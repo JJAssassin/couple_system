@@ -1,0 +1,361 @@
+<template>
+  <div class="diary-page" ref="container">
+    <!-- 顶部：标题 + 写日记 -->
+    <div class="bar">
+      <h2>双人日记</h2>
+      <n-button type="primary" @click="openWrite">写日记</n-button>
+    </div>
+
+    <!-- 分段：全部 / 我写的 / 对方写的 -->
+    <div class="tabs">
+      <button :class="['tab', { active: tab === 'all' }]" @click="tab = 'all'">全部</button>
+      <button :class="['tab', { active: tab === 'mine' }]" @click="tab = 'mine'">我写的</button>
+      <button :class="['tab', { active: tab === 'partner' }]" @click="tab = 'partner'">对方写的</button>
+    </div>
+
+    <!-- 加载骨架 -->
+    <IndSkeleton v-if="loading" variant="list" :rows="6" />
+
+    <!-- 空态 -->
+    <IndEmpty
+      v-else-if="!filtered.length"
+      :title="tab === 'mine' ? '你还没写过日记' : tab === 'partner' ? '对方还没写日记' : '还没有日记'"
+      :desc="tab === 'mine' ? '记下第一篇心情吧～' : tab === 'partner' ? '催 TA 来写写你呀' : '点击右上角写第一篇'"
+      actionText="写日记"
+      @action="openWrite"
+    />
+
+    <!-- 列表 -->
+    <div v-else class="cards">
+      <div
+        v-for="d in displayList"
+        :key="d.id"
+        class="love-card diary-card"
+        @click="openDetail(d)"
+      >
+        <div class="row1">
+          <span class="title title-clamp">{{ d.title }}</span>
+          <n-tag :type="permMeta[d.permissionType]?.type ?? 'default'" size="small" round>
+            {{ permMeta[d.permissionType]?.label ?? '' }}
+          </n-tag>
+        </div>
+        <div class="row2 sub-text">
+          <span v-if="d.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(d.diaryDate) }}</span>
+          <span v-if="d.weather" class="meta"><CloudSun :size="13" :stroke-width="1.8" /> {{ d.weather }}</span>
+          <span class="meta"><Heart :size="13" :stroke-width="1.8" /> 心情 {{ d.moodScore }}/10</span>
+          <span class="meta author"><PenLine :size="13" :stroke-width="1.8" /> {{ authorLabel(d.createUserId) }}</span>
+        </div>
+        <div v-if="d.moodTag" class="mood-tag">#{{ d.moodTag }}</div>
+      </div>
+    </div>
+
+    <IndPager
+      v-if="filtered.length"
+      mode="more"
+      :page="1"
+      :page-size="12"
+      :total="filtered.length"
+      :loading="loading"
+      :has-more="hasMore"
+      @load-more="loadMore"
+    />
+
+    <!-- 写日记：NModal（移动端全屏） -->
+    <n-modal
+      v-model:show="showWrite"
+      preset="card"
+      title="写日记"
+      :style="{ width: modalWidth }"
+      :mask-closable="false"
+    >
+      <n-form ref="formRef" :model="form" label-placement="top">
+        <n-form-item label="标题" :rule="requiredRule('给日记起个标题吧～')">
+          <n-input v-model:value="form.title" placeholder="今天发生了什么…" maxlength="80" show-count />
+        </n-form-item>
+        <n-form-item label="内容">
+          <n-input
+            v-model:value="form.content"
+            type="textarea"
+            placeholder="写下你的心情与故事"
+            :autosize="{ minRows: 4, maxRows: 10 }"
+          />
+        </n-form-item>
+        <div class="grid2">
+          <n-form-item label="心情分数 (1-10)">
+            <n-input-number v-model:value="form.moodScore" :min="1" :max="10" />
+          </n-form-item>
+          <n-form-item label="天气">
+            <n-input v-model:value="form.weather" placeholder="晴 / 雨 / 多云" />
+          </n-form-item>
+        </div>
+        <n-form-item label="权限">
+          <n-select v-model:value="form.permissionType" :options="permOptions" />
+        </n-form-item>
+        <n-form-item label="日期">
+          <n-date-picker v-model:value="form.dateTs" type="date" clearable style="width: 100%" />
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <div class="foot">
+          <n-button @click="showWrite = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="submit">保存</n-button>
+        </div>
+      </template>
+    </n-modal>
+
+    <!-- 详情：NDrawer（移动端全屏） -->
+    <n-drawer v-model:show="showDetail" :width="drawerWidth" placement="right">
+      <n-drawer-content :title="current?.title || '日记详情'" closable>
+        <div v-if="current" class="detail">
+          <div class="sub-text detail-meta">
+            <span v-if="current.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(current.diaryDate) }}</span>
+            <span v-if="current.weather" class="meta"><CloudSun :size="13" :stroke-width="1.8" /> {{ current.weather }}</span>
+            <span class="meta"><Heart :size="13" :stroke-width="1.8" /> 心情 {{ current.moodScore }}/10</span>
+            <n-tag :type="permMeta[current.permissionType]?.type ?? 'default'" size="small" round>
+              {{ permMeta[current.permissionType]?.label ?? '' }}
+            </n-tag>
+          </div>
+          <!-- 富文本展示：内容已在后端净化，前端仅呈现 -->
+          <div class="diary-content" v-html="current.content" />
+        </div>
+
+        <n-divider title-placement="left">评论</n-divider>
+        <div v-if="!comments.length" class="sub-text">还没有评论，来抢沙发～</div>
+        <div v-for="c in comments" :key="c.id" class="comment">
+          <div class="sub-text">{{ authorLabel(c.createUserId) }} · {{ fmtDateTime(c.createTime) }}</div>
+          <div class="comment-body">{{ c.content }}</div>
+        </div>
+
+        <template #footer>
+          <div class="comment-box">
+            <n-input
+              v-model:value="commentText"
+              type="textarea"
+              placeholder="说点什么…"
+              class="comment-input"
+              :autosize="{ minRows: 3, maxRows: 8 }"
+            />
+            <n-button type="primary" :loading="sending" :disabled="!commentText.trim()" @click="sendComment">
+              发送
+            </n-button>
+          </div>
+        </template>
+      </n-drawer-content>
+    </n-drawer>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, computed, onMounted, watch } from 'vue';
+import {
+  NButton, NModal, NDrawer, NDrawerContent, NForm, NFormItem,
+  NInput, NInputNumber, NSelect, NDatePicker, NTag, NDivider,
+} from 'naive-ui';
+import type { DiaryDto, DiaryReq, DiaryCommentDto, PermissionType } from '@/types';
+import { Calendar, CloudSun, Heart, PenLine } from 'lucide-vue-next';
+import {
+  listDiary, createDiary, listComments, addComment,
+} from '@/api/diary';
+import { isMobile } from '@/composables/useDevice';
+import { useStaggerEnter } from '@/composables/useAnimation';
+import { useAuthStore } from '@/store/authStore';
+import { usePartnerStore } from '@/store/partnerStore';
+import { useRealtime } from '@/composables/useRealtime';
+import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import IndEmpty from '@/components/industrial/IndEmpty.vue';
+import { feedback } from '@/utils/feedback';
+import { requiredRule } from '@/utils/formRules';
+
+const formRef = ref();
+const auth = useAuthStore();
+const partner = usePartnerStore();
+const { onSync } = useRealtime();
+const myId = computed(() => auth.profile?.id ?? 0);
+
+function authorLabel(uid?: number) {
+  if (!uid) return 'TA';
+  return uid === myId.value ? '我' : (partner.status?.partner?.nickName || 'TA');
+}
+
+// ---------- 列表 ----------
+const loading = ref(true);
+const list = ref<DiaryDto[]>([]);
+const container = ref<HTMLElement>();
+const tab = ref<'all' | 'mine' | 'partner'>('all');
+
+useStaggerEnter(container, '.diary-card', { stagger: 0.08, y: 16 });
+
+const filtered = computed(() =>
+  list.value.filter((d) => {
+    if (tab.value === 'mine') return d.createUserId === myId.value;
+    if (tab.value === 'partner') return d.createUserId !== myId.value;
+    return true;
+  })
+);
+
+const displayCount = ref(12);
+const displayList = computed(() => filtered.value.slice(0, displayCount.value));
+const hasMore = computed(() => displayCount.value < filtered.value.length);
+function loadMore() {
+  displayCount.value += 12;
+}
+watch(filtered, () => {
+  displayCount.value = 12;
+});
+
+async function load() {
+  loading.value = true;
+  try {
+    const p = await listDiary({ page: 1, pageSize: 50 });
+    list.value = p.items;
+  } finally {
+    loading.value = false;
+  }
+}
+onMounted(async () => {
+  if (!partner.status) await partner.load();
+  await load();
+  onSync('diary', () => load());
+});
+
+// ---------- 写日记 ----------
+const showWrite = ref(false);
+const submitting = ref(false);
+const form = reactive({
+  title: '',
+  content: '',
+  moodTag: undefined as string | undefined,
+  moodScore: 5,
+  permissionType: 1 as PermissionType,
+  weather: '',
+  dateTs: null as number | null,
+});
+
+const permOptions = [
+  { label: '公开（双方可读写）', value: 1 },
+  { label: '仅自己可见', value: 2 },
+  { label: '对方可读不可写', value: 3 },
+];
+
+function openWrite() {
+  form.title = '';
+  form.content = '';
+  form.moodTag = undefined;
+  form.moodScore = 5;
+  form.permissionType = 1;
+  form.weather = '';
+  form.dateTs = null;
+  showWrite.value = true;
+}
+
+async function submit() {
+  try {
+    await formRef.value?.validate();
+  } catch {
+    return;
+  }
+  submitting.value = true;
+  try {
+    const req: DiaryReq = {
+      title: form.title,
+      content: form.content,
+      moodTag: form.moodTag,
+      moodScore: form.moodScore,
+      permissionType: form.permissionType,
+      weather: form.weather || undefined,
+      diaryDate: form.dateTs ? new Date(form.dateTs).toISOString() : undefined,
+    };
+    await createDiary(req);
+    showWrite.value = false;
+    feedback.saved('日记');
+    await load();
+  } finally {
+    submitting.value = false;
+  }
+}
+
+// ---------- 详情 / 评论 ----------
+const showDetail = ref(false);
+const current = ref<DiaryDto | null>(null);
+const comments = ref<DiaryCommentDto[]>([]);
+const commentText = ref('');
+const sending = ref(false);
+
+async function openDetail(d: DiaryDto) {
+  current.value = d;
+  showDetail.value = true;
+  comments.value = await listComments(d.id);
+}
+
+async function sendComment() {
+  if (!current.value || !commentText.value.trim()) return;
+  sending.value = true;
+  try {
+    await addComment({ diaryId: current.value.id, content: commentText.value });
+    commentText.value = '';
+    comments.value = await listComments(current.value.id);
+  } finally {
+    sending.value = false;
+  }
+}
+
+// ---------- 展示辅助 ----------
+const permMeta: Record<PermissionType, { label: string; type: 'success' | 'warning' | 'info' }> = {
+  1: { label: '公开', type: 'success' },
+  2: { label: '仅自己', type: 'warning' },
+  3: { label: '对方可读', type: 'info' },
+};
+
+function fmtDate(s?: string) {
+  return s ? s.slice(0, 10) : '';
+}
+function fmtDateTime(s?: string) {
+  return s ? s.replace('T', ' ').slice(0, 16) : '';
+}
+
+// 响应式宽度
+const modalWidth = computed(() => (isMobile() ? '100%' : '520px'));
+const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
+</script>
+
+<style scoped>
+.diary-page { max-width: 880px; margin: 0 auto; }
+.bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.bar h2 { font-size: 18px; margin: 0; }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.tab {
+  border: none; background: transparent; cursor: pointer;
+  padding: 6px 12px; border-radius: 999px; color: var(--color-ink-3);
+  font-size: 14px; transition: all var(--dur-micro) var(--ease-love);
+}
+.tab.active { background: var(--color-rose); color: #fff; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.diary-card { cursor: pointer; }
+.row1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.title { font-weight: 500; flex: 1; }
+.row2 { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 13px; }
+.meta { display: inline-flex; align-items: center; gap: 4px; color: var(--color-ink-3); }
+.meta :deep(svg) { color: var(--color-rose); flex: 0 0 auto; }
+.mood-tag { color: var(--color-rose); font-size: 12px; margin-top: 6px; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.foot { display: flex; justify-content: flex-end; gap: 8px; }
+
+.detail-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
+.diary-content { line-height: 1.8; word-break: break-word; }
+.diary-content :deep(img) { max-width: 100%; border-radius: 8px; }
+
+.comment { padding: 10px 0; border-top: 1px solid var(--color-ink-soft); }
+.comment-body { margin-top: 4px; }
+.comment-box { display: flex; flex-direction: column; gap: 10px; }
+.comment-input :deep(.n-input__textarea),
+.comment-input :deep(textarea) {
+  font-size: 15px;
+  line-height: 1.65;
+  padding: 12px 14px;
+  resize: vertical;
+}
+.comment-box .n-button { align-self: flex-end; min-width: 92px; }
+</style>

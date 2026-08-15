@@ -1,0 +1,237 @@
+@import "tailwindcss";
+
+/* =====================================================================
+   浪漫柔光设计令牌（Romantic Soft · 商业级 Web 风）
+   语言：暖奶油底 + 柔珊瑚强调 + 雾蓝/可可辅色；统一柔和扩散阴影、
+   圆角、缓动 ease-love。去除一切工业拟物（螺丝 / LED / 噪点 / 凹凸阴影）。
+   ===================================================================== */
+@theme {
+  /* —— 主色：柔珊瑚（情侣主题强调） —— */
+  --color-rose: #ff6f7d;          /* 品牌主色 / 强调 */
+  --color-rose-hover: #ff8893;    /* hover */
+  --color-rose-pressed: #e25a68;  /* pressed */
+  --color-rose-soft: #ffe9ec;     /* 浅玫瑰底（active 态 / 浅填充） */
+  --color-rose-deep: #D88593;     /* 玫瑰粉（图表 / 装饰次色） */
+
+  /* —— 中性 / 背景 —— */
+  --color-cream: #F9F6F4;         /* 全局底：暖白奶油 */
+  --color-mist: #E8EEF2;          /* 雾蓝：分区 / 占位 */
+  --color-surface: #ffffff;       /* 卡片 / 浮层表面 */
+  --color-surface-2: #fbf7f5;     /* 次级表面（斑马 / hover 浅底） */
+  --color-cocoa: #7A6462;         /* 可可：辅色 / 装饰 / 图表 */
+  --color-border: rgba(122, 100, 98, 0.14);  /* 柔和分隔线 */
+
+  /* —— 文字（炭灰，分级满足 AA） —— */
+  --color-ink: #1F2937;           /* 主文字 */
+  --color-ink-2: #4B5563;         /* 次级 / 标签 */
+  --color-ink-3: #9CA3AF;         /* 弱文字 / 元信息 */
+  --color-ink-soft: #F3F4F6;      /* 极浅底 / 细边框 */
+
+  /* —— 圆角（注塑柔润，非锐角） —— */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 26px;
+
+  /* —— 字体（中文优先：PingFang SC / 雅黑 / Noto） —— */
+  --font-sans: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Roboto Mono", "SFMono-Regular", monospace;
+
+  /* —— 缓动（柔，带轻微回弹但克制） —— */
+  --ease-love: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --dur-micro: 180ms;
+  --dur-pop: 300ms;
+  --dur-page: 380ms;
+}
+
+:root {
+  font-family: var(--font-sans);
+  line-height: 1.7;
+  color: var(--color-ink);
+  /* 暖奶油底 + 顶部极淡玫瑰光晕，营造柔和呼吸感（非立体光照） */
+  background:
+    radial-gradient(130% 80% at 50% -12%, #ffffff 0%, var(--color-cream) 58%),
+    var(--color-cream);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+html, body, #app { height: 100%; margin: 0; }
+body { font-size: 15px; }
+
+/* 兼容旧工业主题变量 → 映射到浪漫令牌（避免引用旧名静默回退） */
+:root {
+  --color-accent: var(--color-rose);
+  --color-accent-strong: var(--color-rose-pressed);
+  --color-accent-soft: var(--color-rose-soft);
+  --color-accent-foreground: #ffffff;
+  --color-chassis: var(--color-cream);
+  --color-panel: var(--color-surface);
+  --color-recessed: var(--color-mist);
+  --color-shadow: var(--color-ink-3);
+  --color-highlight: #ffffff;
+  --color-border-dark: var(--color-border);
+  --color-ink-soft: var(--color-ink-soft);
+  --ease-mech: var(--ease-love);
+}
+
+h1, h2, h3 { line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; }
+
+/* ====================== 暗色模式：深可可暖夜 ====================== */
+html.dark {
+  --color-cream: #1f1a1f;
+  --color-mist: #2a2429;
+  --color-surface: #2a2429;
+  --color-surface-2: #322a30;
+  --color-ink: #f3ecee;
+  --color-ink-2: #cabdc1;
+  --color-ink-3: #968a8f;
+  --color-ink-soft: #2e262b;
+  --color-rose-deep: #e3a3ad;
+  --color-cocoa: #b89a9e;
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-rose-soft: rgba(255, 111, 125, 0.16);
+  --color-accent-soft: rgba(255, 111, 125, 0.16);
+  --color-panel: #2a2429;
+  --color-recessed: #231e22;
+  --color-chassis: #1f1a1f;
+  background:
+    radial-gradient(130% 80% at 50% -12%, #2a2429 0%, var(--color-cream) 60%),
+    var(--color-cream);
+  color: var(--color-ink);
+}
+
+/* ====================== 柔和阴影工具类 ====================== */
+.shadow-card  { box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
+.shadow-float { box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.20); }
+.shadow-press { box-shadow: inset 0 1px 3px rgba(122, 100, 98, 0.10); }
+
+/* 卡片：扁平柔和白卡 + hover 轻微抬升（统一取代工业 love-card） */
+.love-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
+  will-change: transform;
+}
+html:not(.reduce-motion) .love-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22);
+}
+.love-card:active { transform: scale(0.99); }
+
+/* 工程标签：等宽 + 大写 + 宽字距（保留作小标签样式，弱化工业感） */
+.ind-label {
+  font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ink-3);
+}
+
+/* 柔和按钮（扁平，非物理按键）：凸起底 + hover 浅玫瑰底 + 按下微缩 */
+.ind-btn {
+  font-family: var(--font-sans); font-weight: 600; letter-spacing: 0.01em;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md); cursor: pointer;
+  background: var(--color-surface); color: var(--color-ink);
+  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.ind-btn:hover { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.ind-btn:active { transform: scale(0.98); }
+.ind-btn-accent {
+  background: var(--color-rose); color: #fff; border-color: var(--color-rose);
+  box-shadow: 0 4px 14px -4px rgba(255, 111, 125, 0.5);
+}
+.ind-btn-accent:hover { color: #fff; background: var(--color-rose-hover); border-color: var(--color-rose-hover); }
+
+/* 状态点（柔和呼吸，去重 LED 光晕） */
+.ind-led {
+  width: 8px; height: 8px; border-radius: 9999px;
+  background: var(--color-rose);
+  animation: ind-pulse 2.4s var(--ease-love) infinite;
+}
+@keyframes ind-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.reduce-motion .ind-led { animation: none; }
+
+/* 螺丝：降级为极小的半透明装饰点（组件将不再使用，仅作兼容占位） */
+.ind-screw {
+  width: 6px; height: 6px; border-radius: 9999px;
+  background: var(--color-ink-3); opacity: 0.25;
+}
+
+/* ====================== 保留的通用类 ====================== */
+.app-bar { padding-top: calc(env(safe-area-inset-top) + 8px); padding-left: 16px; padding-right: 16px; }
+.tab-bar { padding-bottom: calc(env(safe-area-inset-bottom) + 6px); }
+.sub-text { color: var(--color-ink-3); font-size: 13px; }
+.title-clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* 锁呼吸动画（书信未解锁） */
+@keyframes breath { 0%, 100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.06); opacity: 1; } }
+.letter-lock { animation: breath 3.2s var(--ease-love) infinite; }
+.reduce-motion .letter-lock { animation: none; }
+
+/* ====================== 骨架屏（加载占位） ====================== */
+/* 柔光表面 + 浅色流光，替代凹陷注塑质感 */
+.sk-base {
+  background: linear-gradient(100deg, var(--color-surface-2) 30%, #ffffff 50%, var(--color-surface-2) 70%);
+  background-size: 220% 100%;
+  border-radius: var(--radius-md);
+  animation: sk-shimmer 1.25s linear infinite;
+}
+@keyframes sk-shimmer { from { background-position: 180% 0; } to { background-position: -80% 0; } }
+.reduce-motion .sk-base { animation: none; }
+
+/* ====================== 空态（统一插画） ====================== */
+.empty {
+  padding: 40px 16px; text-align: center; color: var(--color-ink-3);
+  background: var(--color-surface-2); border-radius: var(--radius-lg);
+  border: 1px dashed var(--color-border);
+}
+
+/* 兜底：万一有视图仍使用旧骨架占位（应已被 IndSkeleton 替换） */
+.skeleton { padding: 24px; text-align: center; color: var(--color-ink-3); }
+
+/* ====================== 分页（load-more / 页码） ====================== */
+.ind-pager {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  padding: 18px 0 8px; color: var(--color-ink-3); font-size: 13px;
+}
+.ind-pager .pg-info { font-family: var(--font-mono); letter-spacing: 0.04em; }
+.ind-pager .pg-btn {
+  min-width: 84px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--radius-md); cursor: pointer; font-weight: 600;
+  background: var(--color-surface); color: var(--color-ink);
+  border: 1px solid var(--color-border);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.ind-pager .pg-btn:hover:not(:disabled) { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.ind-pager .pg-btn:active:not(:disabled) { transform: scale(0.98); }
+.ind-pager .pg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Toast 统一动效：消息体入场「love pop」——轻微上移 + 回弹缩放，柔而不腻 */
+:global(.n-message-wrapper) {
+  animation: toast-pop var(--dur-pop) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes toast-pop {
+  from { opacity: 0; transform: translateY(-12px) scale(0.92); }
+  60%  { opacity: 1; transform: translateY(0) scale(1.03); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.reduce-motion :global(.n-message-wrapper) { animation: none; }
+
+/* 按类型点缀左侧色条，强化语义（保留 Naive 自带底色与图标） */
+:global(.n-message--success) { border-left: 3px solid var(--color-rose); }
+:global(.n-message--error)   { border-left: 3px solid #ef4444; }
+:global(.n-message--warning) { border-left: 3px solid #f59e0b; }
+:global(.n-message--info)    { border-left: 3px solid var(--color-cocoa); }
+.reduce-motion :global(.n-message--success),
+.reduce-motion :global(.n-message--error),
+.reduce-motion :global(.n-message--warning),
+.reduce-motion :global(.n-message--info) { border-left: none; }
+
+/* 通用可访问性：尊重 reduce-motion，关闭非必要位移动画 */
+.reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}

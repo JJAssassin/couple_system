@@ -1,0 +1,42 @@
+# ===== .NET / ASP.NET Core =====
+bin/
+obj/
+*.user
+.vs/
+TestResults/
+coverage/
+*.log
+logs/
+
+# ===== Node / Vite (frontend) =====
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+.vite-cache/
+
+# ===== Secrets / credentials (NEVER commit) =====
+# RSA private key used to sign JWT — leaking this defeats all auth
+backend/CoupleLoveSystem.Api/keys/
+*.pem
+*.key
+.env
+.env.*
+
+# Real appsettings holds DB + SMTP passwords; keep a sanitized example instead
+backend/CoupleLoveSystem.Api/appsettings.json
+backend/CoupleLoveSystem.Api/appsettings.Development.json
+
+# Plaintext DB credential note kept locally for reference — never commit
+MySQL账号密码.txt
+
+# ===== OS / editor =====
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ===== Python (if any scripts land in repo) =====
+__pycache__/
+*.pyc
