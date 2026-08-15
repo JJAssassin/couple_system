@@ -1,1 +1,0 @@
-import{c as e}from"./index-Cpn8Vtlx.js";function u(){return e.get("/couple/setting")}function n(t){return e.post("/couple/lovestart",{loveStartTime:t})}function p(t){return e.put("/couple/setting",t)}export{u as g,n as s,p as u};

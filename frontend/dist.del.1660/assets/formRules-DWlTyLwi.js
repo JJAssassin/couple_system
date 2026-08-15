@@ -1,1 +1,0 @@
-const u=(e="这一项填一下吧～")=>({required:!0,message:e,trigger:["input","blur","change"]}),s=(e="请选择一个选项")=>({required:!0,type:"number",message:e,trigger:["change","blur"]}),t=(e,r)=>({max:e,message:r,trigger:["input","blur"]}),g=(e="请选择一个日期")=>({required:!0,type:"number",message:e,trigger:["change","blur"]});export{g as d,t as m,u as r,s};

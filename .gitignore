@@ -12,9 +12,13 @@ logs/
 node_modules/
 dist/
 dist-ssr/
+dist.del.*
+dist.trash
 *.local
 .vite/
 .vite-cache/
+*.tsbuildinfo
+vitest.config.ts.timestamp-*.mjs
 
 # ===== Secrets / credentials (NEVER commit) =====
 # RSA private key used to sign JWT — leaking this defeats all auth
