@@ -160,7 +160,7 @@ import { isMobile } from '@/composables/useDevice';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';
-import { useRealtime } from '@/composables/useRealtime';
+import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { feedback } from '@/utils/feedback';
@@ -169,7 +169,7 @@ import { requiredRule } from '@/utils/formRules';
 const formRef = ref();
 const auth = useAuthStore();
 const partner = usePartnerStore();
-const { onSync } = useRealtime();
+const { useModuleSync } = useRealtime();
 const myId = computed(() => auth.profile?.id ?? 0);
 
 function authorLabel(uid?: number) {
@@ -215,7 +215,7 @@ async function load() {
 onMounted(async () => {
   if (!partner.status) await partner.load();
   await load();
-  onSync('diary', () => load());
+  useModuleSync('diary', { items: list, getId: i => i.id, load, map: overlaySyncMap });
 });
 
 // ---------- 写日记 ----------

@@ -1,4 +1,4 @@
-import { ref, shallowRef, onUnmounted } from 'vue';
+import { ref, shallowRef, onUnmounted, type Ref } from 'vue';
 import * as signalR from '@microsoft/signalr';
 import { useAuthStore } from '@/store/authStore';
 import { authenticateSync } from '@/api/sync';
@@ -11,7 +11,8 @@ const connection = shallowRef<signalR.HubConnection | null>(null);
 const starting = ref(false);
 
 // 增量同步信号类型（与后端 SyncSignal 对齐）：kind ∈ created/updated/deleted/reload；id 为变更实体主键
-export interface SyncChange { kind: 'created' | 'updated' | 'deleted' | 'reload'; id: number | null; }
+// payload：后端携带的实体标量投影（camelCase），供前端就地 upsert；reload / deleted 时为 undefined
+export interface SyncChange { kind: 'created' | 'updated' | 'deleted' | 'reload'; id: number | null; payload?: any; }
 export interface SyncSignal { module: string; changes: SyncChange[]; }
 
 const listeners = new Map<string, Set<(sig: SyncSignal) => void>>();
@@ -79,5 +80,64 @@ export function useRealtime() {
     return off;
   }
 
-  return { partnerOnline, ensure, onSync };
+  return { partnerOnline, ensure, onSync, useModuleSync };
+}
+
+// 增量同步助手：在 onSync 基础上，当后端信号携带实体 Payload 时做就地 upsert/remove，避免整表重载。
+// 安全策略：reload 信号、未提供 map、或 created（默认）一律回退整表 load()；
+// 仅在 updated/deleted 且提供 map 时做局部更新，杜绝因载荷形状不一致导致的显示异常。
+export function overlaySyncMap<T>(payload: any, existing: T | undefined): T {
+  return { ...(existing ?? {}), ...(payload ?? {}) } as T;
+}
+
+export function useModuleSync<T>(
+  module: string,
+  opts: {
+    items: Ref<T[]>;
+    getId: (item: T) => number | string | undefined;
+    load: () => void | Promise<void>;
+    map?: (payload: any, existing: T | undefined) => T;
+    allowCreate?: boolean;
+  }
+): () => void {
+  const { onSync } = useRealtime();
+  return onSync(module, (sig: SyncSignal) => {
+    const changes = sig.changes ?? [];
+    // reload 信号（或无法增量）直接整表重载，保持原行为
+    if (changes.some((c) => c.kind === 'reload') || !opts.map) {
+      opts.load();
+      return;
+    }
+    const map = new Map<number | string, T>();
+    for (const it of opts.items.value) {
+      const id = opts.getId(it);
+      if (id != null) map.set(id, it);
+    }
+    let mutated = false;
+    for (const c of changes) {
+      const id = c.id;
+      if (id == null) {
+        opts.load();
+        return;
+      }
+      if (c.kind === 'deleted') {
+        if (map.delete(id)) mutated = true;
+      } else if (c.kind === 'updated') {
+        map.set(id, opts.map!(c.payload, map.get(id)));
+        mutated = true;
+      } else if (c.kind === 'created') {
+        if (opts.allowCreate) {
+          map.set(id, opts.map!(c.payload, undefined));
+          mutated = true;
+        } else {
+          opts.load();
+          return;
+        }
+      } else {
+        opts.load();
+        return;
+      }
+    }
+    if (mutated) opts.items.value = [...map.values()];
+  });
 }

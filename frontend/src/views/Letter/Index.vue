@@ -103,7 +103,7 @@ import type { LetterDto, LetterReq } from '@/types';
 import { listLetter, getLetter, createLetter, deleteLetter } from '@/api/letter';
 import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';
-import { useRealtime } from '@/composables/useRealtime';
+import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useRouter } from 'vue-router';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import LetterItem from '@/components/Letter/LetterItem.vue';
@@ -117,7 +117,7 @@ import { requiredRule, dateRule } from '@/utils/formRules';
 const auth = useAuthStore();
 const partner = usePartnerStore();
 const router = useRouter();
-const { onSync } = useRealtime();
+const { useModuleSync } = useRealtime();
 const loading = ref(true);
 const submitting = ref(false);
 const container = ref<HTMLElement>();
@@ -201,7 +201,7 @@ useStaggerEnter(container, '.love-card', { stagger: 0.06, y: 14 });
 onMounted(async () => {
   if (!partner.status) await partner.load();
   await load();
-  onSync('letter', () => load());
+  useModuleSync('letter', { items: letters, getId: i => i.id, load, map: overlaySyncMap });
 });
 </script>
 

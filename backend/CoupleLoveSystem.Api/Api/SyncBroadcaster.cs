@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace CoupleLoveSystem.Api;
 
-/// <summary>单条增量变更：kind ∈ created / updated / deleted / reload；id 为变更实体的主键（reload 时为 null）。</summary>
-public sealed record SyncChange(string Kind, long? Id);
+/// <summary>单条增量变更：kind ∈ created / updated / deleted / reload；id 为变更实体的主键（reload 时为 null）。
+/// Payload 为变更实体的标量投影（仅基础类型/字符串/枚举/日期/decimal，剔除导航与集合），供前端就地 upsert；reload / deleted 时为 null。</summary>
+public sealed record SyncChange(string Kind, long? Id, object? Payload = null);
 
 /// <summary>
 /// 实时同步信号：携带模块名与该模块在一次保存中的全部增量变更。

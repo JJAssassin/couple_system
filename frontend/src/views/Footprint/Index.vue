@@ -99,7 +99,7 @@ import { ref, onMounted } from 'vue';
 import { NButton, NModal, NForm, NFormItem, NInput, NInputNumber, NPopconfirm } from 'naive-ui';
 import type { FootprintDto } from '@/types';
 import { listFootprints, createFootprint, deleteFootprint, incrementFootprint, updateFootprint } from '@/api/footprint';
-import { useRealtime } from '@/composables/useRealtime';
+import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
@@ -108,7 +108,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import { feedback } from '@/utils/feedback';
 import { requiredRule } from '@/utils/formRules';
 
-const { onSync } = useRealtime();
+const { useModuleSync } = useRealtime();
 const loading = ref(true);
 const items = ref<FootprintDto[]>([]);
 const container = ref<HTMLElement>();
@@ -204,7 +204,7 @@ useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 onMounted(async () => {
   await load();
   loading.value = false;
-  onSync('footprint', () => load());
+  useModuleSync('footprint', { items, getId: i => i.id, load, map: overlaySyncMap });
 });
 </script>
 

@@ -105,7 +105,7 @@ import type { AnniversaryDto, AnniversaryReq } from '@/types';
 import {
   listAnniversaries, createAnniversary, updateAnniversary, deleteAnniversary,
 } from '@/api/anniversary';
-import { useRealtime } from '@/composables/useRealtime';
+import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
@@ -116,7 +116,7 @@ import GradientText from '@/components/Common/GradientText.vue';
 import { feedback } from '@/utils/feedback';
 import { requiredRule, dateRule } from '@/utils/formRules';
 
-const { onSync } = useRealtime();
+const { useModuleSync } = useRealtime();
 const loading = ref(true);
 const items = ref<AnniversaryDto[]>([]);
 const container = ref<HTMLElement>();
@@ -228,7 +228,7 @@ useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 onMounted(async () => {
   await load();
   loading.value = false;
-  onSync('anniversary', () => load());
+  useModuleSync('anniversary', { items, getId: i => i.id, load, map: overlaySyncMap });
 });
 </script>
 

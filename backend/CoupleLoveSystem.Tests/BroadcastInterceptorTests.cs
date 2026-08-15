@@ -74,4 +74,65 @@ public class BroadcastInterceptorTests
 
         Assert.Null(hub.LastArg); // 未广播
     }
+
+    [Fact]
+    public async Task SaveChanges_Broadcasts_Created_With_EntityPayload()
+    {
+        var hub = new RecordingHubContext();
+        var db = CreateContext(hub, "broadcast-payload-" + System.Guid.NewGuid());
+
+        CoupleContext.Current = "cid-P"; // 有情侣上下文才广播
+        try
+        {
+            var wish = new CoupleWish { WishType = (WishType)0, Title = "payload-test" };
+            db.Wishes.Add(wish);
+            await db.SaveChangesAsync();
+
+            var sig = Assert.IsType<SyncSignal>(hub.LastArg);
+            var change = Assert.Single(sig.Changes);
+            Assert.Equal("created", change.Kind);
+
+            // 增量信号须携带实体标量投影，便于前端就地 upsert（不再整表重载）
+            Assert.NotNull(change.Payload);
+            var dict = Assert.IsType<System.Collections.Generic.Dictionary<string, object?>>(change.Payload);
+            Assert.Equal("payload-test", dict["Title"]);
+            Assert.Equal(wish.Id, dict["Id"]);
+        }
+        finally
+        {
+            CoupleContext.Current = null;
+        }
+    }
+
+    [Fact]
+    public async Task SaveChanges_Broadcasts_Updated_With_EntityPayload()
+    {
+        var hub = new RecordingHubContext();
+        var db = CreateContext(hub, "broadcast-updated-" + System.Guid.NewGuid());
+
+        CoupleContext.Current = "cid-U";
+        try
+        {
+            var wish = new CoupleWish { WishType = (WishType)0, Title = "before" };
+            db.Wishes.Add(wish);
+            await db.SaveChangesAsync();
+
+            wish.Title = "after";
+            await db.SaveChangesAsync();
+
+            var sig = Assert.IsType<SyncSignal>(hub.LastArg);
+            var change = Assert.Single(sig.Changes);
+            Assert.Equal("updated", change.Kind);
+
+            // 更新信号同样携带最新标量投影（含改动后的值）
+            Assert.NotNull(change.Payload);
+            var dict = Assert.IsType<System.Collections.Generic.Dictionary<string, object?>>(change.Payload);
+            Assert.Equal("after", dict["Title"]);
+            Assert.Equal(wish.Id, dict["Id"]);
+        }
+        finally
+        {
+            CoupleContext.Current = null;
+        }
+    }
 }

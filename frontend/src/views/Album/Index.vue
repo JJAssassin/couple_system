@@ -271,11 +271,11 @@ async function removeImage(img: ImageDto) {
   if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - 1);
 }
 
-import { useRealtime } from '@/composables/useRealtime';
-const { onSync } = useRealtime();
+import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
+const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await loadAlbums();
-  onSync('album', () => loadAlbums());
+  useModuleSync('album', { items: albums, getId: i => i.id, load: loadAlbums, map: overlaySyncMap });
 });
 </script>
 

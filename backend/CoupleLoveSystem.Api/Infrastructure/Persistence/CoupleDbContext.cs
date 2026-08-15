@@ -3,6 +3,7 @@ using CoupleLoveSystem.Api.Hubs;
 using CoupleLoveSystem.Core.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -225,13 +226,40 @@ public class CoupleDbContext : DbContext
         foreach (var (module, kind, entry) in pending)
         {
             long? id = entry.Entity is BaseEntity be ? be.Id : null;
+            // created / updated 携带实体标量投影，供前端就地 upsert（不再整表重载）；deleted 无需载荷。
+            object? payload = kind == "deleted" ? null : ProjectForSync(entry.Entity);
             if (!byModule.TryGetValue(module, out var changes))
                 byModule[module] = changes = new List<SyncChange>();
-            changes.Add(new SyncChange(kind, id));
+            changes.Add(new SyncChange(kind, id, payload));
         }
 
         foreach (var kv in byModule)
             await sync.NotifySignalAsync(new SyncSignal(kv.Key, kv.Value), OperatingCoupleId, ct);
+    }
+
+    // 实体标量投影：仅取基础类型/字符串/枚举/日期/decimal（剔除导航属性与集合），
+    // 作为增量信号的 Payload，供前端就地 upsert。只读标量属性，不会触发 EF 延迟加载。
+    private static readonly HashSet<Type> _syncScalarTypes = new()
+    {
+        typeof(string), typeof(decimal), typeof(DateTime), typeof(DateTimeOffset),
+        typeof(Guid), typeof(TimeSpan), typeof(DateOnly), typeof(TimeOnly)
+    };
+
+    private static object? ProjectForSync(object entity)
+    {
+        var t = entity.GetType();
+        var dict = new Dictionary<string, object?>();
+        foreach (var p in t.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (!p.CanRead || p.GetIndexParameters().Length > 0) continue;
+            var pt = p.PropertyType;
+            var ut = Nullable.GetUnderlyingType(pt) ?? pt;
+            if (ut.IsPrimitive || ut.IsEnum || _syncScalarTypes.Contains(ut))
+            {
+                try { dict[p.Name] = p.GetValue(entity); } catch { /* 读取失败则跳过该字段 */ }
+            }
+        }
+        return dict;
     }
 
     private void StampCoupleId()

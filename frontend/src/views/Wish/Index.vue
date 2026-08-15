@@ -157,7 +157,7 @@ import {
 } from '@/api/wish';
 import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
-import { useRealtime } from '@/composables/useRealtime';
+import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
@@ -318,10 +318,10 @@ async function load() {
 }
 
 useStaggerEnter(container, '.love-card', { stagger: 0.06, y: 14 });
-const { onSync } = useRealtime();
+const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await load();
-  onSync('wish', () => load());
+  useModuleSync('wish', { items: wishes, getId: i => i.id, load, map: overlaySyncMap });
 });
 </script>
 
