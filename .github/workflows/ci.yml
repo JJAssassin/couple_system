@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+# 同一 ref 的重复触发会取消进行中的运行，省资源
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: 后端构建与测试 (.NET 8)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 缓存 NuGet 包
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: 后端构建
+        run: dotnet build backend/CoupleLoveSystem.Api/CoupleLoveSystem.Api.csproj -c Debug
+
+      - name: 后端测试 (InMemory，无外部 DB 依赖)
+        run: dotnet test backend/CoupleLoveSystem.Tests/CoupleLoveSystem.Tests.csproj -c Debug --no-build
+
+  frontend:
+    name: 前端测试 / 类型检查 / 构建 / 体积门禁
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: 安装依赖
+        working-directory: frontend
+        run: npm ci
+
+      - name: 单元测试 (vitest)
+        working-directory: frontend
+        run: npm test
+
+      - name: 类型检查 + 生产构建 (vue-tsc --noEmit && vite build)
+        working-directory: frontend
+        run: npm run build
+
+      - name: 体积门禁 (echarts ≤700KB / naive ≤900KB)
+        working-directory: frontend
+        shell: bash
+        run: |
+          node -e '
+            const fs=require("fs"),path=require("path");
+            const dir="dist/assets";
+            if(!fs.existsSync(dir)){console.error("dist/assets 不存在，前端构建可能未产出");process.exit(1);}
+            const files=fs.readdirSync(dir).filter(f=>f.endsWith(".js"));
+            const kb=f=>Math.round(fs.statSync(path.join(dir,f)).size/1024);
+            const pick=re=>files.find(f=>re.test(f));
+            const ec=pick(/^echarts-.*\.js$/);
+            const nv=pick(/^naive-.*\.js$/);
+            if(!ec){console.error("体积门禁：未在 dist/assets 找到 echarts chunk");process.exit(1);}
+            if(!nv){console.error("体积门禁：未在 dist/assets 找到 naive chunk");process.exit(1);}
+            const e=kb(ec), n=kb(nv);
+            console.log("echarts chunk: "+e+" KB");
+            console.log("naive chunk:  "+n+" KB");
+            let bad=false;
+            if(e>700){console.error("失败：echarts "+e+"KB 超 700KB 阈值（疑似回归为全量引入）");bad=true;}
+            if(n>900){console.error("失败：naive "+n+"KB 超 900KB 阈值（疑似重新全量注册 app.use(NaiveUi)）");bad=true;}
+            process.exit(bad?1:0);
+          '
+
+  # ─────────────────────────────────────────────────────────────
+  # 全栈冒烟（登录 + 28 读 + 12 写闭环 + 401 门）不在此 CI 内：
+  # 依赖本机 MySQL / Redis 与机器绝对路径脚本
+  # （D:/Item/cap/workbuddy/smoke_api.py），无法在 GitHub 托管 runner 上跑。
+  # 本地请使用仓库根的 ci-gate.sh（已自动拉起后端并完成 6 阶段门禁）。
+  # 若将来需要云端集成测试，可在此加一个带 mysql:8 / redis:7 service 的 job，
+  # 并通过 ConnectionStrings__MySql / TokenStore__* 等环境变量注入配置。
+  # ─────────────────────────────────────────────────────────────
