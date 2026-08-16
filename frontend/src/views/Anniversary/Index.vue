@@ -7,6 +7,51 @@
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
 
+    <!-- 顶部「下一个重要的日子」英雄卡 -->
+    <section v-if="hero" class="block hero" :class="{ today: heroToday }">
+      <div class="hero-main">
+        <div class="hero-kicker">距离下一个纪念日</div>
+        <div class="hero-name">
+          <component :is="typeMeta(hero.anniversaryType).icon" :size="22" class="hero-ico" />
+          <span>{{ hero.name }}</span>
+          <span v-if="hero.isYearly && occNumber(hero)" class="hero-occ">第 {{ occNumber(hero) }} 周年</span>
+        </div>
+
+        <div v-if="heroToday" class="hero-today">🎉 就是今天！</div>
+        <div v-else class="hero-count">
+          <GradientText tag="span" class="hero-days">{{ heroCd?.d }}</GradientText>
+          <span class="hero-unit">天</span>
+          <span class="hero-hms">{{ pad(heroCd?.h) }}:{{ pad(heroCd?.m) }}:{{ pad(heroCd?.s) }}</span>
+        </div>
+
+        <div class="hero-sub">
+          下次 <b>{{ fmtDate(hero.nextOccurrence) }}</b>
+          <span class="dot-sep">·</span>提前 {{ hero.remindDays }} 天提醒
+          <span v-if="isReminderNear(hero)" class="hero-remind">提醒临近</span>
+        </div>
+      </div>
+      <div v-if="hero.isYearly && !heroToday" class="hero-ring">
+        <IndProgressRing :value="yearProgress(hero)" :size="112" :stroke="11" color="var(--color-rose)" sublabel="本周年进度" />
+      </div>
+    </section>
+
+    <!-- 无即将到来时的历史回顾英雄卡 -->
+    <section v-else-if="pastHero" class="block hero past">
+      <div class="hero-main">
+        <div class="hero-kicker">最近的纪念日</div>
+        <div class="hero-name">
+          <component :is="typeMeta(pastHero.anniversaryType).icon" :size="22" class="hero-ico" />
+          <span>{{ pastHero.name }}</span>
+        </div>
+        <div class="hero-count">
+          <span class="hero-past">已过去</span>
+          <GradientText tag="span" class="hero-days">{{ daysSince(pastHero) }}</GradientText>
+          <span class="hero-unit">天</span>
+        </div>
+        <div class="hero-sub">目标日 {{ fmtDate(pastHero.targetDate) }} · 今年已无更多纪念日</div>
+      </div>
+    </section>
+
     <section class="block head-row">
       <IndSectionTitle label="我们的重要日子" :led="true" />
       <button class="add-btn" @click="openCreate">＋ 新增纪念日</button>
@@ -14,7 +59,14 @@
 
     <section class="block">
       <div v-if="items.length" class="anniv-grid">
-        <div v-for="a in items" :key="a.id" class="anniv-card" :class="{ pop: poppingId === a.id }">
+        <div
+          v-for="a in items"
+          :key="a.id"
+          class="anniv-card"
+          :class="{ pop: poppingId === a.id, near: isNear(a), soon: isSoon(a) }"
+        >
+          <div v-if="a.coverImage" class="ac-cover" :style="{ backgroundImage: `url(${a.coverImage})` }" />
+
           <div class="ac-top">
             <component :is="typeMeta(a.anniversaryType).icon" class="ac-type-ico" :size="20" />
             <span class="ac-name">{{ a.name }}</span>
@@ -30,12 +82,26 @@
 
           <div class="ac-next">
             <template v-if="a.nextOccurrence">
-              下次 <b>{{ fmtDate(a.nextOccurrence) }}</b>
-              <span class="ac-left">还有 <GradientText tag="span" class="ac-days">{{ a.daysLeft }}</GradientText> 天</span>
+              <span v-if="isToday(a)" class="ac-today">🎉 就是今天！</span>
+              <template v-else>
+                <span>还有 </span>
+                <GradientText tag="span" class="ac-days">{{ cd(a.nextOccurrence)?.d }}</GradientText>
+                <span> 天</span>
+                <span v-if="(cd(a.nextOccurrence)?.d ?? 99) <= 2" class="ac-hms">
+                  {{ pad(cd(a.nextOccurrence)?.h) }}:{{ pad(cd(a.nextOccurrence)?.m) }}:{{ pad(cd(a.nextOccurrence)?.s) }}
+                </span>
+                <div class="ac-next-date">下次 {{ fmtDate(a.nextOccurrence) }}</div>
+              </template>
             </template>
             <template v-else>
-              <span class="ac-expired">这一天已经过去啦</span>
+              <span class="ac-expired">这一天已经过去 {{ daysSince(a) }} 天</span>
             </template>
+          </div>
+
+          <div class="ac-badges">
+            <span v-if="a.isYearly && occNumber(a)" class="badge occ">第 {{ occNumber(a) }} 周年</span>
+            <span v-if="isReminderNear(a)" class="badge remind">提醒临近</span>
+            <span v-if="isToday(a)" class="badge today">今天</span>
           </div>
 
           <div class="ac-actions">
@@ -54,6 +120,16 @@
         </div>
       </div>
       <IndEmpty v-else title="还没有纪念日" desc="点「新增纪念日」，把恋爱纪念日、生日、初见都记下来，每年自动提醒" />
+    </section>
+
+    <!-- 历史回顾统计 -->
+    <section v-if="hasHistory" class="block history">
+      <IndSectionTitle label="历史回顾" :led="true" />
+      <div class="hist-row">
+        <div class="hist-stat"><b>{{ yearlyCount }}</b><span>个每年纪念日</span></div>
+        <div class="hist-stat"><b>{{ maxOcc }}</b><span>共同走过最久（周年）</span></div>
+        <div class="hist-stat"><b>{{ pastCount }}</b><span>已过去的单次纪念</span></div>
+      </div>
     </section>
 
     <!-- 新增 / 编辑 弹窗 -->
@@ -98,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, type Component } from 'vue';
+import { ref, onMounted, onUnmounted, computed, type Component } from 'vue';
 import { Heart, Cake, Handshake, Sparkles } from 'lucide-vue-next';
 import { NButton, NModal, NForm, NFormItem, NInput, NSelect, NDatePicker, NSwitch, NTag, NPopconfirm } from 'naive-ui';
 import type { AnniversaryDto, AnniversaryReq } from '@/types';
@@ -111,6 +187,7 @@ import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import ImageField from '@/components/Common/ImageField.vue';
 import GradientText from '@/components/Common/GradientText.vue';
 import { feedback } from '@/utils/feedback';
@@ -126,6 +203,89 @@ const submitting = ref(false);
 const editingId = ref<number | null>(null);
 const poppingId = ref<number | null>(null);
 
+/* ---------- 实时倒计时引擎：每秒刷新 now，驱动所有倒计时 ---------- */
+const now = ref(Date.now());
+let timer: number | undefined;
+interface Countdown { d: number; h: number; m: number; s: number; diff: number }
+function cd(iso?: string | null): Countdown | null {
+  if (!iso) return null;
+  const target = new Date(iso).getTime();
+  let diff = target - now.value;
+  if (diff < 0) diff = 0;
+  return {
+    d: Math.floor(diff / 86_400_000),
+    h: Math.floor((diff % 86_400_000) / 3_600_000),
+    m: Math.floor((diff % 3_600_000) / 60_000),
+    s: Math.floor((diff % 60_000) / 1000),
+    diff,
+  };
+}
+const pad = (n?: number) => String(n ?? 0).padStart(2, '0');
+
+/* ---------- 派生信息 ---------- */
+// 第 N 周年（仅每年重复）
+function occNumber(a: AnniversaryDto): number | null {
+  if (!a.isYearly || !a.nextOccurrence) return null;
+  return new Date(a.nextOccurrence).getFullYear() - new Date(a.targetDate).getFullYear() + 1;
+}
+// 已过去天数（用于过期的一次性纪念日）
+function daysSince(a: AnniversaryDto): number {
+  return Math.max(0, Math.floor((now.value - new Date(a.targetDate).getTime()) / 86_400_000));
+}
+// 是否「今天」就是目标日
+function isToday(a: AnniversaryDto): boolean {
+  return !!a.nextOccurrence && (cd(a.nextOccurrence)?.d ?? 1) === 0;
+}
+// 提醒临近：目标日落在提前提醒窗口内
+function isReminderNear(a: AnniversaryDto): boolean {
+  return !!a.nextOccurrence && a.remindDays > 0 && (cd(a.nextOccurrence)?.d ?? 999) <= a.remindDays;
+}
+// 卡片发光：临近 7 天 / 30 天
+function isNear(a: AnniversaryDto): boolean {
+  return !!a.nextOccurrence && (cd(a.nextOccurrence)?.d ?? 999) <= 7;
+}
+function isSoon(a: AnniversaryDto): boolean {
+  return !!a.nextOccurrence && (cd(a.nextOccurrence)?.d ?? 999) <= 30;
+}
+// 本周年进度（仅每年重复）：自上次发生日到下次发生日的占比
+function yearProgress(a: AnniversaryDto): number {
+  if (!a.isYearly || !a.nextOccurrence) return 0;
+  const next = new Date(a.nextOccurrence).getTime();
+  const last = new Date(a.nextOccurrence);
+  last.setFullYear(last.getFullYear() - 1);
+  const lastMs = last.getTime();
+  const pct = ((now.value - lastMs) / (next - lastMs)) * 100;
+  return Math.max(0, Math.min(100, Math.round(pct)));
+}
+
+/* ---------- 顶部英雄卡 ---------- */
+const hero = computed<AnniversaryDto | null>(() => {
+  const ups = items.value
+    .filter((a) => a.nextOccurrence)
+    .map((a) => ({ a, c: cd(a.nextOccurrence) }))
+    .filter((x) => x.c)
+    .sort((x, y) => x.c!.diff - y.c!.diff);
+  return ups[0]?.a ?? null;
+});
+const heroCd = computed(() => (hero.value ? cd(hero.value.nextOccurrence) : null));
+const heroToday = computed(() => !!hero.value && (heroCd.value?.d ?? 1) === 0);
+const pastHero = computed<AnniversaryDto | null>(() => {
+  if (hero.value) return null;
+  return items.value
+    .filter((a) => !a.nextOccurrence)
+    .sort((a, b) => new Date(b.targetDate).getTime() - new Date(a.targetDate).getTime())[0] ?? null;
+});
+
+/* ---------- 历史回顾统计 ---------- */
+const yearlyCount = computed(() => items.value.filter((a) => a.isYearly).length);
+const maxOcc = computed(() => {
+  const ns = items.value.map(occNumber).filter((n): n is number => n != null);
+  return ns.length ? Math.max(...ns) : 0;
+});
+const pastCount = computed(() => items.value.filter((a) => !a.nextOccurrence).length);
+const hasHistory = computed(() => yearlyCount.value > 0 || pastCount.value > 0);
+
+/* ---------- 类型元数据 ---------- */
 const typeOptions = [
   { label: '恋爱纪念日', value: 1 },
   { label: '生日', value: 2 },
@@ -144,6 +304,7 @@ function typeMeta(t: number) {
   return { icon: typeIcon[t] ?? Sparkles, label: typeOptions.find((o) => o.value === t)?.label ?? '自定义' };
 }
 
+/* ---------- 数据加载与表单 ---------- */
 const emptyForm = () => ({
   name: '', anniversaryType: 1, dateTs: null as number | null, remindDays: 3, isYearly: true, coverImage: '',
 });
@@ -226,10 +387,12 @@ async function onDelete(a: AnniversaryDto) {
 useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 
 onMounted(async () => {
+  timer = window.setInterval(() => (now.value = Date.now()), 1000);
   await load();
   loading.value = false;
   useModuleSync('anniversary', { items, getId: i => i.id, load, map: overlaySyncMap });
 });
+onUnmounted(() => { if (timer) clearInterval(timer); });
 </script>
 
 <style scoped>
@@ -248,6 +411,37 @@ onMounted(async () => {
 }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); }
 
+.block { margin: 22px 0; }
+
+/* ---------- 英雄卡 ---------- */
+.hero {
+  position: relative; display: flex; align-items: center; gap: 18px;
+  padding: 22px 24px; border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-rose-soft), var(--color-surface));
+  border: 1px solid var(--color-rose-soft);
+  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 18px 44px -16px rgba(214, 100, 120, 0.34);
+  overflow: hidden;
+}
+.hero.past { background: linear-gradient(135deg, var(--color-surface-2), var(--color-surface)); border-color: var(--color-border); box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
+.hero.today { background: linear-gradient(135deg, #ffd9e3, #ffe9c7); animation: heroGlow 2.4s ease-in-out infinite; }
+@keyframes heroGlow { 0%,100% { box-shadow: 0 1px 2px rgba(31,41,55,.04), 0 18px 44px -16px rgba(214,100,120,.34); } 50% { box-shadow: 0 1px 2px rgba(31,41,55,.04), 0 22px 60px -14px rgba(214,100,120,.6); } }
+.hero-main { flex: 1; min-width: 0; }
+.hero-kicker { font-size: 12px; letter-spacing: 0.12em; color: var(--color-ink-2); margin-bottom: 6px; text-transform: uppercase; }
+.hero-name { display: flex; align-items: center; gap: 8px; font-size: 19px; font-weight: 800; color: var(--color-ink); margin-bottom: 10px; }
+.hero-ico { color: var(--color-rose); flex: 0 0 auto; }
+.hero-occ { font-size: 12px; font-weight: 600; color: var(--color-rose); background: var(--color-surface); border: 1px solid var(--color-rose-soft); padding: 2px 10px; border-radius: 999px; }
+.hero-count { display: flex; align-items: baseline; gap: 6px; }
+.hero-days { font-weight: 900; font-size: 44px; line-height: 1; }
+.hero-unit { font-size: 16px; color: var(--color-ink-2); font-weight: 600; }
+.hero-hms { margin-left: 8px; font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--color-accent); letter-spacing: 0.02em; }
+.hero-today { font-size: 30px; font-weight: 900; color: var(--color-rose); }
+.hero-past { font-size: 14px; color: var(--color-ink-2); margin-right: 4px; }
+.hero-sub { margin-top: 10px; font-size: 13px; color: var(--color-ink-2); }
+.hero-sub b { color: var(--color-ink); }
+.hero-remind { margin-left: 8px; font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 999px; }
+.hero-ring { flex: 0 0 auto; }
+.dot-sep { margin: 0 6px; color: var(--color-ink-3); }
+
 .head-row { display: flex; align-items: center; justify-content: space-between; }
 .add-btn {
   border: 1px solid var(--color-border); cursor: pointer; padding: 9px 16px; border-radius: 999px;
@@ -257,18 +451,21 @@ onMounted(async () => {
 }
 .add-btn:active { transform: scale(0.97); }
 
-.block { margin: 22px 0; }
-
+/* ---------- 卡片网格 ---------- */
 .anniv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .anniv-card {
   position: relative; padding: 18px 18px 14px; border-radius: var(--radius-lg);
   background: var(--color-surface); border: 1px solid var(--color-border);
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
-  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
+  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
 }
 .anniv-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
+.anniv-card.near { border-color: var(--color-rose-soft); box-shadow: 0 4px 12px rgba(31,41,55,.06), 0 16px 40px -12px rgba(214,100,120,.28); }
+.anniv-card.soon { border-color: color-mix(in srgb, var(--color-rose-soft) 55%, var(--color-border)); }
 .anniv-card.pop { animation: acPop 0.3s var(--ease-love); }
 @keyframes acPop { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+.ac-cover { height: 92px; margin: -18px -18px 14px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; background-size: cover; background-position: center; }
 
 .ac-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .ac-type-ico { color: var(--color-rose); }
@@ -279,11 +476,19 @@ onMounted(async () => {
 .ac-meta { font-size: 12px; color: var(--color-ink-2); margin-bottom: 8px; font-family: var(--font-mono); }
 .dot-sep { margin: 0 6px; color: var(--color-ink-3); }
 
-.ac-next { font-size: 13px; color: var(--color-ink); margin-bottom: 14px; }
+.ac-next { font-size: 13px; color: var(--color-ink); margin-bottom: 8px; }
 .ac-next b { color: var(--color-accent); }
-.ac-left { margin-left: 8px; }
 .ac-days { font-weight: 800; font-size: 16px; }
+.ac-hms { margin-left: 6px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--color-accent); }
+.ac-next-date { font-size: 12px; color: var(--color-ink-3); margin-top: 2px; }
+.ac-today { color: var(--color-rose); font-weight: 800; font-size: 15px; }
 .ac-expired { color: var(--color-ink-3); }
+
+.ac-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.badge.occ { color: var(--color-rose); background: var(--color-rose-soft); border: 1px solid var(--color-rose-soft); }
+.badge.remind { color: #b45309; background: #fef3c7; border: 1px solid #fde68a; }
+.badge.today { color: #fff; background: var(--color-rose); }
 
 .ac-actions { display: flex; gap: 10px; }
 .ac-btn {
@@ -295,6 +500,16 @@ onMounted(async () => {
 .ac-btn:active { transform: scale(0.98); }
 .ac-btn:hover { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
 .ac-btn.danger { color: var(--color-rose); }
+
+/* ---------- 历史回顾 ---------- */
+.history .hist-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.hist-stat {
+  text-align: center; padding: 16px 10px; border-radius: var(--radius-lg);
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
+}
+.hist-stat b { display: block; font-size: 26px; font-weight: 900; color: var(--color-rose); font-family: var(--font-mono); }
+.hist-stat span { font-size: 12px; color: var(--color-ink-3); }
 
 .yearly-row { display: flex; align-items: center; gap: 12px; }
 .yearly-hint { font-size: 12px; color: var(--color-ink-3); }
