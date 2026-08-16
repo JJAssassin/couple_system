@@ -16,7 +16,7 @@
         @action="showCreate = true"
       />
 
-      <div v-else class="album-grid">
+      <div v-else class="album-grid" ref="albumGrid">
         <div
           v-for="a in albums"
           :key="a.id"
@@ -149,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import {
   NButton, NModal, NForm, NFormItem, NInput, NUpload, NTag,
 } from 'naive-ui';
@@ -158,6 +158,7 @@ import type { AlbumDto, AlbumReq, ImageDto, ApiResult } from '@/types';
 import * as albumApi from '@/api/album';
 import { isMobile } from '@/composables/useDevice';
 import { useStaggerEnter } from '@/composables/useAnimation';
+import { useSettingStore } from '@/store/settingStore';
 import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
@@ -166,6 +167,8 @@ import { Heart } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';
 import ImageField from '@/components/Common/ImageField.vue';
 
+const setting = useSettingStore();
+
 const formRef = ref();
 
 const container = ref<HTMLElement>();
@@ -173,6 +176,34 @@ useStaggerEnter(container, '.stagger-item', { stagger: 0.08, y: 16 });
 
 const loading = ref(true);
 const albums = ref<AlbumDto[]>([]);
+
+const albumGrid = ref<HTMLElement | null>(null);
+let parallaxRAF = 0;
+function applyParallax() {
+  const grid = albumGrid.value ?? document.querySelector<HTMLElement>('.album-grid');
+  if (!grid) return;
+  if (setting.reduceMotion) {
+    grid.querySelectorAll<HTMLElement>('.album-cover img').forEach((img) => { img.style.transform = ''; });
+    return;
+  }
+  const vh = window.innerHeight || document.documentElement.clientHeight;
+  grid.querySelectorAll<HTMLElement>('.album-cover').forEach((card) => {
+    const img = card.querySelector<HTMLElement>('img');
+    if (!img) return;
+    const r = card.getBoundingClientRect();
+    const center = r.top + r.height / 2;
+    // 卡片中心相对视口中心的归一化偏移（-0.5 ~ 0.5），乘以系数得到 ±12px 视差
+    const delta = (center - vh / 2) / vh;
+    img.style.transform = `translateY(${(-delta * 24).toFixed(2)}px)`;
+  });
+}
+function onScrollParallax() {
+  if (parallaxRAF) return;
+  parallaxRAF = window.requestAnimationFrame(() => {
+    parallaxRAF = 0;
+    applyParallax();
+  });
+}
 
 const currentAlbum = ref<AlbumDto | null>(null);
 const images = ref<ImageDto[]>([]);
@@ -208,6 +239,9 @@ async function loadAlbums() {
   } finally {
     loading.value = false;
   }
+  // 必须在 loading=false（网格真实渲染）之后、再 nextTick，applyParallax 才能取到 .album-grid
+  await nextTick();
+  applyParallax();
 }
 
 async function openAlbum(a: AlbumDto) {
@@ -276,6 +310,13 @@ const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await loadAlbums();
   useModuleSync('album', { items: albums, getId: i => i.id, load: loadAlbums, map: overlaySyncMap });
+  window.addEventListener('scroll', onScrollParallax, { passive: true });
+  window.addEventListener('resize', onScrollParallax);
+});
+onUnmounted(() => {
+  window.removeEventListener('scroll', onScrollParallax);
+  window.removeEventListener('resize', onScrollParallax);
+  if (parallaxRAF) window.cancelAnimationFrame(parallaxRAF);
 });
 </script>
 
@@ -286,11 +327,11 @@ onMounted(async () => {
 .album-title { flex: 1; }
 
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-.album-card { padding: 0; overflow: hidden; cursor: pointer; }
-.album-cover { aspect-ratio: 1 / 1; overflow: hidden; background: var(--color-ink-soft); }
-.album-cover img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--dur-micro) var(--ease-love); }
+.album-card { padding: 0; overflow: hidden; cursor: pointer; transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
+.album-cover { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--color-ink-soft); }
+.album-cover img { position: absolute; top: -15%; left: 0; width: 100%; height: 130%; object-fit: cover; will-change: transform; transition: transform var(--dur-micro) var(--ease-love); }
 .album-cover-ph { width: 100%; height: 100%; display: grid; place-items: center; color: var(--color-ink-3); }
-html:not(.reduce-motion) .album-card:hover .album-cover img { transform: scale(1.04); }
+html:not(.reduce-motion) .album-card:hover { transform: translateY(-3px) scale(1.015); box-shadow: 0 6px 16px rgba(31, 41, 55, 0.08), 0 22px 50px -14px rgba(122, 100, 98, 0.28); }
 .album-meta { padding: 10px 12px; }
 .album-name { font-weight: 500; }
 
