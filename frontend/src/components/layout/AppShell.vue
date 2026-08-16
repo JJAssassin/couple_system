@@ -179,9 +179,14 @@ function logout() {
 
 .content { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; }
 @media (max-width: 767px) {
-  .topbar { padding: 0 16px; }
+  .topbar { padding: 0 14px; gap: 10px; }
   .content { padding: 20px 16px 40px; }
   .crumb-root { display: none; }
+  .crumb-cur { display: none; }
+  .tb-right { gap: 6px; }
+  .avatar { width: 30px; height: 30px; font-size: 12px; }
+  .avatar-mate { margin-left: -8px; }
+  .avatar-mate.online { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 3.5px #43d17a; }
 }
 
 /* 移动端抽屉 */

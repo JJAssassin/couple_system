@@ -514,4 +514,24 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 .yearly-row { display: flex; align-items: center; gap: 12px; }
 .yearly-hint { font-size: 12px; color: var(--color-ink-3); }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
+
+@media (max-width: 767px) {
+  .brand { padding: 10px 14px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .hero { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; }
+  .hero-ring { align-self: center; }
+  .hero-name { font-size: 17px; }
+  .hero-count { flex-wrap: wrap; }
+  .hero-days { font-size: 38px; }
+  .hero-hms { margin-left: 0; margin-top: 6px; font-size: 16px; }
+  .hero-remind { margin-left: 0; margin-top: 6px; }
+  .hero-sub { display: flex; flex-wrap: wrap; gap: 4px; }
+  .anniv-grid { grid-template-columns: 1fr; gap: 14px; }
+  .history .hist-row { grid-template-columns: 1fr; }
+  .hist-stat { padding: 14px 10px; }
+  .ac-cover { height: 120px; }
+  .head-row { gap: 12px; flex-wrap: wrap; }
+  .add-btn { flex: 0 0 auto; }
+}
 </style>
