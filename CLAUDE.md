@@ -122,5 +122,5 @@ cd frontend && npm run dev   # http://localhost:5174
 ## 9. 下一步 backlog（已与用户对齐的优先级）
 
 - **P0（已做）**：首页打磨包提交（`e1597db`）；本 CLAUDE.md 固化坑位。
-- **P1 体验做实**：① 伴侣实时更新轻提示 toast（当前 sync 收到后无提示）；② 纪念日页 `/anniversary` 深化（倒计时 / 达成动画）；③ 暗色 / 夜间模式；④ 移动端窄屏回归。
+- **P1 体验做实**：① ~~伴侣实时更新轻提示 toast~~ **已实现**（2026-08-16）：后端给 `SyncSignal` 加 `SenderId`（CoupleContext.CurrentUserId 经中间件写入，CoupleDbContext 捕获进信号）；前端 `PartnerActivityToast` 订阅 `useRealtime().onAnySync`，仅当 `senderId` 非空且 ≠ 当前用户（从 JWT `sub` 解析，避免刷新后 profile 为空漏提示）时弹「伴侣更新了 『模块』」，按模块 1.5s 去抖；已双浏览器验证（伴侣端弹、自己端不弹、零报错）。② 纪念日页 `/anniversary` 深化（倒计时 / 达成动画）；③ 暗色 / 夜间模式；④ 移动端窄屏回归。
 - **P2 工程化 / 扩展**：推送到远程仓库异地备份；GitHub Actions 串 `dotnet test`+`vitest`+`vue-tsc`；照片墙视差/批量上传；关系时间轴；节日/纪念日彩蛋；生产 HTTPS/域名。

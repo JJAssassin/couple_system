@@ -26,6 +26,10 @@ public class CoupleDbContext : DbContext
     /// 否则广播会误推到 anon 组，前端收不到实时更新。</summary>
     internal string? OperatingCoupleId { get; private set; }
 
+    /// <summary>本次 SaveChanges 操作的用户 Id，在 SaveChanges/SaveChangesAsync 的「同步部分」捕获
+    /// （此刻 CoupleContext.CurrentUserId 仍有效）。作为实时同步信号的 SenderId，供前端区分"自己/伴侣"的改动。</summary>
+    internal long? OperatingUserId { get; private set; }
+
     public DbSet<CoupleUser> Users => Set<CoupleUser>();
     public DbSet<CoupleAnniversary> Anniversaries => Set<CoupleAnniversary>();
     public DbSet<CoupleDiary> Diaries => Set<CoupleDiary>();
@@ -165,6 +169,7 @@ public class CoupleDbContext : DbContext
     public override int SaveChanges()
     {
         OperatingCoupleId = CoupleContext.Current;
+        OperatingUserId = CoupleContext.CurrentUserId;
         StampCoupleId();
         var pending = CaptureBroadcasts();
         var affected = base.SaveChanges();
@@ -175,6 +180,7 @@ public class CoupleDbContext : DbContext
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         OperatingCoupleId = CoupleContext.Current;
+        OperatingUserId = CoupleContext.CurrentUserId;
         StampCoupleId();
         var pending = CaptureBroadcasts();
         var affected = await base.SaveChangesAsync(cancellationToken);
@@ -234,7 +240,7 @@ public class CoupleDbContext : DbContext
         }
 
         foreach (var kv in byModule)
-            await sync.NotifySignalAsync(new SyncSignal(kv.Key, kv.Value), OperatingCoupleId, ct);
+            await sync.NotifySignalAsync(new SyncSignal(kv.Key, kv.Value, OperatingUserId), OperatingCoupleId, ct);
     }
 
     // 实体标量投影：仅取基础类型/字符串/枚举/日期/decimal（剔除导航属性与集合），

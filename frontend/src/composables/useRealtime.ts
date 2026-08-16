@@ -12,10 +12,13 @@ const starting = ref(false);
 
 // 增量同步信号类型（与后端 SyncSignal 对齐）：kind ∈ created/updated/deleted/reload；id 为变更实体主键
 // payload：后端携带的实体标量投影（camelCase），供前端就地 upsert；reload / deleted 时为 undefined
+// senderId：触发本次变更的操作用户 Id（后端写入）；前端据此区分"自己/伴侣"的改动，仅对伴侣的变更做提示
 export interface SyncChange { kind: 'created' | 'updated' | 'deleted' | 'reload'; id: number | null; payload?: any; }
-export interface SyncSignal { module: string; changes: SyncChange[]; }
+export interface SyncSignal { module: string; changes: SyncChange[]; senderId?: number | null; }
 
 const listeners = new Map<string, Set<(sig: SyncSignal) => void>>();
+// 全局监听：收到任意模块信号时都会触发（无论是否订阅了该模块），用于"伴侣更新"等跨模块提示
+const anyListeners = new Set<(sig: SyncSignal) => void>();
 
 // 握手：匿名连上 WebSocket 后，携带 JWT 上报 connectionId，后端据此登记并加入对应情侣组
 async function authenticate(conn: signalR.HubConnection) {
@@ -42,6 +45,9 @@ async function ensure(): Promise<signalR.HubConnection | null> {
       listeners.get(sig.module)?.forEach((cb) => {
         // 订阅回调可能触发刷新请求并 reject（如实时同步时后端/网络异常）。
         // 在分发处统一吞掉 rejection，避免未处理 Promise Rejection 刷屏（拦截器已弹 toast）。
+        Promise.resolve(cb(sig)).catch(() => {});
+      });
+      anyListeners.forEach((cb) => {
         Promise.resolve(cb(sig)).catch(() => {});
       });
     });
@@ -80,7 +86,15 @@ export function useRealtime() {
     return off;
   }
 
-  return { partnerOnline, ensure, onSync, useModuleSync };
+  // 订阅所有模块的实时信号（无论是否显式订阅某模块）。用于"伴侣更新"等跨模块轻提示。
+  function onAnySync(cb: (sig: SyncSignal) => void) {
+    anyListeners.add(cb);
+    const off = () => anyListeners.delete(cb);
+    onUnmounted(off);
+    return off;
+  }
+
+  return { partnerOnline, ensure, onSync, onAnySync, useModuleSync };
 }
 
 // 增量同步助手：在 onSync 基础上，当后端信号携带实体 Payload 时做就地 upsert/remove，避免整表重载。

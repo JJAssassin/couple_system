@@ -11,8 +11,10 @@ public sealed record SyncChange(string Kind, long? Id, object? Payload = null);
 /// <summary>
 /// 实时同步信号：携带模块名与该模块在一次保存中的全部增量变更。
 /// 前端据此做局部刷新（有 id）或全量重载（kind=reload）。
+/// SenderId 为触发本次变更的操作用户 Id（由 CoupleDbContext 在保存时写入），前端据此区分"自己/伴侣"的改动，
+/// 仅当 SenderId 非空且不等于当前用户时才提示"伴侣更新"。后台托管服务等无用户上下文时为 null。
 /// </summary>
-public sealed record SyncSignal(string Module, IReadOnlyList<SyncChange> Changes);
+public sealed record SyncSignal(string Module, IReadOnlyList<SyncChange> Changes, long? SenderId = null);
 
 /// <summary>封装 SignalR 广播：向「当前写操作的情侣」组推送"数据已变更"通知，驱动前端实时刷新。</summary>
 public class SyncBroadcaster

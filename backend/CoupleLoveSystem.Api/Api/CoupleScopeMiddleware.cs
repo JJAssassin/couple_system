@@ -17,6 +17,8 @@ public class CoupleScopeMiddleware
     {
         var cid = context.User?.FindFirst("cid")?.Value;
         CoupleContext.Current = string.IsNullOrWhiteSpace(cid) ? null : cid;
+        var uidClaim = context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        CoupleContext.CurrentUserId = long.TryParse(uidClaim, out var uid) ? uid : (long?)null;
         try
         {
             await _next(context);
@@ -24,6 +26,7 @@ public class CoupleScopeMiddleware
         finally
         {
             CoupleContext.Current = null;
+            CoupleContext.CurrentUserId = null;
         }
     }
 }

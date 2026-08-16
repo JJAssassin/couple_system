@@ -18,4 +18,14 @@ public static class CoupleContext
         get => _current.Value;
         set => _current.Value = value;
     }
+
+    private static readonly AsyncLocal<long?> _currentUserId = new();
+
+    /// <summary>当前操作用户 Id（来自 JWT 的 NameIdentifier 声明）；由 <see cref="CoupleScopeMiddleware"/> 在请求内写入，请求结束清空。
+    /// 实时同步信号据此打上发送者标识，使前端能区分"自己/伴侣"的改动。</summary>
+    public static long? CurrentUserId
+    {
+        get => _currentUserId.Value;
+        set => _currentUserId.Value = value;
+    }
 }
