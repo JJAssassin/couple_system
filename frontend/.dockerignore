@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist.del.*
+dist.trash
+*.tsbuildinfo
+vitest.config.ts.timestamp-*.mjs
+.git/
+.gitignore

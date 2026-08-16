@@ -23,10 +23,13 @@ vitest.config.ts.timestamp-*.mjs
 # ===== Secrets / credentials (NEVER commit) =====
 # RSA private key used to sign JWT — leaking this defeats all auth
 backend/CoupleLoveSystem.Api/keys/
+secrets/
 *.pem
 *.key
 .env
-.env.*
+!.env.example
+# Docker bind-mounted runtime data (volumes)
+data/
 
 # Real appsettings holds DB + SMTP passwords; keep a sanitized example instead
 backend/CoupleLoveSystem.Api/appsettings.json
