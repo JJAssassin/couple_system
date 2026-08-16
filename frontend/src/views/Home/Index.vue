@@ -33,13 +33,24 @@
       </template>
     </section>
 
+    <!-- 恋爱里程碑 -->
+    <MilestoneStrip
+      v-if="loveInfo.hasLoveStart"
+      :total-days="loveInfo.totalDays"
+      :love-start-time="loveInfo.loveStartTime"
+    />
+
     <!-- 每日一句 -->
     <section class="block" v-if="quote.content">
       <IndSectionTitle label="每日一句" :led="true" />
       <IndCard class="quote-card">
+        <button class="quote-shuffle" :class="{ beat: quoteBeat }" @click="shuffleQuote" title="换一句情话" aria-label="换一句情话">
+          <Heart :size="15" :stroke-width="2" />
+        </button>
         <span class="quote-mark">“</span>
         <p class="quote-text">{{ quote.content }}</p>
         <span class="quote-author" v-if="quote.author">—— {{ quote.author }}</span>
+        <span class="quote-hint" v-else>—— 点 ♥ 换一句</span>
       </IndCard>
     </section>
 
@@ -158,6 +169,7 @@ import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import MilestoneStrip from '@/components/Common/MilestoneStrip.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useAuthStore } from '@/store/authStore';
 import { useNotifyStore } from '@/store/notifyStore';
@@ -218,11 +230,44 @@ const albums = ref<AlbumDto[]>([]);
 const feed = ref<TimelineItemDto[]>([]);
 const quote = ref<DailyQuoteDto>({ content: '' });
 
+const quoteBeat = ref(false);
+// 本地治愈系短句库：点击 ♥ 随机换一句，丰富首页情趣（不依赖后端）
+const extraQuotes = [
+  '世界很大，但和你在一起的地方就是家。',
+  '想把每天的晚安，都变成见到你的早安。',
+  '你的小脾气，也是我喜欢的样子。',
+  '慢慢来，我们的故事还很长很长。',
+  '被人放在心上，是这世上最温柔的事。',
+  '今天也想和你一起虚度时光。',
+  '你是我所有计划里，最重要的一项。',
+  '喜欢你，是我做过最不后悔的决定。',
+  '哪怕什么也不做，只要是你身边就很好。',
+  '我们的日子，是把平凡过成糖。',
+  '想把一年四季，都和你一起走过。',
+  '你一笑，我的世界就亮了。',
+  '在一起越久，越觉得当初选对了人。',
+  '余生很长，请多指教呀。',
+  '你是我的意外之喜，也是命中注定。',
+  '无论晴雨，有你在就是好天气。',
+];
+function shuffleQuote() {
+  if (extraQuotes.length === 0) return;
+  let q = quote.value.content;
+  let guard = 0;
+  while (q === quote.value.content && guard++ < 12) {
+    q = extraQuotes[Math.floor(Math.random() * extraQuotes.length)];
+  }
+  quote.value = { content: q, author: '' };
+  quoteBeat.value = false;
+  requestAnimationFrame(() => { quoteBeat.value = true; });
+  window.setTimeout(() => { quoteBeat.value = false; }, 650);
+}
+
 const hour = new Date().getHours();
 const greet = computed(() => (hour < 6 ? '凌晨好' : hour < 12 ? '早安' : hour < 14 ? '午安' : hour < 18 ? '下午好' : '晚安'));
 
 function go(name: string) {
-  router.push({ name });
+  router.push('/' + name);
 }
 function feedIcon(type: string) {
   return FEED_ICONS[type] || Star;
@@ -400,9 +445,27 @@ onMounted(async () => {
 }
 .quote-text {
   position: relative; font-size: 16px; line-height: 1.8; color: var(--color-ink);
-  margin: 6px 0 0; padding-left: 8px; letter-spacing: 0.02em;
+  margin: 6px 0 0; padding-left: 8px; padding-right: 40px; letter-spacing: 0.02em;
 }
 .quote-author {
   display: block; margin-top: 10px; text-align: right; font-size: 13px; color: var(--color-ink-3);
 }
+.quote-hint {
+  display: block; margin-top: 10px; text-align: right; font-size: 12px; color: var(--color-ink-3);
+}
+.quote-shuffle {
+  position: absolute; top: 12px; right: 12px; z-index: 3;
+  width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-rose); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.quote-shuffle:hover { background: var(--color-rose-soft); border-color: var(--color-rose); transform: scale(1.08); }
+.quote-shuffle.beat { animation: q-beat 0.6s var(--ease-love); }
+@keyframes q-beat {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.25); }
+  60% { transform: scale(0.92); }
+}
+.reduce-motion .quote-shuffle.beat { animation: none; }
 </style>

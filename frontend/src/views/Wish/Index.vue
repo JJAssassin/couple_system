@@ -9,19 +9,20 @@
       <n-button type="primary" round @click="openAdd">+ 加愿望</n-button>
     </header>
 
-    <!-- 分类 Tab -->
-    <n-tabs v-model:value="activeTab" type="segment" class="tabs">
-      <n-tab-pane :name="1" tab="共同心愿" />
-      <n-tab-pane :name="2" tab="礼物心愿" />
-      <n-tab-pane :name="3" tab="成长目标" />
-    </n-tabs>
-
-    <!-- 状态筛选 -->
-    <n-tabs v-model:value="statusFilter" type="segment" class="tabs status-tabs">
-      <n-tab-pane name="all" tab="全部" />
-      <n-tab-pane name="active" tab="进行中" />
-      <n-tab-pane name="done" tab="已完成" />
-    </n-tabs>
+    <!-- 分类 + 状态：单排筛选条 -->
+    <div class="filter-bar">
+      <n-tabs v-model:value="activeTab" type="segment" class="type-tabs">
+        <n-tab-pane :name="1" tab="共同心愿" />
+        <n-tab-pane :name="2" tab="礼物心愿" />
+        <n-tab-pane :name="3" tab="成长目标" />
+      </n-tabs>
+      <n-select
+        v-model:value="statusFilter"
+        :options="statusFilterOptions"
+        size="small"
+        class="status-select"
+      />
+    </div>
 
     <!-- 列表 -->
     <IndSkeleton v-if="loading" variant="grid" :rows="6" :columns="3" />
@@ -211,6 +212,11 @@ const statusOptions = [
   { label: '已完成', value: 3 },
   { label: '已归档', value: 4 },
 ];
+const statusFilterOptions = [
+  { label: '全部', value: 'all' },
+  { label: '进行中', value: 'active' },
+  { label: '已完成', value: 'done' },
+];
 const statusMap: Record<number, { label: string; type: 'default' | 'info' | 'success' | 'warning' }> = {
   1: { label: '未开始', type: 'default' },
   2: { label: '进行中', type: 'info' },
@@ -330,8 +336,13 @@ onMounted(async () => {
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .head-left { display: flex; align-items: center; gap: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
-.tabs { margin-bottom: 18px; }
-.status-tabs { margin-bottom: 14px; }
+.filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.type-tabs { flex: 1 1 320px; min-width: 0; }
+.status-select { flex: 0 0 auto; width: 118px; }
+@media (max-width: 520px) {
+  .type-tabs { flex: 1 1 100%; }
+  .status-select { width: 100%; }
+}
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .wish-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .wish-title { font-size: 16px; font-weight: 500; color: var(--color-ink); }
