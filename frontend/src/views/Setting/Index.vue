@@ -98,10 +98,17 @@
     <!-- 主题 -->
     <section class="block love-card">
       <h2>主题与动效</h2>
-      <div class="set-row">
-        <span>深色模式</span>
-        <NSwitch :value="setting.dark" @update:value="setting.toggleDark()" />
+      <div class="set-row set-row-top">
+        <span>外观主题</span>
+        <div class="theme-seg">
+          <button :class="{ on: setting.mode === 'light' }" @click="setting.setMode('light')">浅色</button>
+          <button :class="{ on: setting.mode === 'dark' }" @click="setting.setMode('dark')">深色</button>
+          <button :class="{ on: setting.mode === 'system' }" @click="setting.setMode('system')">跟随系统</button>
+        </div>
       </div>
+      <p v-if="setting.mode === 'system'" class="theme-hint">
+        当前按系统设置：{{ setting.dark ? '深色' : '浅色' }}
+      </p>
       <div class="set-row">
         <span>减少动效</span>
         <NSwitch :value="setting.reduceMotion" @update:value="setting.toggleMotion()" />
@@ -337,6 +344,19 @@ async function doExport() {
 .block h2 { font-size: 16px; margin: 0 0 14px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
 .set-row + .set-row { border-top: 1px solid var(--color-ink-soft); }
+.set-row-top { align-items: flex-start; }
+.theme-seg { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.theme-seg button {
+  padding: 7px 14px; border-radius: var(--radius-md); cursor: pointer; font-size: 13px; font-weight: 600;
+  border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-ink-2);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.theme-seg button.on {
+  background: var(--color-rose); color: #fff; border-color: var(--color-rose);
+  box-shadow: 0 4px 14px -4px rgba(255, 111, 125, 0.5);
+}
+.theme-seg button:not(.on):hover { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.theme-hint { font-size: 12px; color: var(--color-ink-3); margin: -4px 0 8px; text-align: right; }
 .native-date {
   padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink); font-size: 14px; width: 100%;

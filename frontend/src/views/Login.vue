@@ -48,13 +48,14 @@ async function onSubmit() {
 </script>
 <style scoped>
 .login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #F9F6F4, #E8EEF2); padding: 16px; }
-.login-card { width: 340px; background: #fff; border-radius: 20px; padding: 32px 28px;
-  box-shadow: 0 20px 60px rgba(122,100,98,.12); text-align: center; }
+  background: linear-gradient(135deg, var(--color-cream), var(--color-mist)); padding: 16px; }
+.login-card { width: 340px; background: var(--color-surface); border-radius: 20px; padding: 32px 28px;
+  box-shadow: 0 20px 60px rgba(122,100,98,.12); text-align: center; border: 1px solid var(--color-border); }
 h1 { color: var(--color-rose); font-size: 22px; margin: 0 0 4px; }
 label { display: block; text-align: left; font-size: 13px; color: var(--color-ink-2); margin: 16px 0 6px; }
-input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid var(--color-ink-soft);
-  border-radius: 10px; font-size: 14px; outline: none; transition: border-color var(--dur-micro) var(--ease-love); }
+input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid var(--color-border);
+  border-radius: 10px; font-size: 14px; outline: none; background: var(--color-surface-2); color: var(--color-ink);
+  transition: border-color var(--dur-micro) var(--ease-love); }
 input:focus { border-color: var(--color-rose); }
 button { width: 100%; margin-top: 22px; padding: 12px; border: none; border-radius: 10px;
   background: var(--color-rose); color: #fff; font-size: 15px; cursor: pointer; transition: opacity var(--dur-micro); }
