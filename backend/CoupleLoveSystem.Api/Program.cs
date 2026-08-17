@@ -71,6 +71,7 @@ builder.Services.AddScoped<DiaryService>();
 builder.Services.AddScoped<WishService>();
 builder.Services.AddScoped<TodoService>();
 builder.Services.AddScoped<BoardMessageService>();
+builder.Services.AddScoped<QuizService>();
 builder.Services.AddScoped<AlbumService>();
 builder.Services.AddScoped<ConflictService>();
 builder.Services.AddScoped<LetterService>();

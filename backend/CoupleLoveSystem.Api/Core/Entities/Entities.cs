@@ -137,6 +137,39 @@ public class CoupleBoardMessage : BaseEntity, ICoupleScoped
     public bool Pinned { get; set; } // 是否置顶
 }
 
+/// <summary>默契问答题库：选择题，双方基于它发起「默契挑战」。内置题由种子写入（IsBuiltin，不可删），也可自定义添加。</summary>
+[Broadcast("quiz")]
+public class CoupleQuizQuestion : BaseEntity, ICoupleScoped
+{
+    public string Text { get; set; } = string.Empty;
+    public string OptionsJson { get; set; } = "[]"; // JSON 字符串数组，如 ["火锅","烧烤"]
+    public string? Category { get; set; }           // 分类（口味/习惯/回忆…），可选
+    public int SortOrder { get; set; }
+    public bool IsBuiltin { get; set; }             // 内置题（种子写入），不允许删除
+}
+
+/// <summary>默契挑战一局：基于某道题，双方各选一个选项；两人都答完后揭晓，选项一致即「默契」。
+/// 题面与选项做快照，避免题库后续改动影响历史战绩。</summary>
+[Broadcast("quiz")]
+public class CoupleQuizRound : BaseEntity, ICoupleScoped
+{
+    public long QuestionId { get; set; }
+    public string QuestionText { get; set; } = string.Empty; // 题面快照
+    public string OptionsJson { get; set; } = "[]";          // 选项快照
+    public string? Category { get; set; }
+
+    public long? FirstUserId { get; set; }          // 先作答的人
+    public int? FirstAnswer { get; set; }           // 选项索引
+    public DateTime? FirstAnsweredTime { get; set; }
+
+    public long? SecondUserId { get; set; }         // 后作答的人
+    public int? SecondAnswer { get; set; }
+    public DateTime? SecondAnsweredTime { get; set; }
+
+    public bool IsRevealed { get; set; }            // 双方都已作答（可揭晓）
+    public bool IsMatched { get; set; }             // 选项一致（默契达成）
+}
+
 [Broadcast("album")]
 public class CoupleAlbum : BaseEntity, ICoupleScoped
 {

@@ -128,6 +128,64 @@ public class BoardMessageReq
 public class BoardMessageIdReq { public long Id { get; set; } }
 #endregion
 
+#region 默契问答 Quiz
+public class QuizQuestionDto
+{
+    public long Id { get; set; }
+    public string Text { get; set; } = string.Empty;
+    public List<string> Options { get; set; } = new();
+    public string? Category { get; set; }
+    public bool IsBuiltin { get; set; }
+}
+public class QuizQuestionReq
+{
+    public string Text { get; set; } = string.Empty;
+    public List<string> Options { get; set; } = new();
+    public string? Category { get; set; }
+}
+public class QuizRoundDto
+{
+    public long Id { get; set; }
+    public long QuestionId { get; set; }
+    public string QuestionText { get; set; } = string.Empty;
+    public List<string> Options { get; set; } = new();
+    public string? Category { get; set; }
+
+    public long? FirstUserId { get; set; }
+    public int? FirstAnswer { get; set; }
+    public DateTime? FirstAnsweredTime { get; set; }
+    public long? SecondUserId { get; set; }
+    public int? SecondAnswer { get; set; }
+    public DateTime? SecondAnsweredTime { get; set; }
+
+    public bool IsRevealed { get; set; }
+    public bool IsMatched { get; set; }
+
+    /// <summary>当前请求者是否已作答（前端据此决定显示选项还是等待态）。</summary>
+    public bool MyAnswered { get; set; }
+    /// <summary>当前请求者选的选项索引；未揭晓前不暴露对方选项。</summary>
+    public int? MyAnswer { get; set; }
+    /// <summary>对方是否已作答。</summary>
+    public bool MateAnswered { get; set; }
+
+    public long CreateUserId { get; set; }
+    public DateTime CreateTime { get; set; }
+}
+/// <summary>发起一局：QuestionId 为空则从题库随机抽一题（优先抽没玩过的）。</summary>
+public class QuizStartReq { public long? QuestionId { get; set; } }
+public class QuizAnswerReq { public long RoundId { get; set; } public int Answer { get; set; } }
+public class QuizIdReq { public long Id { get; set; } }
+public class QuizStatsDto
+{
+    public int TotalRounds { get; set; }
+    public int RevealedRounds { get; set; }
+    public int MatchedRounds { get; set; }
+    /// <summary>默契率 0-100（按已揭晓局计算）。</summary>
+    public int MatchRate { get; set; }
+    public int PendingRounds { get; set; }
+}
+#endregion
+
 #region 相册 Album + Image
 public class AlbumDto
 {

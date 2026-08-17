@@ -21,10 +21,14 @@ public class DbSeeder
         await SeedQuotesAsync();
         // 预绑定两个 demo 账号（依赖账号已存在；首次启动账号尚未创建时此处为 no-op，账号创建后再绑定）
         await SeedBindAsync();
-        // 把已有内容数据回填到 demo 情侣空间（CoupleId 为空的历史/外部灌入数据统一归属该空间，避免被全局过滤器隐藏）
-        await BackfillCoupleIdAsync();
         // 演示用纪念日（仅当表为空时写入）
         await SeedAnniversariesAsync();
+        // 默契问答内置题库（仅当题库为空时写入）
+        await SeedQuizQuestionsAsync();
+        // 把已有内容数据回填到 demo 情侣空间（CoupleId 为空的历史/外部灌入数据统一归属该空间，避免被全局过滤器隐藏）。
+        // 必须放在所有 Seed* 之后：种子写入时无 HTTP 上下文（CoupleContext.Current 为 null），
+        // 新种子行 CoupleId 为空，靠这一步在「同一次启动内」补盖章。
+        await BackfillCoupleIdAsync();
 
         // 确保情侣级共享设置行存在（整库单对情侣，Key=global）；LoveStartTime 初始为 null（未设置，不显示虚假天数）
         if (!await _db.Settings.AnyAsync(s => s.Key == "global"))
@@ -53,10 +57,11 @@ public class DbSeeder
         await _db.SaveChangesAsync();
     }
 
-    /// <summary>种子每日一句温情语录（仅当语录表为空时写入；已存在则跳过，不重复插入）。</summary>
+    /// <summary>种子每日一句温情语录（仅当语录表为空时写入；已存在则跳过，不重复插入）。
+    /// 存在性判定用 IgnoreQueryFilters：绕开软删除过滤，用户删过的语录不会在下次启动被重新种回来。</summary>
     private async Task SeedQuotesAsync()
     {
-        if (await _db.Quotes.AnyAsync()) return;
+        if (await _db.Quotes.IgnoreQueryFilters().AnyAsync()) return;
 
         var quotes = new[]
         {
@@ -121,10 +126,17 @@ public class DbSeeder
         await _db.SaveChangesAsync();
     }
 
-    /// <summary>种子演示用纪念日（仅当表为空时写入；已存在则跳过）。含「每年重复」示例，便于直接体验该功能。</summary>
+    /// <summary>种子演示用纪念日（仅当表为空时写入；已存在则跳过）。含「每年重复」示例，便于直接体验该功能。
+    ///
+    /// 存在性判定必须用 IgnoreQueryFilters（历史 bug 修复）：CoupleAnniversary 是 ICoupleScoped，
+    /// 全局过滤器为 !IsDeleted && (CoupleId == CoupleContext.Current || CoupleId == null)。
+    /// 种子阶段无 HTTP 上下文 → Current 为 null → 过滤器只能看见 CoupleId 为 null 的行；
+    /// 而 BackfillCoupleIdAsync 会把这些行盖章成 demo 情侣，于是下次启动过滤器又「看不见」它们，
+    /// 判定为空 → 重复种入。实测该 bug 已让 4 条演示纪念日各重复 40 份（每次重启 +4）。
+    /// 加 IgnoreQueryFilters 后无论 CoupleId / IsDeleted 为何都能看见，真正幂等。</summary>
     private async Task SeedAnniversariesAsync()
     {
-        if (await _db.Anniversaries.AnyAsync()) return;
+        if (await _db.Anniversaries.IgnoreQueryFilters().AnyAsync()) return;
 
         var now = DateTime.UtcNow;
         var demos = new (string name, AnniversaryType type, DateTime date, int remind, bool yearly)[]
@@ -148,6 +160,50 @@ public class DbSeeder
         await _db.SaveChangesAsync();
     }
 
+    /// <summary>种子默契问答内置题库（仅当题库为空时写入）。存在性判定同样用 IgnoreQueryFilters 保证幂等，
+    /// 理由见 SeedAnniversariesAsync 的注释。内置题标记 IsBuiltin=true，接口层禁止删除。</summary>
+    private async Task SeedQuizQuestionsAsync()
+    {
+        if (await _db.QuizQuestions.IgnoreQueryFilters().AnyAsync()) return;
+
+        var bank = new (string cat, string text, string[] options)[]
+        {
+            ("口味", "如果只能选一样当宵夜，TA 会选？", new[] { "火锅", "烧烤", "螺蛳粉", "泡面加蛋" }),
+            ("口味", "奶茶必点甜度是？", new[] { "全糖", "七分糖", "五分糖", "不额外加糖" }),
+            ("口味", "TA 最不能接受的食物是？", new[] { "香菜", "臭豆腐", "榴莲", "肥肉" }),
+            ("习惯", "周末更想怎么过？", new[] { "在家躺平", "出门逛街", "短途旅行", "约朋友聚会" }),
+            ("习惯", "TA 睡觉前最后做的一件事是？", new[] { "刷手机", "看书", "聊天", "直接睡" }),
+            ("习惯", "定了闹钟之后 TA 通常？", new[] { "秒起", "赖床 10 分钟", "反复贪睡", "起了又躺回去" }),
+            ("习惯", "出门旅行 TA 收拾行李的方式是？", new[] { "提前几天列清单", "出发前一晚打包", "临出门随手塞", "让对方帮忙收" }),
+            ("性格", "吵架之后 TA 更可能？", new[] { "主动来找我", "冷静一会儿再说", "等我先开口", "假装没事发生" }),
+            ("性格", "TA 收到礼物时最看重？", new[] { "心意和惊喜", "实用性", "价格档次", "包装和仪式感" }),
+            ("性格", "遇到难题 TA 的第一反应是？", new[] { "自己先扛着", "立刻找我商量", "上网搜答案", "先放一放" }),
+            ("回忆", "我们第一次约会的主要活动是？", new[] { "吃饭", "看电影", "散步逛街", "在家待着" }),
+            ("回忆", "对方最先记住我的哪一点？", new[] { "长相", "声音", "性格", "某句话" }),
+            ("默契", "如果中了一笔小钱，TA 想先？", new[] { "存起来", "带我去旅行", "换手机/数码", "请大家吃一顿" }),
+            ("默契", "TA 心里理想的同居分工是？", new[] { "一人做饭一人洗碗", "谁有空谁做", "全靠外卖", "各做各的" }),
+            ("默契", "TA 更希望纪念日怎么庆祝？", new[] { "精心准备惊喜", "两个人安静吃饭", "拍一组照片", "买个大礼物" }),
+            ("默契", "对方觉得我们最像的地方是？", new[] { "口味", "作息", "笑点", "花钱习惯" }),
+        };
+
+        var now = DateTime.UtcNow;
+        for (var i = 0; i < bank.Length; i++)
+        {
+            var q = bank[i];
+            _db.QuizQuestions.Add(new CoupleQuizQuestion
+            {
+                Text = q.text,
+                OptionsJson = System.Text.Json.JsonSerializer.Serialize(q.options),
+                Category = q.cat,
+                SortOrder = i,
+                IsBuiltin = true,
+                CreateUserId = 1,
+                CreateTime = now,
+            });
+        }
+        await _db.SaveChangesAsync();
+    }
+
     /// <summary>把已有内容数据回填到 demo 情侣空间：取任一已绑定用户的 CoupleId，
     /// 将内容表（受隔离过滤的实体）中 CoupleId 为空的历史/外部灌入数据统一归属该空间，避免被全局过滤器隐藏。</summary>
     private async Task BackfillCoupleIdAsync()
@@ -159,7 +215,7 @@ public class DbSeeder
         {
             "Anniversaries", "Diaries", "DiaryComments", "Wishes", "Albums", "Images",
             "Conflicts", "Letters", "AccountRecords", "DateRecords",
-            "SystemMessages", "Footprints"
+            "SystemMessages", "Footprints", "QuizQuestions"
         };
         foreach (var t in contentTables)
         {

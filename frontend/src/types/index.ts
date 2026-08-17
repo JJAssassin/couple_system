@@ -195,6 +195,52 @@ export interface BoardMessageReq {
   color?: string;
 }
 
+// ---------- 默契问答 ----------
+export interface QuizQuestionDto {
+  id: number;
+  text: string;
+  options: string[];
+  category?: string | null;
+  isBuiltin: boolean;
+}
+export interface QuizQuestionReq {
+  text: string;
+  options: string[];
+  category?: string;
+}
+export interface QuizRoundDto {
+  id: number;
+  questionId: number;
+  questionText: string;
+  options: string[];
+  category?: string | null;
+  firstUserId?: number | null;
+  /** 仅在 isRevealed 为 true 时后端才下发，未揭晓时为 null（防提前偷看） */
+  firstAnswer?: number | null;
+  firstAnsweredTime?: string | null;
+  secondUserId?: number | null;
+  secondAnswer?: number | null;
+  secondAnsweredTime?: string | null;
+  isRevealed: boolean;
+  isMatched: boolean;
+  /** 当前登录者是否已作答 */
+  myAnswered: boolean;
+  /** 当前登录者选的选项索引（自己的始终可见） */
+  myAnswer?: number | null;
+  /** 对方是否已作答 */
+  mateAnswered: boolean;
+  createUserId: number;
+  createTime: string;
+}
+export interface QuizStatsDto {
+  totalRounds: number;
+  revealedRounds: number;
+  matchedRounds: number;
+  /** 默契率 0-100，按已揭晓局计算 */
+  matchRate: number;
+  pendingRounds: number;
+}
+
 // ---------- 相册 / 图片 ----------
 export interface AlbumDto {
   id: number;

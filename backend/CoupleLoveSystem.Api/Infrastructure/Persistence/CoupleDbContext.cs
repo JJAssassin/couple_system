@@ -37,6 +37,8 @@ public class CoupleDbContext : DbContext
     public DbSet<CoupleWish> Wishes => Set<CoupleWish>();
     public DbSet<CoupleTodo> Todos => Set<CoupleTodo>();
     public DbSet<CoupleBoardMessage> BoardMessages => Set<CoupleBoardMessage>();
+    public DbSet<CoupleQuizQuestion> QuizQuestions => Set<CoupleQuizQuestion>();
+    public DbSet<CoupleQuizRound> QuizRounds => Set<CoupleQuizRound>();
     public DbSet<CoupleAlbum> Albums => Set<CoupleAlbum>();
     public DbSet<CoupleImage> Images => Set<CoupleImage>();
     public DbSet<CoupleConflict> Conflicts => Set<CoupleConflict>();
