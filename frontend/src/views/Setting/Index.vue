@@ -329,7 +329,7 @@ async function doExport() {
   exporting.value = true;
   try {
     const resp = await exportAll();
-    feedback.exported(resp.fileName);
+    feedback.exported(`couple_export.zip（含 ${resp.mediaCount ?? 0} 个媒体文件）`);
   } catch {
     /* 错误已由响应拦截器提示 */
   } finally {

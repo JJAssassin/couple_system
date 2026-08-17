@@ -306,6 +306,7 @@ export interface UpdateProfileReq {
 export interface ExportResp {
   downloadUrl: string;
   fileName: string;
+  mediaCount?: number;
 }
 
 // ---------- 足迹 / 自定义计数卡 ----------
