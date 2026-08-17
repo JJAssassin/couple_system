@@ -86,15 +86,15 @@ cd frontend && npm run dev   # http://localhost:5174
 
 ---
 
-## 6. 容器化部署（docker-compose 全栈自包含）
+## 6. 容器化部署（docker-compose，部署配置已迁至 D:\Docker）
 
-- 编排：`docker-compose.yml`（mysql:8.0.39 / redis:7 / backend / frontend 四服务）。**端口与本机错开**：`8080→frontend(nginx:80)`、`3307→mysql`、`6380→redis`，不冲突本机 3306/6379/5199。
-- 一键：`cd D:\Code\My_vscode\couple-love-system && docker compose up -d --build` → 访问 `http://localhost:8080`。
-- 后端环境变量：`ASPNETCORE_ENVIRONMENT=Production` + `ConnectionStrings__MySql` 指向 `mysql:3306` + `TokenStore__Provider=Redis` + JWT 私钥挂载 `/app/keys/jwt-private.pem`（私钥在 `secrets/jwt-private.pem`，已 gitignore；另存脱敏 `appsettings.example.json`）。
+- 编排：`D:\Docker\couple-love-system\docker-compose.yml`（mysql:8.0.39 / redis:7 / backend / frontend / caddy 五服务）。**端口与本机错开**：`8080→frontend(nginx:80)`、`3307→mysql`、`6380→redis`、`80/443→caddy`，不冲突本机 3306/6379/5199。
+- 一键：`cd D:\Docker\couple-love-system && docker compose up -d --build` → 访问 `http://localhost:8080`（或 `https://localhost` 走 Caddy 自签）。部署配置与源码分离：compose 内 `build.context` 指向源码绝对路径 `D:\Code\My_vscode\couple-love-system\{backend,frontend}`。
+- 后端环境变量：`ASPNETCORE_ENVIRONMENT=Production` + `ConnectionStrings__MySql` 指向 `mysql:3306` + `TokenStore__Provider=Redis` + JWT 私钥挂载 `/app/keys/jwt-private.pem`（私钥在 `D:\Docker\couple-love-system\secrets\jwt-private.pem`，已 gitignore）。
 - 官方 MySQL 镜像自动建库 `couple_love` + 建 `app@'%'` 并授权，无需手写 init 脚本。
 - 前端 `baseURL` / SignalR 均为**相对路径** → 容器化零改前端代码；nginx 反代 `/api` `/uploads` `/hub`（含 websocket）。
-- 数据持久化：命名卷 `mysql-data` / `redis-data` / `uploads-data`。
-- **`.env` / `secrets/` 已 gitignore**，仅入库 `.env.example`（脱敏）。
+- 数据持久化：命名卷 `mysql-data` / `redis-data` / `uploads-data` / `caddy-data` / `caddy-config`。
+- **`.env` / `secrets/` / `certs/` 已 gitignore**（且已不在本项目仓库内）；`.env.example` 现位于 `D:\Docker\couple-love-system\.env.example`（脱敏）。
 
 ### nginx 缓存坑（已踩并已修，别再回退）
 `/home` 白屏**不是代码 bug**，根因是浏览器缓存旧版 JS：`/assets/` 原用 `immutable` 永久缓存，本地反复 `docker rebuild` 会删旧 hash 的 chunk；浏览器永久信任旧 JS、持续 import 已删旧 chunk（404 或回退 HTML 被当 JS）→ 白屏。且 `index.html` 的 no-cache 只在整页刷新时生效，SPA 内点链接切换路由不重载 index.html。
