@@ -335,6 +335,37 @@ export interface AccountRecordReq {
   remark?: string;
 }
 
+// ---------- 预算 ----------
+export interface BudgetDto {
+  id: number;
+  year: number;
+  month: number;
+  category?: string; // 空 = 当月总预算
+  limitAmount: number;
+}
+export interface BudgetSetReq {
+  year: number;
+  month: number;
+  category?: string;
+  limitAmount: number;
+}
+export interface MonthlyCategoryStat {
+  category: string;
+  amount: number;
+  budget?: number;
+  isOverspent: boolean;
+}
+export interface MonthlyBudgetDto {
+  year: number;
+  month: number;
+  income: number;
+  expense: number;
+  totalBudget?: number;
+  remaining: number;
+  isOverspent: boolean;
+  categories: MonthlyCategoryStat[];
+}
+
 // ---------- 约会 ----------
 export interface DateRecordDto {
   id: number;

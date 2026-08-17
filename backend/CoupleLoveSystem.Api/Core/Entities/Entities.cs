@@ -223,6 +223,15 @@ public class CoupleAccountRecord : BaseEntity, ICoupleScoped
     public string? Remark { get; set; }
 }
 
+[Broadcast("budget")]
+public class CoupleBudget : BaseEntity, ICoupleScoped
+{
+    public int Year { get; set; }
+    public int Month { get; set; } // 1-12
+    public string? Category { get; set; } // null/空 = 当月总预算；否则为分类预算
+    public decimal LimitAmount { get; set; }
+}
+
 public class CoupleDateRecord : BaseEntity, ICoupleScoped
 {
     public bool IsCompleted { get; set; }

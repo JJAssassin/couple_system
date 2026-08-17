@@ -76,6 +76,7 @@ builder.Services.AddScoped<AlbumService>();
 builder.Services.AddScoped<ConflictService>();
 builder.Services.AddScoped<LetterService>();
 builder.Services.AddScoped<AccountService>();
+builder.Services.AddScoped<BudgetService>();
 builder.Services.AddScoped<DatePlanService>();
 builder.Services.AddScoped<MessageService>();
 builder.Services.AddScoped<TimelineService>();

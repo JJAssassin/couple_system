@@ -44,6 +44,7 @@ public class CoupleDbContext : DbContext
     public DbSet<CoupleConflict> Conflicts => Set<CoupleConflict>();
     public DbSet<CoupleLetter> Letters => Set<CoupleLetter>();
     public DbSet<CoupleAccountRecord> AccountRecords => Set<CoupleAccountRecord>();
+    public DbSet<CoupleBudget> Budgets => Set<CoupleBudget>();
     public DbSet<CoupleDateRecord> DateRecords => Set<CoupleDateRecord>();
     public DbSet<CoupleSystemMessage> SystemMessages => Set<CoupleSystemMessage>();
     public DbSet<CoupleSetting> Settings => Set<CoupleSetting>();

@@ -17,6 +17,47 @@
       <ChartWrap :option="pieOption" />
     </section>
 
+    <!-- 本月预算 -->
+    <section class="block">
+      <div class="block-head">
+        <h2>本月预算</h2>
+        <div class="month-pick">
+          <NDatePicker v-model:value="budgetMonthTs" type="month" size="small" style="width: 150px" @update:value="onBudgetMonthChange" />
+          <NButton size="small" quaternary type="primary" @click="openBudget">设预算</NButton>
+        </div>
+      </div>
+
+      <div v-if="budget" class="budget-body">
+        <div v-if="budget.totalBudget != null" class="budget-overall">
+          <div class="bo-top">
+            <span>支出 / 预算</span>
+            <span :class="budget.isOverspent ? 'over' : ''">
+              ¥{{ budget.expense.toFixed(2) }} / ¥{{ (budget.totalBudget ?? 0).toFixed(2) }}
+            </span>
+          </div>
+          <div class="bar">
+            <div class="bar-fill" :class="budget.isOverspent ? 'over' : ''" :style="{ width: budgetPct + '%' }"></div>
+          </div>
+          <div class="bo-foot">
+            <span v-if="budget.isOverspent" class="tag over">超支 ¥{{ Math.abs(budget.remaining).toFixed(2) }}</span>
+            <span v-else class="tag ok">剩余 ¥{{ budget.remaining.toFixed(2) }}</span>
+          </div>
+        </div>
+        <div v-else class="budget-empty">
+          还没设 {{ budget.year }} 年 {{ budget.month }} 月的总预算，点「设预算」规划一下吧～
+        </div>
+
+        <div v-if="budget.categories.length" class="cat-list">
+          <div v-for="c in budget.categories" :key="c.category" class="cat-row">
+            <span class="cat-name">{{ c.category || '未分类' }}</span>
+            <span class="cat-amt">¥{{ c.amount.toFixed(2) }}</span>
+            <span v-if="c.budget != null" class="cat-budget">预算 ¥{{ c.budget.toFixed(2) }}</span>
+            <span v-if="c.isOverspent" class="tag over sm">超支</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- 记账列表 + 记一笔 -->
     <section class="block">
       <div class="block-head">
@@ -82,18 +123,49 @@
         </div>
       </template>
     </NModal>
+
+    <NModal v-model:show="showBudget" title="设置预算" preset="card" style="max-width: 460px">
+      <NForm>
+        <NFormItem label="月份">
+          <NDatePicker v-model:value="bForm.monthTs" type="month" style="width: 100%" />
+        </NFormItem>
+        <NFormItem label="当月总预算（留空 = 不设）">
+          <NInputNumber v-model:value="bForm.total" :min="0" :precision="2" style="width: 100%" placeholder="如 3000" />
+        </NFormItem>
+        <NButton type="primary" block :disabled="bForm.total == null" @click="saveTotal">保存总预算</NButton>
+      </NForm>
+
+      <NDivider>分类预算</NDivider>
+      <div class="cat-budgets">
+        <div v-for="b in catBudgets" :key="b.id" class="cb-row">
+          <span class="cb-name">{{ b.category }}</span>
+          <span class="cb-amt">¥{{ b.limitAmount.toFixed(2) }}</span>
+          <NPopconfirm @positive-click="removeCatBudget(b)">
+            <template #trigger><NButton size="small" quaternary type="error">删</NButton></template>
+            删除该分类预算？
+          </NPopconfirm>
+        </div>
+        <IndEmpty v-if="!catBudgets.length" title="还没有分类预算" desc="按分类设额度，超支会标红提醒" />
+      </div>
+      <div class="cb-add">
+        <NInput v-model:value="bForm.catName" placeholder="分类名（如 餐饮）" style="flex: 1" />
+        <NInputNumber v-model:value="bForm.catLimit" :min="0" :precision="2" placeholder="额度" />
+        <NButton type="primary" size="small" :disabled="!bForm.catName || bForm.catLimit == null" @click="addCatBudget">添加</NButton>
+      </div>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import {
-  NButton, NModal, NForm, NFormItem, NInput, NInputNumber, NDatePicker, NSelect, NTag, NPopconfirm, NTabs, NTabPane,
+  NButton, NModal, NForm, NFormItem, NInput, NInputNumber, NDatePicker, NSelect, NTag, NPopconfirm, NTabs, NTabPane, NDivider,
 } from 'naive-ui';
 import type { FormItemRule } from 'naive-ui';
 import type { EChartsOption } from 'echarts';
-import type { AccountRecordDto } from '@/types';
+import type { AccountRecordDto, MonthlyBudgetDto, BudgetDto } from '@/types';
 import * as ac from '@/api/account';
+import * as bg from '@/api/budget';
 import ChartWrap from '@/components/ChartWrap.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
@@ -164,6 +236,64 @@ function refreshPie() {
   ];
 }
 
+// —— 预算 ——
+const budget = ref<MonthlyBudgetDto | null>(null);
+const budgetYear = ref(new Date().getFullYear());
+const budgetMonth = ref(new Date().getMonth() + 1);
+const budgetMonthTs = ref(new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime());
+
+const budgetPct = computed(() => {
+  if (!budget.value || budget.value.totalBudget == null || budget.value.totalBudget === 0) return 0;
+  return Math.min(100, Math.round((budget.value.expense / budget.value.totalBudget) * 100));
+});
+
+async function loadBudget() {
+  budget.value = await bg.getMonthlyBudget(budgetYear.value, budgetMonth.value);
+}
+function onBudgetMonthChange(ts: number) {
+  const d = new Date(ts);
+  budgetYear.value = d.getFullYear();
+  budgetMonth.value = d.getMonth() + 1;
+  loadBudget();
+}
+
+const showBudget = ref(false);
+const catBudgets = ref<BudgetDto[]>([]);
+const bForm = ref<{ monthTs: number; total: number | null; catName: string; catLimit: number | null }>({
+  monthTs: budgetMonthTs.value, total: null, catName: '', catLimit: null,
+});
+async function openBudget() {
+  bForm.value.monthTs = budgetMonthTs.value;
+  bForm.value.total = budget.value?.totalBudget ?? null;
+  await refreshCatBudgets();
+  showBudget.value = true;
+}
+async function refreshCatBudgets() {
+  const d = new Date(bForm.value.monthTs);
+  catBudgets.value = (await bg.listBudgets(d.getFullYear(), d.getMonth() + 1)).filter((b) => b.category);
+}
+async function saveTotal() {
+  if (bForm.value.total == null) return;
+  const d = new Date(bForm.value.monthTs);
+  await bg.setBudget({ year: d.getFullYear(), month: d.getMonth() + 1, limitAmount: bForm.value.total });
+  feedback.saved('总预算');
+  await Promise.all([loadBudget(), refreshCatBudgets()]);
+}
+async function addCatBudget() {
+  if (!bForm.value.catName || bForm.value.catLimit == null) return;
+  const d = new Date(bForm.value.monthTs);
+  await bg.setBudget({ year: d.getFullYear(), month: d.getMonth() + 1, category: bForm.value.catName, limitAmount: bForm.value.catLimit });
+  feedback.created('分类预算');
+  bForm.value.catName = '';
+  bForm.value.catLimit = null;
+  await Promise.all([loadBudget(), refreshCatBudgets()]);
+}
+async function removeCatBudget(b: BudgetDto) {
+  await bg.deleteBudget(b.id);
+  feedback.deleted('该分类预算');
+  await Promise.all([loadBudget(), refreshCatBudgets()]);
+}
+
 const showModal = ref(false);
 const editing = ref<AccountRecordDto | null>(null);
 const form = ref<{ recordType: number; category: string; amount: number | null; time: number | null; remark?: string }>({
@@ -175,7 +305,7 @@ async function loadSummary() {
   refreshPie();
 }
 async function refresh() {
-  await Promise.all([loadSummary(), refreshList()]);
+  await Promise.all([loadSummary(), refreshList(), loadBudget()]);
 }
 
 function openCreate() {
@@ -228,6 +358,7 @@ const { onSync } = useRealtime();
 onMounted(async () => {
   try { await refresh(); } finally { loading.value = false; }
   onSync('account', refresh);
+  onSync('budget', loadBudget);
 });
 </script>
 
@@ -241,6 +372,35 @@ onMounted(async () => {
 .block h2 { font-size: 16px; margin: 0 0 12px; }
 .block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .block-head h2 { margin: 0; }
+.month-pick { display: flex; gap: 8px; align-items: center; }
+
+/* 预算 */
+.budget-body { display: flex; flex-direction: column; gap: 14px; }
+.budget-overall { background: var(--color-bg-soft, #faf6f2); border-radius: 12px; padding: 14px 16px; }
+.bo-top { display: flex; justify-content: space-between; font-size: 14px; color: var(--color-ink-2); }
+.bo-top .over { color: var(--color-rose); font-weight: 600; }
+.bar { height: 10px; background: #efe7e0; border-radius: 6px; overflow: hidden; margin: 10px 0 8px; }
+.bar-fill { height: 100%; background: #5BB98C; border-radius: 6px; transition: width .4s ease; }
+.bar-fill.over { background: var(--color-rose); }
+.bo-foot { display: flex; gap: 8px; }
+.tag { font-size: 12px; padding: 2px 10px; border-radius: 999px; }
+.tag.ok { background: #e7f6ee; color: #2f9e6b; }
+.tag.over { background: #fdeaec; color: var(--color-rose); }
+.tag.sm { padding: 1px 8px; }
+.budget-empty { color: var(--color-ink-3); font-size: 13px; padding: 8px 0; }
+.cat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.cat-row { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--color-border, #eee); border-radius: 10px; padding: 8px 12px; }
+.cat-name { font-weight: 600; }
+.cat-amt { color: var(--color-rose); }
+.cat-budget { color: var(--color-ink-3); font-size: 12px; }
+
+/* 分类预算弹窗 */
+.cat-budgets { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+.cb-row { display: flex; align-items: center; gap: 10px; }
+.cb-name { font-weight: 600; flex: 1; }
+.cb-amt { color: var(--color-ink-2); }
+.cb-add { display: flex; gap: 8px; align-items: center; }
+
 .rec-tabs { margin-bottom: 14px; }
 .records { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .rec { display: flex; align-items: center; gap: 12px; }
@@ -254,5 +414,6 @@ onMounted(async () => {
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 @media (max-width: 767px) {
   .records { grid-template-columns: 1fr; }
+  .cat-list { grid-template-columns: 1fr; }
 }
 </style>

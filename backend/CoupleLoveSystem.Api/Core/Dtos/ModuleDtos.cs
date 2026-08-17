@@ -291,6 +291,46 @@ public class AccountRecordReq
     public DateTime RecordTime { get; set; }
     public string? Remark { get; set; }
 }
+
+/// <summary>预算设置项：按 年/月/分类 唯一（分类为 null 表示当月总预算）。</summary>
+public class BudgetDto
+{
+    public long Id { get; set; }
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public string? Category { get; set; }
+    public decimal LimitAmount { get; set; }
+}
+
+public class BudgetSetReq
+{
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public string? Category { get; set; }
+    public decimal LimitAmount { get; set; }
+}
+
+/// <summary>分类支出统计：金额、对应分类预算、是否超支。</summary>
+public class MonthlyCategoryStat
+{
+    public string Category { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public decimal? Budget { get; set; }
+    public bool IsOverspent { get; set; }
+}
+
+/// <summary>某月预算总览：收支、当月总预算、剩余、是否超支、分类明细。</summary>
+public class MonthlyBudgetDto
+{
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public decimal Income { get; set; }
+    public decimal Expense { get; set; }
+    public decimal? TotalBudget { get; set; }
+    public decimal Remaining { get; set; }
+    public bool IsOverspent { get; set; }
+    public List<MonthlyCategoryStat> Categories { get; set; } = new();
+}
 #endregion
 
 #region 约会 DatePlan
