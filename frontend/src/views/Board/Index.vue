@@ -42,7 +42,7 @@
     />
     <div v-else class="wall">
       <div
-        v-for="m in messages"
+        v-for="m in displayList"
         :key="m.id"
         class="msg love-card"
         :class="{ mine: m.createUserId === meId, pinned: m.pinned }"
