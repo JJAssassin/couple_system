@@ -38,6 +38,9 @@ backend/CoupleLoveSystem.Api/appsettings.Development.json
 # Plaintext DB credential note kept locally for reference — never commit
 MySQL账号密码.txt
 
+# Self-signed localhost TLS cert/key for local HTTPS (regenerate with openssl, not a real secret but keep out of repo)
+certs/
+
 # ===== OS / editor =====
 .DS_Store
 Thumbs.db

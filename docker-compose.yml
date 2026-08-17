@@ -81,7 +81,26 @@ services:
     ports:
       - "8080:80"
 
+  # HTTPS 反代层：把 80/443 流量透传到 frontend(nginx:80)
+  # 默认自签证书（tls internal）；切真域名见 Caddyfile 注释
+  caddy:
+    image: caddy:2-alpine
+    container_name: couple_caddy
+    restart: unless-stopped
+    depends_on:
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./certs:/certs:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
 volumes:
   mysql-data:
   redis-data:
   uploads-data:
+  caddy-data:
+  caddy-config:
