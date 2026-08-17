@@ -127,6 +127,16 @@ public class CoupleTodo : BaseEntity, ICoupleScoped
     public string? AssigneeName { get; set; }
 }
 
+/// <summary>私密留言板：仅两人可见的情话 / 留言墙，可置顶。实时同步，数据双方互通。</summary>
+[Broadcast("board")]
+public class CoupleBoardMessage : BaseEntity, ICoupleScoped
+{
+    public string Content { get; set; } = string.Empty;
+    public string? AuthorName { get; set; } // 留言人昵称（创建时解析，便于展示）
+    public string? Color { get; set; } // 装饰色（如 #ff6f7d）或 emoji 前缀，可选
+    public bool Pinned { get; set; } // 是否置顶
+}
+
 [Broadcast("album")]
 public class CoupleAlbum : BaseEntity, ICoupleScoped
 {

@@ -109,6 +109,25 @@ public class TodoIdReq { public long Id { get; set; } }
 public class TodoAssignReq { public long Id { get; set; } public long? AssigneeUserId { get; set; } }
 #endregion
 
+#region 留言板 Board
+public class BoardMessageDto
+{
+    public long Id { get; set; }
+    public string Content { get; set; } = string.Empty;
+    public string? AuthorName { get; set; }
+    public string? Color { get; set; }
+    public bool Pinned { get; set; }
+    public long CreateUserId { get; set; }
+    public DateTime CreateTime { get; set; }
+}
+public class BoardMessageReq
+{
+    public string Content { get; set; } = string.Empty;
+    public string? Color { get; set; }
+}
+public class BoardMessageIdReq { public long Id { get; set; } }
+#endregion
+
 #region 相册 Album + Image
 public class AlbumDto
 {

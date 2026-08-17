@@ -180,6 +180,21 @@ export interface TodoReq {
   assigneeUserId?: number | null;
 }
 
+// ---------- 留言板 ----------
+export interface BoardMessageDto {
+  id: number;
+  content: string;
+  authorName?: string | null;
+  color?: string | null;
+  pinned: boolean;
+  createUserId: number;
+  createTime: string;
+}
+export interface BoardMessageReq {
+  content: string;
+  color?: string;
+}
+
 // ---------- 相册 / 图片 ----------
 export interface AlbumDto {
   id: number;
