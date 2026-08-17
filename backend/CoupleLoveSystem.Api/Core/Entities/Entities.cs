@@ -110,6 +110,23 @@ public class CoupleWish : BaseEntity, ICoupleScoped
     public string? CompleteImage { get; set; }
 }
 
+/// <summary>情侣共享待办清单：双方可添加、勾选完成、指派给对方，实时同步。整库即一对情侣，数据双方互通。</summary>
+[Broadcast("todo")]
+public class CoupleTodo : BaseEntity, ICoupleScoped
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsDone { get; set; }
+    public DateTime? DoneTime { get; set; }
+    public long? DoneUserId { get; set; }
+    public string? DoneUserName { get; set; }
+    public int Priority { get; set; } = 2; // 1-3，越大越优先
+    public DateTime? DueTime { get; set; }
+    public string? Category { get; set; } // 分类标签（购物/家务/出行…），可选
+    public long? AssigneeUserId { get; set; } // 责任人；null=双方共同
+    public string? AssigneeName { get; set; }
+}
+
 [Broadcast("album")]
 public class CoupleAlbum : BaseEntity, ICoupleScoped
 {

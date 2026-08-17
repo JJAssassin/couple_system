@@ -154,6 +154,32 @@ export interface WishReq {
   status: number;
 }
 
+// ---------- 待办 ----------
+export interface TodoDto {
+  id: number;
+  title: string;
+  description?: string;
+  isDone: boolean;
+  doneTime?: string | null;
+  doneUserId?: number | null;
+  doneUserName?: string | null;
+  priority: number;
+  dueTime?: string | null;
+  category?: string | null;
+  assigneeUserId?: number | null;
+  assigneeName?: string | null;
+  createUserId: number;
+  createTime: string;
+}
+export interface TodoReq {
+  title: string;
+  description?: string;
+  priority: number;
+  dueTime?: string | null;
+  category?: string;
+  assigneeUserId?: number | null;
+}
+
 // ---------- 相册 / 图片 ----------
 export interface AlbumDto {
   id: number;

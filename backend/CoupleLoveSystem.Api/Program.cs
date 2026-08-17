@@ -69,6 +69,7 @@ builder.Services.AddScoped<HomeService>();
 builder.Services.AddScoped<AnniversaryService>();
 builder.Services.AddScoped<DiaryService>();
 builder.Services.AddScoped<WishService>();
+builder.Services.AddScoped<TodoService>();
 builder.Services.AddScoped<AlbumService>();
 builder.Services.AddScoped<ConflictService>();
 builder.Services.AddScoped<LetterService>();

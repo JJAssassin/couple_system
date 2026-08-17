@@ -78,6 +78,37 @@ public class WishCompleteReq
 }
 #endregion
 
+#region 待办 Todo
+public class TodoDto
+{
+    public long Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public bool IsDone { get; set; }
+    public DateTime? DoneTime { get; set; }
+    public long? DoneUserId { get; set; }
+    public string? DoneUserName { get; set; }
+    public int Priority { get; set; } = 2;
+    public DateTime? DueTime { get; set; }
+    public string? Category { get; set; }
+    public long? AssigneeUserId { get; set; }
+    public string? AssigneeName { get; set; }
+    public long CreateUserId { get; set; }
+    public DateTime CreateTime { get; set; }
+}
+public class TodoReq
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public int Priority { get; set; } = 2;
+    public DateTime? DueTime { get; set; }
+    public string? Category { get; set; }
+    public long? AssigneeUserId { get; set; }
+}
+public class TodoIdReq { public long Id { get; set; } }
+public class TodoAssignReq { public long Id { get; set; } public long? AssigneeUserId { get; set; } }
+#endregion
+
 #region 相册 Album + Image
 public class AlbumDto
 {
