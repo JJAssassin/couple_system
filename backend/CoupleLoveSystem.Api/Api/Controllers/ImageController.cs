@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System.IO;
 
 namespace CoupleLoveSystem.Api.Controllers;
@@ -19,10 +20,11 @@ public class ImageController : BaseController
     private readonly IRepository<CoupleImage> _repo;
     private readonly IWebHostEnvironment _env;
     private readonly CoupleDbContext _db;
+    private readonly ILogger<ImageController> _logger;
 
-    public ImageController(IRepository<CoupleImage> repo, IWebHostEnvironment env, CoupleDbContext db)
+    public ImageController(IRepository<CoupleImage> repo, IWebHostEnvironment env, CoupleDbContext db, ILogger<ImageController> logger)
     {
-        _repo = repo; _env = env; _db = db;
+        _repo = repo; _env = env; _db = db; _logger = logger;
     }
 
     // 允许的扩展名（忽略大小写）
@@ -103,9 +105,32 @@ public class ImageController : BaseController
     public async Task<ActionResult<ApiResult<object>>> Delete([FromQuery] long id, CancellationToken ct = default)
     {
         var img = await _repo.GetByIdAsync(id, ct) ?? throw new NotFoundException("图片不存在");
-        // 逻辑删除：保留磁盘原文件以便追溯（TODO：可改为定时物理清理 / 由上传者清理）
+        var imagePath = img.ImagePath; // 先取出路径，软删后再物理清理
+        // 逻辑删除（保留数据可追溯）
         _repo.SoftDelete(img);
         await _repo.SaveChangesAsync(ct);
+
+        // 物理清理磁盘原文件（落地 ImageController 的 TODO）：仅删 uploads 根内文件，best-effort 不阻断请求
+        if (!string.IsNullOrWhiteSpace(imagePath))
+        {
+            try
+            {
+                var root = _env.WebRootPath ?? _env.ContentRootPath;
+                var uploadsRoot = Path.GetFullPath(Path.Combine(root, "uploads")).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                var rel = imagePath.Length > "/uploads/".Length ? imagePath.Substring("/uploads/".Length) : imagePath.TrimStart('/');
+                if (!string.IsNullOrWhiteSpace(rel))
+                {
+                    var physical = Path.GetFullPath(Path.Combine(root, "uploads", rel));
+                    if (physical.StartsWith(uploadsRoot, StringComparison.OrdinalIgnoreCase) && System.IO.File.Exists(physical))
+                        System.IO.File.Delete(physical);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "删除图片物理文件失败（已忽略）：{Path}", imagePath);
+            }
+        }
+
         return Ok(ApiResults.Ok(new { }, "已删除"));
     }
 }
