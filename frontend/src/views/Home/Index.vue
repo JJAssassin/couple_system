@@ -68,10 +68,14 @@
     <section class="block">
       <IndSectionTitle label="今日与你" :led="true" />
       <div class="today-grid">
-        <div class="today-card" :class="{ ok: nearest.length }" @click="go('anniversary')">
+        <div class="today-card" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" @click="go('anniversary')">
           <span class="tc-ico"><component :is="icAnniversary" :size="22" :stroke-width="1.8" /></span>
           <div class="tc-label">最近纪念日</div>
-          <div class="tc-val">{{ nearest.length ? nearest[0].name + ' · ' + nearest[0].daysLeft + '天' : '未设置' }}</div>
+          <div v-if="nearest.length" class="tc-val" :class="{ 'tc-big': nearest[0].daysLeft <= 7 }">
+            <template v-if="nearest[0].daysLeft === 0">就是今天！{{ nearest[0].name }}</template>
+            <template v-else>还有 {{ nearest[0].daysLeft }} 天 · {{ nearest[0].name }}</template>
+          </div>
+          <div v-else class="tc-val">未设置</div>
         </div>
         <div class="today-card" :class="{ ok: unread > 0 }" @click="go('message')">
           <span class="tc-ico"><component :is="icMessage" :size="22" :stroke-width="1.8" /></span>
@@ -462,6 +466,8 @@ onMounted(async () => {
 .tc-ico { color: var(--color-rose); display: inline-flex; }
 .tc-label { font-size: 13px; color: var(--color-ink-2); }
 .tc-val { font-weight: 600; font-size: 14px; color: var(--color-ink); }
+/* 临近纪念日（≤7 天）：大字玫瑰色强调 */
+.tc-val.tc-big { font-size: 19px; font-weight: 800; color: var(--color-rose); line-height: 1.35; }
 
 /* 回忆胶片 */
 .film { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
