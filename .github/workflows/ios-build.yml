@@ -103,3 +103,18 @@ jobs:
           name: ios-app
           path: mobile/ios/App/build/export/*.ipa
           if-no-files-found: error
+
+      # 直链交付（未签名场景）：ipa 上传到免费临时文件服务，链接打印在日志，
+      # 手机/电脑直接下载即可（配合全能签等重签工具安装，无需登录 GitHub）。
+      - name: Upload unsigned ipa to direct-link service
+        if: ${{ secrets.IOS_SIGNING_CERT_BASE64 == '' }}
+        run: |
+          IPA=mobile/ios/App/build/export/App-unsigned.ipa
+          echo "========== 未签名 ipa 直链（48 小时内有效，请尽快下载） =========="
+          echo "-- file.io --"
+          curl -s -F "file=@$IPA" https://file.io
+          echo ""
+          echo "-- tmpfiles 备用 --"
+          curl -s -F "file=@$IPA" https://tmpfiles.org/api/v1/upload
+          echo ""
+          echo "========== 以上任一链接即 App-unsigned.ipa =========="
