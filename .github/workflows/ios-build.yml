@@ -20,6 +20,10 @@ on:
       - 'mobile/**'
       - '.github/workflows/ios-build.yml'
 
+# gh release create 需要写权限（发布未签名 ipa 到 Release）
+permissions:
+  contents: write
+
 jobs:
   ios:
     runs-on: macos-latest
@@ -109,6 +113,18 @@ jobs:
           name: ios-app
           path: mobile/ios/App/build/export/*.ipa
           if-no-files-found: error
+
+      # 发布到 GitHub Release（asset 公开下载、无需登录，方便直接交付/备份）
+      - name: Publish unsigned release
+        if: ${{ env.HAS_CERT == '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=ios-unsigned-$(date +%Y%m%d-%H%M%S)
+          gh release create "$TAG" -R ${{ github.repository }} \
+            --title "我们的小世界 iOS 未签名包" \
+            --notes "未签名 ipa，供全能签/AltStore 重签安装。构建时间：$(date '+%Y-%m-%d %H:%M')" \
+            mobile/ios/App/build/export/App-unsigned.ipa
 
       # 直链交付（未签名场景）：ipa 上传到免费临时文件服务，链接打印在日志，
       # 手机/电脑直接下载即可（配合全能签等重签工具安装，无需登录 GitHub）。
