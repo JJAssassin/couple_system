@@ -1,0 +1,10 @@
+# Capacitor mobile 壳 —— 构建产物/依赖不入库
+node_modules/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/captures/
+*.apk
+*.aab
