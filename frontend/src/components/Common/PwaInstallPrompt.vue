@@ -1,6 +1,7 @@
 <template>
   <teleport to="body">
     <transition name="pwa-slide">
+      <!-- Android / 桌面：浏览器触发 beforeinstallprompt 后的安装条 -->
       <div v-if="installAvailable" class="pwa-install">
         <div class="pwa-ico">💞</div>
         <div class="pwa-text">
@@ -10,6 +11,15 @@
         <button class="pwa-btn" @click="promptInstall">安装</button>
         <button class="pwa-later" @click="dismissInstall">稍后</button>
       </div>
+      <!-- iOS：没有自动安装提示，给出「分享 → 添加到主屏幕」指引（一次性，已装后不再出现） -->
+      <div v-else-if="isIOS && showIosHint" class="pwa-install">
+        <div class="pwa-ico">🍎</div>
+        <div class="pwa-text">
+          <div class="pwa-title">添加到主屏幕</div>
+          <div class="pwa-sub">点底部「分享」按钮 → 添加到主屏幕，像 App 一样随时打开</div>
+        </div>
+        <button class="pwa-later" @click="dismissIosHint">知道了</button>
+      </div>
     </transition>
   </teleport>
 </template>
@@ -17,7 +27,8 @@
 <script setup lang="ts">
 import { usePwa } from '@/composables/usePwa';
 
-const { installAvailable, promptInstall, dismissInstall } = usePwa();
+const { installAvailable, promptInstall, dismissInstall, isIOS, showIosHint, dismissIosHint } =
+  usePwa();
 </script>
 
 <style scoped>

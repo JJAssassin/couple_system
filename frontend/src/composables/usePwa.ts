@@ -7,6 +7,30 @@ import { useRealtime, type SyncSignal } from '@/composables/useRealtime';
 const installAvailable = ref(false);
 let deferredPrompt: any = null;
 
+/**
+ * iOS 专属引导：iOS Safari 没有 beforeinstallprompt（无法自动弹安装），
+ * 只能「分享 → 添加到主屏幕」。用 UA 检测 + localStorage 记忆引导是否已看过，
+ * 已在独立模式（已安装的主屏 Web App）运行时不再提示。
+ */
+const isIOS = /iPhone|iPad|iPod/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '');
+const isStandalone =
+  typeof window !== 'undefined' && !!window.matchMedia('(display-mode: standalone)').matches;
+const IOS_HINT_LS = 'cl_ios_hint';
+const showIosHint = ref(
+  typeof window !== 'undefined'
+    ? localStorage.getItem(IOS_HINT_LS) !== '1' && !isStandalone
+    : false
+);
+
+function dismissIosHint() {
+  showIosHint.value = false;
+  try {
+    localStorage.setItem(IOS_HINT_LS, '1');
+  } catch {
+    /* 隐私模式等场景忽略 */
+  }
+}
+
 /** 模块名 → 中文（用于后台通知文案） */
 const MODULE_CN: Record<string, string> = {
   message: '消息',
@@ -106,6 +130,9 @@ export function usePwa() {
     requestNotificationPermission,
     setupNotifications,
     notificationsSupported,
+    isIOS,
+    showIosHint,
+    dismissIosHint,
   };
 }
 
