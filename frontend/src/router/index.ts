@@ -20,6 +20,7 @@ const loaders = {
   DatePlan: () => import('@/views/DatePlan/Index.vue'),
   Footprint: () => import('@/views/Footprint/Index.vue'),
   Anniversary: () => import('@/views/Anniversary/Index.vue'),
+  Stats: () => import('@/views/Stats/Index.vue'),
   Setting: () => import('@/views/Setting/Index.vue'),
 };
 
@@ -54,6 +55,7 @@ const router = createRouter({
         { path: 'dateplan', name: 'DatePlan', component: loaders.DatePlan },
         { path: 'footprint', name: 'Footprint', component: loaders.Footprint },
         { path: 'anniversary', name: 'Anniversary', component: loaders.Anniversary },
+        { path: 'stats', name: 'Stats', component: loaders.Stats },
         { path: 'setting', name: 'Setting', component: loaders.Setting },
       ],
     },

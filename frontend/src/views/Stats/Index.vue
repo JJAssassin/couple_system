@@ -1,0 +1,222 @@
+<template>
+  <div class="stats">
+    <!-- 年度切换 + 主题标题 -->
+    <header class="yr-head">
+      <button class="yr-nav" aria-label="上一年" @click="shiftYear(-1)">‹</button>
+      <div class="yr-title-wrap">
+        <h1 class="yr-title">我们这一年</h1>
+        <div class="yr-sub">{{ report?.year ?? currentYear }} · 属于我们的数字回忆</div>
+      </div>
+      <button class="yr-nav" aria-label="下一年" :disabled="!report || report.year >= currentYear" @click="shiftYear(1)">›</button>
+    </header>
+
+    <!-- 骨架 / 空 -->
+    <template v-if="!report">
+      <div class="block cards"><div v-for="i in 4" :key="i" class="skeleton card" /></div>
+    </template>
+
+    <template v-else>
+      <!-- 总览大数字：恋爱天数 -->
+      <section class="hero block">
+        <AuroraBackdrop class="hero-aurora" />
+        <div class="hero-num"><GradientText tag="span">{{ report.loveDays }}</GradientText><span class="hero-unit">天</span></div>
+        <div class="hero-txt">这一年，我们继续爱着彼此 · 共 {{ report.anniversaryTotal }} 个纪念日</div>
+      </section>
+
+      <!-- 数字卡片：内容产出 -->
+      <section class="block">
+        <h2 class="sec-title">我们的痕迹</h2>
+        <div class="cards">
+          <div class="card"><div class="num">{{ report.diaryCount }}</div><div class="lbl">篇日记 · 平均心情 {{ report.avgMood }} 分</div></div>
+          <div class="card"><div class="num">{{ report.imageCount }}</div><div class="lbl">张照片定格瞬间</div></div>
+          <div class="card"><div class="num">{{ report.wishDone }}/{{ report.wishCreated }}</div><div class="lbl">愿望达成</div></div>
+          <div class="card"><div class="num">{{ report.quizRounds }}</div><div class="lbl">轮默契问答 · 默契率 {{ report.matchRate }}%</div></div>
+          <div class="card"><div class="num">{{ report.letterCount }}</div><div class="lbl">封信，纸短情长</div></div>
+          <div class="card"><div class="num">{{ report.boardCount }}</div><div class="lbl">条留言悄悄话</div></div>
+          <div class="card"><div class="num">{{ report.footprintCount }}</div><div class="lbl">个小确幸足迹</div></div>
+          <div class="card"><div class="num">{{ report.dateCompleted }}/{{ report.dateCount }}</div><div class="lbl">次约会成行</div></div>
+          <div class="card"><div class="num">{{ report.todoDone }}</div><div class="lbl">件待办完成</div></div>
+          <div class="card"><div class="num">{{ report.conflictResolved }}/{{ report.conflictCount }}</div><div class="lbl">次矛盾已和解</div></div>
+        </div>
+      </section>
+
+      <!-- 记账总览 -->
+      <section class="block">
+        <h2 class="sec-title">一起记账</h2>
+        <div class="cards">
+          <div class="card"><div class="num inc">+{{ fmt(report.income) }}</div><div class="lbl">收入</div></div>
+          <div class="card"><div class="num exp">-{{ fmt(report.expense) }}</div><div class="lbl">支出</div></div>
+          <div class="card"><div class="num bal">{{ fmt(report.income - report.expense) }}</div><div class="lbl">结余</div></div>
+        </div>
+        <div class="chart-card"><div class="chart-title">月度收支</div><ChartWrap :option="financeOption" height="260px" /></div>
+        <div v-if="report.topSpend.length" class="chart-card"><div class="chart-title">支出去向 TOP</div><ChartWrap :option="spendOption" height="260px" /></div>
+      </section>
+
+      <!-- 心情与矛盾趋势 -->
+      <section class="block">
+        <h2 class="sec-title">情绪曲线</h2>
+        <div class="chart-card"><div class="chart-title">月度平均心情（1-10）</div><ChartWrap :option="moodOption" height="240px" /></div>
+        <div class="chart-card"><div class="chart-title">月度矛盾次数</div><ChartWrap :option="conflictOption" height="240px" /></div>
+      </section>
+
+      <!-- 纪念日回顾 -->
+      <section v-if="report.anniversaries.length" class="block">
+        <h2 class="sec-title">这一年我们纪念过</h2>
+        <div class="ann-list">
+          <div v-for="a in report.anniversaries" :key="a.name + a.targetDate" class="ann-item">
+            <span class="ann-dot">💝</span>
+            <span class="ann-name">{{ a.name }}</span>
+            <span class="ann-date">{{ fmtDate(a.targetDate) }}</span>
+          </div>
+        </div>
+      </section>
+
+      <p v-else class="empty-tip">这一年还没有纪念日记录，去「纪念日」页添加一个吧～</p>
+    </template>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import ChartWrap from '@/components/ChartWrap.vue';
+import AuroraBackdrop from '@/components/Common/AuroraBackdrop.vue';
+import GradientText from '@/components/Common/GradientText.vue';
+import { fetchYearReport, type YearReport } from '@/api/stats';
+
+const currentYear = new Date().getFullYear();
+const report = ref<YearReport | null>(null);
+const selectedYear = ref(currentYear);
+
+function fmt(n: number): string {
+  const v = Math.abs(Math.round(n * 100) / 100);
+  return '¥' + v.toLocaleString('zh-CN');
+}
+function fmtDate(s: string): string {
+  const d = new Date(s);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+}
+function shiftYear(delta: number) {
+  const y = (report.value?.year ?? selectedYear.value) + delta;
+  if (y < 2000 || y > currentYear) return;
+  selectedYear.value = y;
+  load();
+}
+async function load() {
+  report.value = null;
+  try {
+    report.value = await fetchYearReport(selectedYear.value);
+  } catch {
+    /* 拦截器已 toast */
+  }
+}
+onMounted(load);
+
+// ---- ECharts options（ChartWrap 提供主题/调色板） ----
+const financeOption = computed(() => {
+  const m = report.value?.monthlyFinance ?? [];
+  return {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['收入', '支出'] },
+    grid: { left: 8, right: 8, top: 34, bottom: 4, containLabel: true },
+    xAxis: { type: 'category', data: m.map((x) => x.month.slice(5)) },
+    yAxis: { type: 'value' },
+    series: [
+      { name: '收入', type: 'bar', data: m.map((x) => x.income), itemStyle: { color: '#ff9fb0', borderRadius: [6, 6, 0, 0] } },
+      { name: '支出', type: 'bar', data: m.map((x) => x.expense), itemStyle: { color: '#7A6462', borderRadius: [6, 6, 0, 0] } },
+    ],
+  };
+});
+const spendOption = computed(() => ({
+  tooltip: { trigger: 'item', valueFormatter: (v: unknown) => fmt(Number(v)) },
+  series: [{
+    type: 'pie',
+    radius: ['42%', '68%'],
+    center: ['50%', '52%'],
+    itemStyle: { borderRadius: 6, borderColor: 'transparent', borderWidth: 2 },
+    label: { formatter: '{b}\n{d}%' },
+    data: (report.value?.topSpend ?? []).map((s) => ({ name: s.category, value: s.amount })),
+  }],
+}));
+const moodOption = computed(() => ({
+  tooltip: { trigger: 'axis' },
+  grid: { left: 8, right: 8, top: 16, bottom: 4, containLabel: true },
+  xAxis: { type: 'category', boundaryGap: false, data: (report.value?.moodTrend ?? []).map((x) => x.label) },
+  yAxis: { type: 'value', min: 0, max: 10 },
+  series: [{
+    type: 'line', smooth: true, symbol: 'circle', symbolSize: 7,
+    data: (report.value?.moodTrend ?? []).map((x) => x.value),
+    lineStyle: { width: 3, color: '#ff6f7d' }, itemStyle: { color: '#ff6f7d' },
+    areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,111,125,.28)' }, { offset: 1, color: 'rgba(255,111,125,0)' }] } },
+  }],
+}));
+const conflictOption = computed(() => ({
+  tooltip: { trigger: 'axis' },
+  grid: { left: 8, right: 8, top: 16, bottom: 4, containLabel: true },
+  xAxis: { type: 'category', data: (report.value?.conflictTrend ?? []).map((x) => x.label) },
+  yAxis: { type: 'value', minInterval: 1 },
+  series: [{
+    type: 'bar', data: (report.value?.conflictTrend ?? []).map((x) => x.value),
+    itemStyle: { color: '#D88593', borderRadius: [6, 6, 0, 0] },
+  }],
+}));
+</script>
+
+<style scoped>
+.stats { max-width: 720px; margin: 0 auto; padding: 4px 0 24px; }
+.yr-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.yr-nav {
+  width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-ink-2); font-size: 20px; cursor: pointer;
+  transition: transform var(--dur-pop) var(--ease-love);
+}
+.yr-nav:hover:not(:disabled) { transform: translateY(-2px); color: var(--color-rose); border-color: var(--color-rose); }
+.yr-nav:disabled { opacity: 0.3; cursor: default; }
+.yr-title-wrap { text-align: center; }
+.yr-title { margin: 0; font-size: 22px; font-weight: 800; color: var(--color-ink); }
+.yr-sub { font-size: 12px; color: var(--color-ink-3); margin-top: 2px; }
+
+.block { margin: 22px 0; }
+.sec-title { font-size: 16px; font-weight: 700; color: var(--color-ink); margin: 0 0 12px; }
+
+.hero {
+  position: relative; overflow: hidden; text-align: center; padding: 34px 16px;
+  background: linear-gradient(135deg, var(--color-rose-soft), var(--color-surface));
+  border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+}
+.hero-aurora { opacity: 0.5; }
+.hero-num { position: relative; font-size: 52px; line-height: 1; }
+.hero-unit { font-size: 20px; margin-left: 6px; color: var(--color-ink-2); }
+.hero-txt { position: relative; margin-top: 10px; font-size: 13px; color: var(--color-ink-2); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.card {
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  padding: 16px; box-shadow: 0 1px 2px rgba(31,41,55,.04), 0 10px 28px -10px rgba(122,100,98,.16);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.num { font-size: 24px; font-weight: 800; color: var(--color-ink); }
+.num.inc { color: #16a34a; }
+.num.exp { color: #dc2626; }
+.num.bal { color: var(--color-rose); }
+.lbl { font-size: 12px; color: var(--color-ink-3); }
+
+.chart-card {
+  margin-top: 14px; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: 14px;
+}
+.chart-title { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 8px; }
+
+.ann-list { display: flex; flex-direction: column; gap: 8px; }
+.ann-item {
+  display: flex; align-items: center; gap: 10px; background: var(--color-surface);
+  border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 14px;
+}
+.ann-name { font-size: 14px; font-weight: 600; color: var(--color-ink); }
+.ann-date { margin-left: auto; font-size: 12px; color: var(--color-ink-3); }
+
+.empty-tip { text-align: center; color: var(--color-ink-3); font-size: 13px; padding: 24px 0; }
+
+.skeleton { height: 96px; background: linear-gradient(90deg, var(--color-ink-soft) 25%, var(--color-surface-2) 50%, var(--color-ink-soft) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; }
+@keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+:global(.reduce-motion) .skeleton { animation: none; }
+</style>
