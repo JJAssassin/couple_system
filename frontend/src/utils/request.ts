@@ -36,9 +36,16 @@ api.interceptors.response.use(
         refreshing = null;
         useAuthStore().setAccessToken(newAt);
         return api(cfg); // 用新 token 重试
-      } catch {
+      } catch (refreshErr) {
         refreshing = null;
-        useAuthStore().logout();
+        const rerr = refreshErr as AxiosError;
+        if (rerr?.response) {
+          // 服务端明确拒绝刷新（refreshToken 失效/过期）→ 真登出
+          useAuthStore().logout();
+        } else {
+          // 网络层失败（弱网/代理抖动/CF 边缘波动）：绝不登出，保留本地 token，
+          // 避免移动端弱网下「点功能 → 刷新请求超时 → 被误踢回登录页」。
+        }
         return Promise.reject(err);
       }
     }
