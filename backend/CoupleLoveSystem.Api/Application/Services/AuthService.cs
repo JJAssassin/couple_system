@@ -16,20 +16,30 @@ public class AuthService
     private readonly CoupleDbContext _db;
     private readonly ITokenStore _tokens;
     private readonly JwtOptions _jwt;
+    private readonly LoginRateLimiter _rateLimiter;
 
     private readonly JwtKeyResolver? _keyResolver;
 
-    public AuthService(CoupleDbContext db, ITokenStore tokens, IOptions<JwtOptions> jwt, JwtKeyResolver? keyResolver = null)
+    public AuthService(CoupleDbContext db, ITokenStore tokens, IOptions<JwtOptions> jwt, LoginRateLimiter rateLimiter, JwtKeyResolver? keyResolver = null)
     {
-        _db = db; _tokens = tokens; _jwt = jwt.Value; _keyResolver = keyResolver;
+        _db = db; _tokens = tokens; _jwt = jwt.Value; _rateLimiter = rateLimiter; _keyResolver = keyResolver;
     }
 
-    public async Task<LoginResp> LoginAsync(LoginReq req, CancellationToken ct = default)
+    public async Task<LoginResp> LoginAsync(LoginReq req, string? clientIp, CancellationToken ct = default)
     {
+        // 防爆破：IP + 账号双维度固定窗口限速（超限 429）
+        await _rateLimiter.CheckAsync(clientIp ?? string.Empty, req.UserName, ct);
+
         var user = await _db.Users.FirstOrDefaultAsync(u => u.UserName == req.UserName && !u.IsDeleted, ct)
             ?? throw new UnauthorizedException("用户名或密码错误");
         if (!BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
+        {
+            await _rateLimiter.RecordFailAsync(clientIp ?? string.Empty, req.UserName, ct);
             throw new UnauthorizedException("用户名或密码错误");
+        }
+
+        // 登录成功：清空该账号的失败计数
+        await _rateLimiter.ResetAsync(req.UserName, ct);
 
         var access = IssueAccessToken(user.Id, user.RoleType, user.CoupleId);
         var refresh = Guid.NewGuid().ToString("N");

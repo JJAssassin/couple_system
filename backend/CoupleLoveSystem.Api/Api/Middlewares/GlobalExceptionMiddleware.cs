@@ -36,6 +36,7 @@ public class GlobalExceptionMiddleware
                 NotFoundException => ErrorCode.NotFound,
                 ConflictException => ErrorCode.Conflict,
                 UnauthorizedException => ErrorCode.Unauthorized,
+                RateLimitedException => ErrorCode.TooManyRequests,
                 _ => ErrorCode.ServerError
             };
 

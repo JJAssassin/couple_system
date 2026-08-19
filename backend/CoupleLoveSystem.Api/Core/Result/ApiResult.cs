@@ -50,3 +50,8 @@ public class ConflictException : Exception
 {
     public ConflictException(string msg) : base(msg) { }
 }
+/// <summary>请求频率超限（登录防爆破等），由全局中间件转成 429。</summary>
+public class RateLimitedException : Exception
+{
+    public RateLimitedException(string msg) : base(msg) { }
+}

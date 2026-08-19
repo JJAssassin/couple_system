@@ -42,6 +42,14 @@ docker run --rm -v uploads-data:/data -v D:/Item/cap/workbuddy/backups:/backup a
 | 域名打不开 | `docker logs couple_cloudflared`、CF 面板 DNS | 隧道连接 / CNAME 记录（`<tunnel-id>.cfargotunnel.com`） |
 | App 不弹更新 | 检查 `https://域名/app/version.json` | versionCode 必须 > 当前；APK 与清单同目录 |
 | 磁盘告警 | `docker system df` | `docker builder prune -f`（安全回收构建缓存） |
+| 账号被登录限速锁定（429） | 锁定期 15 分钟自动恢复 | 应急解锁：`docker exec couple_redis redis-cli DEL "cache:ratelimit:login:u:<用户名>"`（限速计数存 Redis，key 带 `cache:` 前缀；锁定期内登录成功也会被 Check 拦截，属安全设计） |
+
+## 4. 安全加固（方向#4 已落地）
+
+- **登录防爆破**：`LoginRateLimiter`（IP 15 分钟 10 次 / 账号 15 分钟 5 次失败 → 429 `RateLimitedException`）；计数经 `ICacheService` 存 Redis（key `cache:ratelimit:*`，跨重启持久）；登录成功自动清账号计数
+- **安全响应头**（nginx `security-headers.conf`，每个带 add_header 的 location include）：`X-Frame-Options: DENY`、`X-Content-Type-Options: nosniff`、`Referrer-Policy: strict-origin-when-cross-origin`、`Permissions-Policy` 禁用相机/麦克风/定位/支付（首页 HTML 可能被 CF 边缘覆写为 `SAMEORIGIN`，防护等效）
+- **未启用 CSP**：Vue/naive/ECharts 依赖内联样式与 blob/data，需先收敛资源再启用
+- 现有基线：JWT RSA-2048 非对称（私钥外置）、生产禁 InMemory TokenStore（fail-fast）、BCrypt 密码哈希、HtmlSanitizer 富文本净化、EF 参数化、GitHub CI 测试门禁
 
 ## 4. 安全注意
 

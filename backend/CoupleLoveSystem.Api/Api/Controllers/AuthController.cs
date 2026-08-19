@@ -16,7 +16,13 @@ public class AuthController : BaseController
     [AllowAnonymous]
     public async Task<ActionResult<ApiResult<LoginResp>>> Login([FromBody] LoginReq req, CancellationToken ct)
     {
-        var resp = await _auth.LoginAsync(req, ct);
+        // 客户端 IP（经 CF 隧道时取转发头；取不到则仅账号维度限速兜底）
+        var ip = HttpContext.Request.Headers["CF-Connecting-IP"].ToString();
+        if (string.IsNullOrWhiteSpace(ip))
+            ip = HttpContext.Request.Headers["X-Forwarded-For"].ToString();
+        if (string.IsNullOrWhiteSpace(ip))
+            ip = HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? string.Empty;
+        var resp = await _auth.LoginAsync(req, ip, ct);
         return Ok(ApiResult<LoginResp>.Ok(resp));
     }
 

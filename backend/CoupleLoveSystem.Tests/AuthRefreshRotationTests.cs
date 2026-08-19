@@ -3,6 +3,7 @@ using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Options;
 using CoupleLoveSystem.Infrastructure.Persistence;
+using CoupleLoveSystem.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Xunit;
@@ -40,7 +41,7 @@ public class AuthRefreshRotationTests
             RefreshExpireDays = 7,
             Issuer = "CoupleLove",
             Audience = "CoupleLoveClient"
-        }));
+        }), new LoginRateLimiter(new FakeCacheService()));
 
     [Fact]
     public async Task Refresh_Rotates_And_Invalidates_Old()
@@ -49,7 +50,7 @@ public class AuthRefreshRotationTests
         var store = new InMemoryTokenStore();
         var svc = NewSvc(db, store);
 
-        var login = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" });
+        var login = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
         var oldRt = login.RefreshToken;
 
         var refreshed = await svc.RefreshAsync(oldRt);

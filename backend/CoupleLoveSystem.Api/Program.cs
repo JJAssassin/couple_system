@@ -67,6 +67,7 @@ builder.Services.AddSingleton<HtmlSanitizerService>(); // 富文本白名单净�
 builder.Services.AddSingleton<IConnectionIdentityStore, ConnectionIdentityStore>(); // SignalR 握手身份绑定（单实例）
 builder.Services.AddScoped<HomeService>();
 builder.Services.AddScoped<YearReportService>(); // 年度恋爱报告（数据统计聚合）
+builder.Services.AddScoped<LoginRateLimiter>(); // 登录防爆破（IP+账号双维度限速）
 builder.Services.AddScoped<AnniversaryService>();
 builder.Services.AddScoped<DiaryService>();
 builder.Services.AddScoped<WishService>();
