@@ -8,3 +8,8 @@ android/.idea/
 android/captures/
 *.apk
 *.aab
+
+# iOS
+ios/App/build/
+ios/App/DerivedData/
+ios/App/Pods/
