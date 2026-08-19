@@ -52,7 +52,14 @@ api.interceptors.response.use(
     if (err.response?.status === 403) {
       useNotifyStore().error('无权访问该内容');
     } else if (!err.response) {
-      // 网络层错误（后端没起 / 代理连不上 / 超时）—— 此前被静默 reject，表现为"点了没反应"
+      // 网络层错误（后端没起 / 代理连不上 / 超时 / 弱网 / 离线）：
+      // ① 幂等读接口先尝试 Service Worker 的 API 离线缓存（方向④ 弱网降级）；
+      //    命中则静默返回缓存数据，不打扰用户；② 无缓存才提示网络异常。
+      const method = (cfg.method || 'get').toLowerCase();
+      if (method === 'get' && typeof caches !== 'undefined') {
+        const cached = await readApiCache(cfg.url || '');
+        if (cached) return cached;
+      }
       useNotifyStore().error('网络异常：请确认后端服务已启动（dotnet run）');
     } else if (err.response.status >= 500) {
       // 5xx：后端业务异常，把服务端 msg 透出，便于排查
@@ -70,6 +77,36 @@ async function doRefresh(): Promise<string> {
   // 保存轮换后的新 refreshToken，否则后端轮换后旧 token 失效会反复 401 登出
   useAuthStore().setTokens(payload.accessToken, payload.refreshToken);
   return payload.accessToken;
+}
+
+/* ---------- 离线 API 缓存兜底（方向④，与 sw.js 的 key 逻辑保持一致） ---------- */
+
+/** 用户指纹：与 sw.js userKey 相同的 djb2，保证能命中 SW 写入的缓存条目 */
+function offlineUserKey(token: string): string {
+  let h = 5381;
+  for (let i = 0; i < token.length; i++) h = ((h << 5) + h + token.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+
+/** 缓存条目 URL（与 sw.js apiKeyUrl 一致）：原 URL + 用户指纹参数 */
+function offlineKeyUrl(url: string, token: string): string {
+  const sep = url.includes('?') ? '&' : '?';
+  return url + sep + '__u=' + offlineUserKey(token);
+}
+
+/** 网络失败时从 SW 的 pw-api-v1 缓存读取该用户的数据副本；返回 axios 兼容的响应结构，未命中返回 null */
+async function readApiCache(url: string): Promise<{ data: unknown; status: number } | null> {
+  try {
+    const token = useAuthStore().accessToken;
+    if (!token) return null;
+    const cache = await caches.open('pw-api-v1');
+    const res = await cache.match(offlineKeyUrl(url, token));
+    if (!res) return null;
+    const data = await res.json();
+    return { data, status: 200 };
+  } catch {
+    return null;
+  }
 }
 
 export default api;

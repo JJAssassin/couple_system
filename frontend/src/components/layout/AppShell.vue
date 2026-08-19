@@ -136,8 +136,33 @@ onMounted(() => {
   if (!partner.status) partner.load();
   // 首屏后空闲预取所有页面 chunk，消除点击导航的等待感
   prefetchRoutes();
+  // 离线数据预取（方向④）：空闲静默拉取核心模块读接口，SW 会写入 pw-api-v1 缓存，
+  // 弱网/离线时前端自动读缓存降级（见 request.ts readApiCache）
+  prefetchData();
 });
 onUnmounted(() => window.removeEventListener('resize', evalTablet));
+
+/* 离线数据预取：核心模块读接口（GET），供 SW 缓存；失败静默忽略 */
+function prefetchData() {
+  if (!('caches' in window) || !auth.accessToken) return;
+  const year = new Date().getFullYear();
+  const urls = [
+    '/api/home/dashboard',
+    '/api/home/loveinfo',
+    '/api/wish/list',
+    '/api/album/list?page=1&pageSize=5',
+    '/api/anniversary/list?page=1&pageSize=50',
+    '/api/timeline/list',
+    `/api/account/list?year=${year}&month=8`,
+  ];
+  const h = { Authorization: `Bearer ${auth.accessToken}` };
+  const run = () => urls.forEach((u) => fetch(u, { headers: h }).catch(() => {}));
+  if ('requestIdleCallback' in window) {
+    (window as unknown as { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(run);
+  } else {
+    setTimeout(run, 2500);
+  }
+}
 
 /* 面包屑当前页标题（与 Sidebar 导航项对应） */
 const TITLE_MAP: Record<string, string> = {
