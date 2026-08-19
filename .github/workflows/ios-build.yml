@@ -23,6 +23,10 @@ on:
 jobs:
   ios:
     runs-on: macos-latest
+    # Actions 禁止在 if 条件直接引用 secrets（语法校验报错），
+    # 因此先把证书 secrets 注入 job 级 env，if 统一判断 env.HAS_CERT。
+    env:
+      HAS_CERT: ${{ secrets.IOS_SIGNING_CERT_BASE64 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -41,7 +45,7 @@ jobs:
         run: cd mobile && npx cap sync ios
 
       - name: Import signing cert & profile (when configured)
-        if: ${{ secrets.IOS_SIGNING_CERT_BASE64 != '' }}
+        if: ${{ env.HAS_CERT != '' }}
         env:
           CERT_B64: ${{ secrets.IOS_SIGNING_CERT_BASE64 }}
           CERT_PASS: ${{ secrets.IOS_SIGNING_CERT_PASSWORD }}
@@ -107,7 +111,7 @@ jobs:
       # 直链交付（未签名场景）：ipa 上传到免费临时文件服务，链接打印在日志，
       # 手机/电脑直接下载即可（配合全能签等重签工具安装，无需登录 GitHub）。
       - name: Upload unsigned ipa to direct-link service
-        if: ${{ secrets.IOS_SIGNING_CERT_BASE64 == '' }}
+        if: ${{ env.HAS_CERT == '' }}
         run: |
           IPA=mobile/ios/App/build/export/App-unsigned.ipa
           echo "========== 未签名 ipa 直链（48 小时内有效，请尽快下载） =========="
