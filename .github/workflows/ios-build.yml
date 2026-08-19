@@ -18,6 +18,7 @@ on:
   push:
     paths:
       - 'mobile/**'
+      - '.github/workflows/ios-build.yml'
 
 jobs:
   ios:
@@ -87,10 +88,13 @@ jobs:
               EOF
               ) -exportPath build/export
           else
-            mkdir -p build/export
-            # 未签名：直接把 .app 打为 ipa 结构（验证产物），真机安装需先签名
-            cd build/App.xcarchive/Products/Applications
-            zip -r ../../export/App-unsigned.ipa . -x '*.app/Frameworks/*'
+            # 未签名产物（供全能签/AltStore 等工具签名安装）：
+            # 标准 ipa 结构 Payload/App.app，保留全部 Frameworks/PlugIns。
+            mkdir -p build/export/Payload
+            cp -R build/App.xcarchive/Products/Applications/App.app build/export/Payload/
+            cd build/export
+            zip -q -r ../export/App-unsigned.ipa Payload
+            rm -rf Payload
           fi
 
       - name: Upload artifact
