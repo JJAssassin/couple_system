@@ -11,18 +11,20 @@
 import AppRoot from '@/AppRoot.vue';
 import { darkTheme, type GlobalThemeOverrides } from 'naive-ui';
 import { computed } from 'vue';
-import { useSettingStore } from '@/store/settingStore';
+import { useSettingStore, ACCENTS } from '@/store/settingStore';
 
 // 让 NaiveUI 组件（对话框/输入/按钮/卡片/表格…）跟随浪漫柔光配色。
 // 颜色尽量引用 CSS 变量，使 html.dark 切换时自动适配，无需两套覆盖。
 const setting = useSettingStore();
 const theme = computed(() => (setting.dark ? darkTheme : null));
-const overrides: GlobalThemeOverrides = {
+const acc = computed(() => ACCENTS[setting.accent] ?? ACCENTS.rose);
+// overrides 改为 computed 跟随主题色：主色族（p/h/pr）取自当前调色板，其余表面/文字仍走 CSS 变量自动明暗适配
+const overrides = computed<GlobalThemeOverrides>(() => ({
   common: {
-    primaryColor: '#ff6f7d',
-    primaryColorHover: '#ff8893',
-    primaryColorPressed: '#e25a68',
-    primaryColorSuppl: '#ff8893',
+    primaryColor: acc.value.p,
+    primaryColorHover: acc.value.h,
+    primaryColorPressed: acc.value.pr,
+    primaryColorSuppl: acc.value.h,
     borderRadius: '10',
     fontFamily: 'var(--font-sans)',
     // 表面与文字（暗色下由 CSS 变量自动切换）
@@ -49,13 +51,12 @@ const overrides: GlobalThemeOverrides = {
     borderRadius: '10',
     borderRadiusSmall: '8',
     fontWeight: '600',
-    // 强调色在明暗主题下同一支玫瑰，故用字面 hex（避免 seemly rgba() 解析 var 抛错）
-    colorPrimary: '#ff6f7d',
-    colorHoverPrimary: '#ff8893',
-    colorPressedPrimary: '#e25a68',
-    colorFocusPrimary: '#ff8893',
+    colorPrimary: acc.value.p,
+    colorHoverPrimary: acc.value.h,
+    colorPressedPrimary: acc.value.pr,
+    colorFocusPrimary: acc.value.h,
     textColorPrimary: '#ffffff',
-    borderColorPrimary: '#ff6f7d',
+    borderColorPrimary: acc.value.p,
   },
   Input: {
     color: 'var(--color-surface)',
@@ -84,11 +85,11 @@ const overrides: GlobalThemeOverrides = {
     borderRadius: '10',
   },
   Tabs: {
-    tabTextColorActiveBar: '#ff6f7d',
-    tabTextColorActive: '#ff6f7d',
-    tabTextColorHover: '#ff6f7d',
+    tabTextColorActiveBar: acc.value.p,
+    tabTextColorActive: acc.value.p,
+    tabTextColorHover: acc.value.p,
     tabTextColor: 'var(--color-ink-2)',
-    barColor: '#ff6f7d',
+    barColor: acc.value.p,
     paneTextColor: 'var(--color-ink)',
     tabFontWeightActive: '600',
   },
@@ -120,5 +121,5 @@ const overrides: GlobalThemeOverrides = {
   Dialog: {
     borderRadius: '16',
   },
-};
+}));
 </script>

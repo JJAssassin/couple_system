@@ -1,0 +1,25 @@
+{
+  "name": "我们的小世界",
+  "short_name": "小世界",
+  "description": "情侣专属情感陪伴 Web 系统",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#fff5f6",
+  "theme_color": "#ff6f7d",
+  "categories": ["lifestyle", "social"],
+  "icons": [
+    { "src": "/pwa-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-maskable-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "首页", "url": "/" },
+    { "name": "记账", "url": "/account" },
+    { "name": "纪念日", "url": "/anniversary" }
+  ]
+}

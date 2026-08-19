@@ -68,6 +68,24 @@
         </router-view>
       </div>
     </div>
+
+    <!-- 移动端底部 TabBar -->
+    <nav class="tabbar" v-if="isMobile()">
+      <router-link
+        v-for="t in tabItems"
+        :key="t.to"
+        :to="t.to"
+        class="tab"
+        @click="drawerOpen = false"
+      >
+        <component :is="t.icon" :size="22" :stroke-width="1.8" />
+        <span class="tab-lbl">{{ t.label }}</span>
+      </router-link>
+      <button class="tab" aria-label="更多" @click="drawerOpen = true">
+        <Menu :size="22" :stroke-width="1.8" />
+        <span class="tab-lbl">更多</span>
+      </button>
+    </nav>
   </div>
 </template>
 
@@ -76,6 +94,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
   Menu, Moon, Sun, LogOut, ChevronRight,
+  Home, Wallet, MessageCircle, Sparkles,
 } from 'lucide-vue-next';
 import Sidebar from './Sidebar.vue';
 import PageTransition from '@/components/Common/PageTransition.vue';
@@ -97,6 +116,14 @@ const setting = useSettingStore();
 const { partnerOnline } = useRealtime();
 
 const drawerOpen = ref(false);
+
+// 移动端底部 TabBar：4 个主入口 + 「更多」打开抽屉（完整导航）
+const tabItems = [
+  { to: '/home', label: '首页', icon: Home },
+  { to: '/account', label: '记账', icon: Wallet },
+  { to: '/board', label: '留言板', icon: MessageCircle },
+  { to: '/quiz', label: '默契', icon: Sparkles },
+];
 
 /* 平板断点：768–1023 收起为图标栏 */
 const isTablet = ref(false);
@@ -180,7 +207,7 @@ function logout() {
 .content { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; }
 @media (max-width: 767px) {
   .topbar { padding: 0 14px; gap: 10px; }
-  .content { padding: 20px 16px 40px; }
+  .content { padding: 20px 16px 84px; }
   .crumb-root { display: none; }
   .crumb-cur { display: none; }
   .tb-right { gap: 6px; }
@@ -195,6 +222,25 @@ function logout() {
   position: fixed; top: 0; left: 0; bottom: 0; z-index: 71; width: 248px;
   box-shadow: 8px 0 28px rgba(31, 41, 55, 0.18);
 }
+
+/* 移动端底部 TabBar */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+  display: flex; align-items: stretch; justify-content: space-around;
+  height: 58px; padding-bottom: env(safe-area-inset-bottom);
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
+  border-top: 1px solid var(--color-border);
+}
+.tab {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  color: var(--color-ink-3); text-decoration: none; cursor: pointer; background: none; border: none;
+  font-size: 11px; padding: 4px 0; transition: color var(--dur-micro) var(--ease-love);
+}
+.tab.router-link-active { color: var(--color-rose); }
+.tab:active { transform: scale(0.94); }
+.tab-lbl { line-height: 1; }
 .drawer-fade-enter-active, .drawer-fade-leave-active { transition: opacity var(--dur-pop) var(--ease-love); }
 .drawer-fade-enter-from, .drawer-fade-leave-to { opacity: 0; }
 .drawer-slide-enter-active, .drawer-slide-leave-active { transition: transform var(--dur-pop) var(--ease-love); }

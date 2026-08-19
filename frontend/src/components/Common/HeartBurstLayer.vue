@@ -21,12 +21,7 @@ const bursts = ref<
 >([]);
 let idc = 0;
 
-function onDblClick(e: MouseEvent) {
-  // 表单控件内的双击（如选词、选日期）不触发彩蛋，避免干扰
-  const t = e.target as HTMLElement | null;
-  if (t && typeof t.closest === 'function' && (t.closest('input,textarea,select,.no-heartburst') || t.isContentEditable)) return;
-  if (setting.reduceMotion) return;
-
+function spawn(x: number, y: number) {
   const n = 5 + Math.floor(Math.random() * 3);
   const hearts = Array.from({ length: n }, () => ({
     id: idc++,
@@ -35,15 +30,38 @@ function onDblClick(e: MouseEvent) {
     delay: Math.floor(Math.random() * 160),
     scale: 0.8 + Math.random() * 0.7,
   }));
-  const b = { id: idc++, x: e.clientX, y: e.clientY, hearts };
+  const b = { id: idc++, x, y, hearts };
   bursts.value.push(b);
   window.setTimeout(() => {
-    bursts.value = bursts.value.filter((x) => x.id !== b.id);
+    bursts.value = bursts.value.filter((z) => z.id !== b.id);
   }, 1600);
 }
 
-onMounted(() => document.addEventListener('dblclick', onDblClick));
-onUnmounted(() => document.removeEventListener('dblclick', onDblClick));
+function onDblClick(e: MouseEvent) {
+  // 表单控件内的双击（如选词、选日期）不触发彩蛋，避免干扰
+  const t = e.target as HTMLElement | null;
+  if (t && typeof t.closest === 'function' && (t.closest('input,textarea,select,.no-heartburst') || t.isContentEditable)) return;
+  if (setting.reduceMotion) return;
+  spawn(e.clientX, e.clientY);
+}
+
+// 供其他组件以编程方式触发心动特效（如首页里程碑彩蛋）
+function onCustom(e: Event) {
+  if (setting.reduceMotion) return;
+  const ce = e as CustomEvent<{ x?: number; y?: number }>;
+  const x = typeof ce.detail?.x === 'number' ? ce.detail.x : window.innerWidth / 2;
+  const y = typeof ce.detail?.y === 'number' ? ce.detail.y : window.innerHeight * 0.4;
+  spawn(x, y);
+}
+
+onMounted(() => {
+  document.addEventListener('dblclick', onDblClick);
+  window.addEventListener('cl-heartburst', onCustom as EventListener);
+});
+onUnmounted(() => {
+  document.removeEventListener('dblclick', onDblClick);
+  window.removeEventListener('cl-heartburst', onCustom as EventListener);
+});
 </script>
 
 <style scoped>

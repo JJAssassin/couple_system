@@ -53,13 +53,15 @@
       >
         <span class="ico"><component :is="item.icon" :size="18" :stroke-width="1.8" /></span>
         <span v-if="!collapsed" class="lbl">{{ item.label }}</span>
-        <span v-if="!collapsed" class="dot" />
+        <span v-if="badgeMap[item.to]" class="nbadge" :class="badgeMap[item.to]!.type">
+          <template v-if="badgeMap[item.to]!.type === 'count'">{{ badgeMap[item.to]!.value }}</template>
+        </span>
       </router-link>
     </nav>
   </aside>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { gsap } from 'gsap';
 import {
   Mail, Home, History, BookOpen, Star, ListChecks, MessageCircle, Sparkles, Image, CloudFog,
@@ -67,7 +69,7 @@ import {
 } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import api from '@/utils/request';
-import type { ApiResult, SystemMessageDto } from '@/types';
+import type { ApiResult, SystemMessageDto, AnniversaryDto } from '@/types';
 import { useRealtime } from '@/composables/useRealtime';
 import { useSettingStore } from '@/store/settingStore';
 import { useNotifyStore } from '@/store/notifyStore';
@@ -83,6 +85,7 @@ const partner = usePartnerStore();
 const { partnerOnline, onSync } = useRealtime();
 
 const unread = ref(0);
+const nearSoon = ref(0); // 7 天内临近的纪念日数量
 const messages = ref<SystemMessageDto[]>([]);
 const panelOpen = ref(false);
 const loading = ref(false);
@@ -120,6 +123,21 @@ async function refreshUnread() {
     unread.value = (data as ApiResult<number>).data;
   } catch { /* 忽略 */ }
 }
+// 临近纪念日（7 天内）数量，用于「纪念日」导航项红点提醒
+async function refreshNear() {
+  try {
+    const { data } = await api.get('/home/nearestanniversary', { params: { take: 5 } });
+    const list = (data as ApiResult<AnniversaryDto[]>).data ?? [];
+    nearSoon.value = list.filter((a) => (a.daysLeft ?? 999) <= 7).length;
+  } catch { /* 忽略 */ }
+}
+// 导航项角标：消息未读数（数字）、纪念日临近（小红点）
+const badgeMap = computed<Record<string, { type: 'count' | 'dot'; value?: string } | null>>(() => ({
+  '/message': unread.value > 0
+    ? { type: 'count', value: unread.value > 99 ? '99+' : String(unread.value) }
+    : null,
+  '/anniversary': nearSoon.value > 0 ? { type: 'dot' } : null,
+}));
 async function togglePanel() {
   panelOpen.value = !panelOpen.value;
   if (panelOpen.value) {
@@ -188,7 +206,9 @@ function onSwipeEnd(m: SystemMessageDto, e: TouchEvent) {
 
 onMounted(() => {
   refreshUnread();
+  refreshNear();
   onSync('message', refreshUnread); // 服务端提醒实时推送：即时刷新未读角标，不再依赖被动轮询
+  onSync('anniversary', refreshNear); // 纪念日增删/临近变化 → 即时刷新红点
   partner.load();
   timer = window.setInterval(refreshUnread, 60000);
 });
@@ -299,6 +319,20 @@ html:not(.reduce-motion) .msg-list li.unread:active .swipe-hint { opacity: 0.8; 
   border-radius: 3px; background: var(--color-rose);
 }
 .ico { width: 20px; display: flex; justify-content: center; }
-.dot { width: 7px; height: 7px; border-radius: 9999px; margin-left: auto; background: var(--color-rose); opacity: 0; transition: opacity var(--dur-micro); }
-.nav-item.router-link-active .dot { opacity: 1; }
+.nbadge {
+  position: absolute; top: 7px; right: 9px; z-index: 2;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.nbadge.count {
+  min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
+  background: var(--color-rose); color: #fff; font-size: 10px; line-height: 16px;
+  font-family: var(--font-mono); box-shadow: 0 0 0 2px var(--color-surface);
+  animation: badgePulse 1.8s var(--ease-love) infinite;
+}
+.nbadge.dot {
+  width: 9px; height: 9px; border-radius: 9999px; background: var(--color-rose);
+  box-shadow: 0 0 0 2px var(--color-surface); animation: badgePulse 1.8s var(--ease-love) infinite;
+}
+.collapsed .nbadge { top: 6px; right: 8px; }
+.reduce-motion .nbadge { animation: none; }
 </style>

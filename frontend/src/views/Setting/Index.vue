@@ -113,6 +113,43 @@
         <span>减少动效</span>
         <NSwitch :value="setting.reduceMotion" @update:value="setting.toggleMotion()" />
       </div>
+      <div class="set-row">
+        <span>主题色</span>
+        <div class="swatches">
+          <button
+            v-for="(a, key) in ACCENTS"
+            :key="key"
+            class="sw"
+            :class="{ on: setting.accent === key }"
+            :style="{ background: a.p }"
+            :title="`${a.label} · ${a.desc}`"
+            :aria-label="a.label"
+            @click="setting.setAccent(key)"
+          />
+        </div>
+      </div>
+      <p v-if="setting.accent !== 'rose'" class="theme-hint">
+        当前主题色：{{ ACCENTS[setting.accent]?.label }}（双方各自设置，互不强制）
+      </p>
+    </section>
+
+    <!-- 消息通知 -->
+    <section class="block love-card">
+      <h2>消息通知</h2>
+      <p class="sub-text">开启后，App 在后台时收到 TA 的新消息或动态，会以系统通知提醒你（需先授权通知权限）。</p>
+      <div class="set-row">
+        <span>系统通知</span>
+        <NSwitch :value="setting.notifications" :disabled="!notifySupported" @update:value="onToggleNotify" />
+      </div>
+      <p v-if="!notifySupported" class="theme-hint">
+        当前浏览器不支持系统通知；可在手机浏览器「添加到主屏」获得类 App 体验。
+      </p>
+      <p v-else-if="notifyDenied" class="theme-hint">
+        通知权限已被浏览器拒绝，请在站点设置中允许通知后重试。
+      </p>
+      <p v-else-if="isIOS" class="theme-hint">
+        iOS 请在 Safari 中点击「分享 → 添加到主屏幕」安装；通知权限在首次安装后于系统设置中开启。
+      </p>
     </section>
 
     <!-- 数据备份 -->
@@ -133,9 +170,10 @@ import * as coupleApi from '@/api/couple';
 import * as partnerApi from '@/api/partner';
 import type { ApiResult, CoupleSetting, BindStatus, InviteResp } from '@/types';
 import { useAuthStore } from '@/store/authStore';
-import { useSettingStore } from '@/store/settingStore';
+import { useSettingStore, ACCENTS } from '@/store/settingStore';
 import { usePartnerStore } from '@/store/partnerStore';
 import { useRealtime } from '@/composables/useRealtime';
+import { usePwa, notificationsSupported } from '@/composables/usePwa';
 import { feedback } from '@/utils/feedback';
 import ImageField from '@/components/Common/ImageField.vue';
 import { maxLenRule } from '@/utils/formRules';
@@ -146,6 +184,10 @@ const setting = useSettingStore();
 const partner = usePartnerStore();
 const msg = useMessage();
 const { onSync } = useRealtime();
+const { requestNotificationPermission } = usePwa();
+const notifySupported = notificationsSupported();
+const notifyDenied = ref(typeof Notification !== 'undefined' && Notification.permission === 'denied');
+const isIOS = ref(/iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.userAgent.includes('Mac') && 'ontouchend' in document));
 
 const loading = ref(false);
 const saving = ref(false);
@@ -296,6 +338,22 @@ onUnmounted(() => {
   if (ui.timer) window.clearTimeout(ui.timer);
 });
 
+async function onToggleNotify(v: boolean) {
+  if (!v) {
+    setting.setNotifications(false);
+    return;
+  }
+  const perm = await requestNotificationPermission();
+  if (perm === 'granted') {
+    setting.setNotifications(true);
+    msg.success('已开启系统通知');
+  } else {
+    setting.setNotifications(false);
+    notifyDenied.value = perm === 'denied';
+    msg.warning(perm === 'denied' ? '通知权限被拒绝，请在浏览器设置中开启' : '未获得通知授权');
+  }
+}
+
 async function saveProfile() {
   try {
     await formRef.value?.validate();
@@ -357,6 +415,14 @@ async function doExport() {
 }
 .theme-seg button:not(.on):hover { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
 .theme-hint { font-size: 12px; color: var(--color-ink-3); margin: -4px 0 8px; text-align: right; }
+.swatches { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.sw {
+  width: 26px; height: 26px; border-radius: 999px; cursor: pointer; padding: 0;
+  border: 2px solid var(--color-surface); box-shadow: 0 0 0 1px var(--color-border);
+  transition: transform var(--dur-micro) var(--ease-love);
+}
+.sw:hover { transform: scale(1.12); }
+.sw.on { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-rose); }
 .native-date {
   padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink); font-size: 14px; width: 100%;

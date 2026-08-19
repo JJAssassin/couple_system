@@ -1,9 +1,19 @@
 <template>
   <IndSkeleton v-if="loading" variant="hero" />
   <div v-else class="home" ref="container">
+    <!-- 圆整节点庆祝横幅 -->
+    <transition name="cele">
+      <div v-if="celebrate" class="cele-banner">
+        <PartyPopper :size="18" :stroke-width="1.8" class="cele-ico" />
+        <span class="cele-txt">{{ celebrate }}</span>
+        <button class="cele-close" aria-label="关闭" @click="celebrate = ''">×</button>
+      </div>
+    </transition>
+
     <!-- 问候 hero -->
     <section class="hero block">
       <AuroraBackdrop class="hero-aurora" />
+      <div class="hero-blob" />
       <FloatingHearts class="hero-hearts" />
       <GradientText class="hero-greet" tag="div">{{ greet }}，{{ nickName }}</GradientText>
       <template v-if="loveInfo.hasLoveStart">
@@ -154,7 +164,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton } from 'naive-ui';
 import {
-  Heart, Mail, BookOpen, Star, CalendarHeart, CloudFog, Image,
+  Heart, Mail, BookOpen, Star, CalendarHeart, CloudFog, Image, PartyPopper,
 } from 'lucide-vue-next';
 import api from '@/utils/request';
 import type { ApiResult, LoveInfo, DashboardData, AnniversaryDto, TimelineItemDto, AlbumDto, DailyQuoteDto } from '@/types';
@@ -173,6 +183,7 @@ import MilestoneStrip from '@/components/Common/MilestoneStrip.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useAuthStore } from '@/store/authStore';
 import { useNotifyStore } from '@/store/notifyStore';
+import { useSettingStore } from '@/store/settingStore';
 import { useRealtime } from '@/composables/useRealtime';
 import * as coupleApi from '@/api/couple';
 import { getDailyQuote } from '@/api/quote';
@@ -186,9 +197,32 @@ const container = ref<HTMLElement>();
 const router = useRouter();
 const auth = useAuthStore();
 const notify = useNotifyStore();
+const setting = useSettingStore();
 
 const nickName = computed(() => auth.profile?.nickName || '亲爱的');
 const unread = ref(0);
+
+// 圆整节点彩蛋：在一起天数逢 100 的倍数或整周年（365 的倍数）时，全屏心动 + 顶部横幅庆祝（每天仅展示一次）
+const celebrate = ref('');
+function milestoneLabel(d: number): string {
+  if (d % 365 === 0) return `在一起 ${d} 天 · 整 ${d / 365} 周年快乐`;
+  if (d % 100 === 0) return `在一起 ${d} 天 · 小小里程碑`;
+  return '';
+}
+function checkMilestone() {
+  if (!loveInfo.value.hasLoveStart) return;
+  const d = loveInfo.value.totalDays;
+  const label = milestoneLabel(d);
+  if (!label) return;
+  const today = new Date().toLocaleDateString('en-CA');
+  const key = `cl_cele_${d}_${today}`;
+  if (localStorage.getItem(key)) return; // 当天已庆祝过
+  localStorage.setItem(key, '1');
+  celebrate.value = label;
+  if (!setting.reduceMotion) {
+    window.dispatchEvent(new CustomEvent('cl-heartburst', { detail: { x: window.innerWidth / 2, y: window.innerHeight * 0.35 } }));
+  }
+}
 const showLoveEditor = ref(false);
 const loveStartInput = ref('');
 const savingLove = ref(false);
@@ -324,6 +358,7 @@ onMounted(async () => {
     loadAlbums(), loadFeed(), loadQuote(),
   ]);
   loading.value = false;
+  checkMilestone(); // 数据就绪后判断是否需要展示圆整节点彩蛋
   onSync('setting', reloadLoveInfo);
   onSync('message', loadUnread); // 服务端提醒实时推送：即时刷新未读角标，不再依赖被动轮询
 });
@@ -332,8 +367,36 @@ onMounted(async () => {
 .home { max-width: 880px; margin: 0 auto; }
 .hero { position: relative; text-align: center; padding: 28px 0 8px; overflow: hidden; }
 .hero-hearts { z-index: 0; }
-.hero > :not(.hero-hearts):not(.hero-aurora) { position: relative; z-index: 1; }
+.hero > :not(.hero-hearts):not(.hero-aurora):not(.hero-blob) { position: relative; z-index: 1; }
 .hero-aurora { z-index: 0; }
+.hero-blob {
+  position: absolute; left: -10%; right: -10%; top: -50px; height: 240px; z-index: 0;
+  background:
+    radial-gradient(60% 100% at 28% 0%, color-mix(in srgb, var(--color-rose) 16%, transparent), transparent 70%),
+    radial-gradient(50% 100% at 78% 12%, color-mix(in srgb, var(--color-cocoa) 12%, transparent), transparent 70%);
+  filter: blur(10px); opacity: 0.9; pointer-events: none;
+}
+.reduce-motion .hero-blob { filter: none; }
+
+/* 圆整节点庆祝横幅 */
+.cele-banner {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  margin: 0 auto 18px; max-width: 520px; padding: 10px 14px; border-radius: 999px;
+  color: #fff; font-weight: 600; font-size: 14px;
+  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  box-shadow: 0 8px 24px -8px rgba(255, 111, 125, 0.5);
+  position: relative;
+}
+.cele-ico { display: inline-flex; flex: 0 0 auto; }
+.cele-txt { flex: 1; text-align: center; }
+.cele-close {
+  flex: 0 0 auto; border: none; background: rgba(255, 255, 255, 0.22); color: #fff;
+  width: 22px; height: 22px; border-radius: 999px; cursor: pointer; font-size: 15px; line-height: 1;
+  transition: background var(--dur-micro) var(--ease-love);
+}
+.cele-close:hover { background: rgba(255, 255, 255, 0.36); }
+.cele-enter-active, .cele-leave-active { transition: all var(--dur-pop) var(--ease-love); }
+.cele-enter-from, .cele-leave-to { opacity: 0; transform: translateY(-10px) scale(0.96); }
 .hero-greet {
   font-size: 22px; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 2px;
   display: inline-block;
