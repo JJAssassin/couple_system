@@ -45,4 +45,23 @@ public sealed class RedisTokenStore : ITokenStore
 
     public async Task RemoveAsync(string key, CancellationToken ct = default)
         => await _db.KeyDeleteAsync(_prefix + key);
+
+    /// <summary>
+    /// 探测 Redis 连通性（真实往返一次，不抛异常）。
+    /// 生产启动 fail-fast 用：本类 AbortOnConnectFail=false 会「带病运行」——Redis 不可达时应用照常启动、
+    /// 直到刷新令牌读写请求期才炸；这里在启动阶段做一次真实探测，由调用方决定是否拒绝启动。
+    /// 探测耗时上限 = SE.Redis ConnectTimeout + SyncTimeout（默认约 5s）。
+    /// </summary>
+    public bool Ping()
+    {
+        try
+        {
+            _db.Ping();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }

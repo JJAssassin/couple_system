@@ -157,6 +157,20 @@ builder.Services.AddScoped<DbSeeder>();
 
 var app = builder.Build();
 
+// 生产启动 fail-fast（评审 #4 残留项 P2-7 收尾）：
+// 上方已强制 Provider=Redis；这里再做一次真实连通性探测——RedisTokenStore 的
+// AbortOnConnectFail=false 会让应用「带病运行」到请求期才炸（刷新令牌读写失败），
+// 多实例部署下尤其隐蔽。启动时探测失败直接拒绝启动，报错信息含配置地址便于排查。
+if (app.Environment.IsProduction())
+{
+    var redis = app.Services.GetRequiredService<RedisTokenStore>();
+    if (!redis.Ping())
+        throw new InvalidOperationException(
+            "生产环境 Redis 不可达（TokenStore:Configuration="
+            + app.Configuration["TokenStore:Configuration"]
+            + "），拒绝启动：refresh token 需跨实例共享，请先恢复 Redis 再启动。");
+}
+
 // 启动期：应用待执行的 EF 迁移（建/改表，替代原先的 EnsureCreated + 手搓 ALTER），再执行幂等数据种子。
 // 改用 Migrations 后，启动日志不再出现 ALTER ... ADD COLUMN [ERR] 噪音，schema 演进可版本化。
 using (var scope = app.Services.CreateScope())

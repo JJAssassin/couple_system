@@ -58,4 +58,19 @@ public class RedisTokenStoreTests
         var store = new RedisTokenStore(opt);
         Assert.True(typeof(ITokenStore).IsAssignableFrom(store.GetType()));
     }
+
+    [Fact]
+    public void RedisTokenStore_Ping_ReturnsFalse_When_Unreachable()
+    {
+        // 生产启动 fail-fast 的契约：Redis 不可达（这里用本机 1 号端口，特权端口必然无监听）时
+        // Ping() 应快速返回 false 而非抛异常，供 Program.cs 决定拒绝启动。connectTimeout 压到 500ms 保证测试快速。
+        var opt = Options.Create(new TokenStoreOptions
+        {
+            Provider = "Redis",
+            Configuration = "127.0.0.1:1,connectTimeout=500,syncTimeout=1000,abortConnect=false",
+            KeyPrefix = "auth:rt:"
+        });
+        var store = new RedisTokenStore(opt);
+        Assert.False(store.Ping());
+    }
 }
