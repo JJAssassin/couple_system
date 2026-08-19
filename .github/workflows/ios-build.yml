@@ -69,11 +69,11 @@ jobs:
         run: |
           cd mobile/ios/App
           if [ -n "$HAS_CERT" ]; then
-            xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            xcodebuild -project App.xcodeproj -scheme App -configuration Release \
               -destination 'generic/platform=iOS' \
               -archivePath build/App.xcarchive archive
           else
-            xcodebuild -workspace App.xcworkspace -scheme App -configuration Release \
+            xcodebuild -project App.xcodeproj -scheme App -configuration Release \
               -destination 'generic/platform=iOS' \
               -archivePath build/App.xcarchive archive CODE_SIGNING_ALLOWED=NO
           fi
