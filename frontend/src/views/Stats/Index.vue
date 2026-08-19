@@ -21,6 +21,7 @@
         <AuroraBackdrop class="hero-aurora" />
         <div class="hero-num"><GradientText tag="span">{{ report.loveDays }}</GradientText><span class="hero-unit">天</span></div>
         <div class="hero-txt">这一年，我们继续爱着彼此 · 共 {{ report.anniversaryTotal }} 个纪念日</div>
+        <button class="poster-btn" @click="poster?.open()">✨ 生成我们的海报</button>
       </section>
 
       <!-- 数字卡片：内容产出 -->
@@ -73,6 +74,9 @@
 
       <p v-else class="empty-tip">这一年还没有纪念日记录，去「纪念日」页添加一个吧～</p>
     </template>
+
+    <!-- 年度报告分享海报 -->
+    <YearPoster ref="poster" :report="report" />
   </div>
 </template>
 
@@ -81,11 +85,13 @@ import { ref, computed, onMounted } from 'vue';
 import ChartWrap from '@/components/ChartWrap.vue';
 import AuroraBackdrop from '@/components/Common/AuroraBackdrop.vue';
 import GradientText from '@/components/Common/GradientText.vue';
+import YearPoster from '@/components/Common/YearPoster.vue';
 import { fetchYearReport, type YearReport } from '@/api/stats';
 
 const currentYear = new Date().getFullYear();
 const report = ref<YearReport | null>(null);
 const selectedYear = ref(currentYear);
+const poster = ref<InstanceType<typeof YearPoster> | null>(null);
 
 function fmt(n: number): string {
   const v = Math.abs(Math.round(n * 100) / 100);
@@ -187,6 +193,13 @@ const conflictOption = computed(() => ({
 .hero-num { position: relative; font-size: 52px; line-height: 1; }
 .hero-unit { font-size: 20px; margin-left: 6px; color: var(--color-ink-2); }
 .hero-txt { position: relative; margin-top: 10px; font-size: 13px; color: var(--color-ink-2); }
+.poster-btn {
+  position: relative; margin-top: 16px; padding: 10px 26px; border-radius: 999px;
+  border: 1px solid var(--color-rose); background: var(--color-surface);
+  color: var(--color-rose); font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
+}
+.poster-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(255, 111, 125, 0.5); }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .card {
