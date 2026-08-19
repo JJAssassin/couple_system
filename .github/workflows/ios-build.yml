@@ -39,7 +39,9 @@ jobs:
           cache-dependency-path: mobile/package-lock.json
 
       - name: Install Capacitor deps
-        run: cd mobile && npm ci
+        run: |
+          node --version && npm --version
+          cd mobile && npm install --no-audit --no-fund
 
       - name: Sync iOS platform
         run: cd mobile && npx cap sync ios
