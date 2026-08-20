@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>情侣小世界 · 访问指南</title>
+<style>
+  :root{
+    --rose:#e8739a; --rose-deep:#d6547f; --cocoa:#7a6462; --ink:#4a3f3d;
+    --cream:#fff7f3; --mist:#fdeef2; --line:#f0d9e2; --ok:#3aa776;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+    color:var(--ink); background:linear-gradient(160deg,#fff7f3 0%,#fdeef2 55%,#f6e8f0 100%);
+    min-height:100vh; padding:env(safe-area-inset-top) 16px calc(24px + env(safe-area-inset-bottom));
+  }
+  .wrap{max-width:680px; margin:0 auto; padding:28px 0 8px;}
+  .hero{
+    text-align:center; padding:30px 20px; border-radius:24px;
+    background:linear-gradient(135deg,var(--rose),var(--rose-deep)); color:#fff;
+    box-shadow:0 18px 40px rgba(214,84,127,.28);
+  }
+  .hero h1{margin:0; font-size:24px; letter-spacing:.5px;}
+  .hero p{margin:8px 0 0; opacity:.92; font-size:14px;}
+  .heart{font-size:30px; line-height:1;}
+  .card{
+    background:#fff; border:1px solid var(--line); border-radius:20px;
+    padding:20px 20px 18px; margin-top:16px; box-shadow:0 10px 26px rgba(122,100,98,.07);
+  }
+  .card h2{margin:0 0 14px; font-size:16px; color:var(--rose-deep); display:flex; align-items:center; gap:8px;}
+  .card h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--rose);display:inline-block;}
+  .row{display:flex; gap:12px; flex-wrap:wrap;}
+  .way{
+    flex:1 1 180px; border:1px solid var(--line); border-radius:14px; padding:14px;
+    background:linear-gradient(180deg,#fff,var(--mist));
+  }
+  .way .tag{font-size:12px; color:var(--cocoa); font-weight:600;}
+  .way .url{margin-top:6px; font-size:15px; font-weight:700; color:var(--ink); word-break:break-all;}
+  .way .note{margin-top:4px; font-size:12px; color:#9a8684;}
+  .account{display:flex; gap:12px; flex-wrap:wrap; margin-top:4px;}
+  .pill{
+    flex:1 1 200px; border:1px dashed var(--rose); border-radius:12px; padding:12px 14px;
+    background:#fff;
+  }
+  .pill b{color:var(--rose-deep);}
+  .pill .k{font-size:12px; color:var(--cocoa);}
+  .pill .v{font-size:17px; font-weight:700; letter-spacing:.5px;}
+  code{
+    display:block; background:#2b2322; color:#ffd9e6; border-radius:10px;
+    padding:10px 12px; font-size:12.5px; white-space:pre-wrap; word-break:break-all; margin:6px 0 0;
+  }
+  .tip{font-size:12.5px; color:#9a8684; margin-top:10px; line-height:1.6;}
+  .footer{text-align:center; color:#b69a98; font-size:12px; margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <div class="heart">❤</div>
+    <h1>情侣小世界 · 访问指南</h1>
+    <p>只属于两个人的小天地，随手打开就能用</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>三种打开方式</h2>
+    <div class="row">
+      <div class="way">
+        <div class="tag">📱 手机 / 异地（最常用）</div>
+        <div class="url">https://7182629.xyz</div>
+        <div class="note">双方任意网络、任意设备直接打开，无需安装</div>
+      </div>
+      <div class="way">
+        <div class="tag">💻 本机（跑服务的电脑）</div>
+        <div class="url">http://localhost:8080</div>
+        <div class="note">不依赖外网，最快</div>
+      </div>
+      <div class="way">
+        <div class="tag">🏠 同一 WiFi（可选）</div>
+        <div class="url">http://&lt;电脑局域网IP&gt;:8080</div>
+        <div class="note">电脑命令行 ipconfig 查 IPv4 填入</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>登录账号</h2>
+    <div class="account">
+      <div class="pill"><div class="k">账号 A</div><div class="v">partner_a</div><div class="k">密码</div><b>123456</b></div>
+      <div class="pill"><div class="k">账号 B</div><div class="v">partner_b</div><div class="k">密码</div><b>123456</b></div>
+    </div>
+    <div class="tip">两人各用各自账号登录，数据自动同步；首次登录后记得在「设置」里改昵称和头像。</div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>原生 App（iOS / 安卓）</h2>
+    <div class="tip">
+      已打包原生 App，连接地址同样是 <b>https://7182629.xyz</b>。<br/>
+      · iOS：用「全能签」安装已签名的 IPA（更新时重装一次即可）<br/>
+      · 安卓：安装 APK，App 内会自动检测新版本并提示更新
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>常用运维命令（管理员）</h2>
+    <div class="tip">一键健康检查（容器 / 本地 / 外网 / 登录）：</div>
+    <code>bash scripts/healthcheck.sh</code>
+    <div class="tip">日常备份 + 巡检（每天 02:30 自动跑，也可手动）：</div>
+    <code>python D:/Item/cap/workbuddy/scripts/daily_maintenance.py</code>
+    <div class="tip">重启全部服务：</div>
+    <code>docker compose -f D:/Docker/couple-love-system/docker-compose.yml up -d</code>
+    <div class="tip">停止全部服务：</div>
+    <code>docker compose -f D:/Docker/couple-love-system/docker-compose.yml down</code>
+  </div>
+
+  <div class="footer">把这张卡片发给对方，就能一起用啦 · 服务由 Cloudflare 隧道保护，传输全程加密 🔒</div>
+</div>
+</body>
+</html>
