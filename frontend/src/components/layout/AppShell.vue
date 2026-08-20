@@ -197,7 +197,11 @@ function logout() {
 .topbar {
   position: sticky; top: 0; z-index: 40;
   display: flex; align-items: center; gap: 14px;
-  height: 60px; padding: 0 24px;
+  box-sizing: border-box;
+  /* 灵动岛/状态栏安全区：导航条整体下沉，内容落在可见区，不再被遮挡 */
+  height: calc(60px + env(safe-area-inset-top));
+  padding: 0 24px;
+  padding-top: env(safe-area-inset-top);
   background: color-mix(in srgb, var(--color-surface) 78%, transparent);
   backdrop-filter: saturate(180%) blur(12px);
   -webkit-backdrop-filter: saturate(180%) blur(12px);
@@ -231,7 +235,7 @@ function logout() {
 
 .content { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; }
 @media (max-width: 767px) {
-  .topbar { padding: 0 14px; gap: 10px; }
+  .topbar { padding: env(safe-area-inset-top) 14px 0; gap: 10px; }
   .content { padding: 20px 16px 84px; }
   .crumb-root { display: none; }
   .crumb-cur { display: none; }

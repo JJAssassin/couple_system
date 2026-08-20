@@ -221,11 +221,11 @@ onUnmounted(() => {
 <style scoped>
 .sidebar {
   position: relative; width: 240px; min-height: 100dvh;
-  background: var(--color-surface); padding: 20px 14px;
+  background: var(--color-surface); padding: calc(20px + env(safe-area-inset-top)) 14px 20px;
   display: flex; flex-direction: column;
   border-right: 1px solid var(--color-border);
 }
-.sidebar.collapsed { width: 72px; padding: 20px 10px; align-items: center; }
+.sidebar.collapsed { width: 72px; padding: calc(20px + env(safe-area-inset-top)) 10px; align-items: center; }
 
 .brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; }
 .brand-mark {
