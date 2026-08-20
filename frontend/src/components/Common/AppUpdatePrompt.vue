@@ -6,9 +6,20 @@
           <div class="upd-ico">💗</div>
           <div class="upd-title">发现新版本 v{{ info.versionName }}</div>
           <div v-if="info.changelog" class="upd-log">{{ info.changelog }}</div>
+
+          <!-- iOS 专属引导：sideload 流程 -->
+          <div v-if="platform === 'ios'" class="upd-tip">
+            <div class="upd-tip-title">📲 iOS 更新流程</div>
+            <ol class="upd-tip-steps">
+              <li>点击下方「前往下载」打开 GitHub Releases</li>
+              <li>下载 <code>App-unsigned.ipa</code></li>
+              <li>用「全能签」签名后安装到手机</li>
+            </ol>
+          </div>
+
           <div class="upd-actions">
             <button class="upd-btn primary" :disabled="downloading" @click="go">
-              {{ downloading ? '下载中…' : '立即更新' }}
+              {{ btnLabel }}
             </button>
             <button class="upd-btn" :disabled="downloading" @click="later">稍后</button>
           </div>
@@ -19,60 +30,152 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 
 interface UpdateManifest {
-  versionCode: number;
   versionName: string;
-  url: string;
+  versionCode: number;
   changelog?: string;
+  apkUrl?: string;
+  releaseUrl?: string;
+  minSupportedCode?: number;
 }
 
 const info = ref<UpdateManifest | null>(null);
 const downloading = ref(false);
+const platform = ref<'ios' | 'android' | 'web'>('web');
 const LS_KEY = 'cl_update_dismiss';
 
-/** Capacitor 原生插件（壳内置 UpdatePlugin）的 JS 桥：window.Capacitor.Plugins.Update */
+// Capacitor 全局访问
+function getCap(): any {
+  return (window as any).Capacitor;
+}
+
+function isNative(): boolean {
+  const cap = getCap();
+  return !!(cap && typeof cap.isNativePlatform === 'function' && cap.isNativePlatform());
+}
+
+function currentPlatform(): 'ios' | 'android' | 'web' {
+  const cap = getCap();
+  if (!cap?.isNativePlatform?.()) return 'web';
+  const p = cap.getPlatform?.();
+  return p === 'ios' || p === 'android' ? p : 'web';
+}
+
+// 原生 UpdatePlugin（Android 专属，用于下载并安装 APK）
 function nativeUpdate(): any {
-  const cap = (window as any).Capacitor;
+  const cap = getCap();
   if (!cap?.isNativePlatform?.() || cap.getPlatform() !== 'android') return null;
   return cap.Plugins?.Update ?? null;
 }
 
-onMounted(async () => {
+// 跨平台获取当前安装版本号：优先用 @capacitor/app 的 getInfo()，
+// 取 build 字段（CFBundleVersion / versionCode），Android 兜底用 UpdatePlugin。
+async function getCurrentVersionCode(): Promise<number | null> {
   try {
-    const upd = nativeUpdate();
-    if (!upd) return; // 浏览器/PWA 环境不检测（PWA 自身有 SW 更新）
-    if (localStorage.getItem(LS_KEY) === String(new Date().getDate())) return; // 当天已忽略
-    const { versionCode: current } = await upd.getVersionCode();
-    const manifest = await (await fetch('/app/version.json', { cache: 'no-store' })).json();
-    if (manifest?.versionCode && manifest.versionCode > current) {
-      info.value = manifest;
+    const cap = getCap();
+    const info = await cap?.Plugins?.App?.getInfo?.();
+    const build = info?.build ?? info?.versionCode;
+    if (build != null) {
+      const n = Number(build);
+      if (Number.isFinite(n) && n > 0) return n;
     }
   } catch {
-    /* 网络/非 App 环境静默 */
+    /* 回退到 Android 原生插件 */
   }
+  try {
+    const upd = nativeUpdate();
+    if (upd?.getVersionCode) {
+      const { versionCode } = await upd.getVersionCode();
+      if (versionCode) return Number(versionCode);
+    }
+  } catch {
+    /* 静默 */
+  }
+  return null;
+}
+
+// 打开外部链接（iOS 走系统浏览器 / Android 走自定义标签 / Web 走新标签）
+function openExternal(url: string) {
+  const cap = getCap();
+  if (cap?.Plugins?.Browser?.open) {
+    cap.Plugins.Browser.open({ url }).catch(() => window.open(url, '_system'));
+    return;
+  }
+  // Capacitor 在原生壳内会拦截 _system 跳到系统浏览器
+  if (isNative()) {
+    window.open(url, '_system');
+  } else {
+    window.open(url, '_blank', 'noopener');
+  }
+}
+
+onMounted(async () => {
+  if (!isNative()) return; // 浏览器/PWA 不检测（SW 自管更新）
+  platform.value = currentPlatform();
+
+  // 同一天已点过「稍后」，不打扰
+  const dismissedDay = (() => {
+    try { return localStorage.getItem(LS_KEY); } catch { return null; }
+  })();
+  if (dismissedDay === String(new Date().getDate())) return;
+
+  const current = await getCurrentVersionCode();
+  if (current == null) return;
+
+  let manifest: UpdateManifest | null = null;
+  try {
+    const r = await fetch('/app/version.json', { cache: 'no-store' });
+    if (r.ok) manifest = (await r.json()) as UpdateManifest;
+  } catch {
+    return;
+  }
+  if (!manifest?.versionCode) return;
+
+  const needUpdate =
+    manifest.versionCode > current &&
+    (manifest.minSupportedCode ?? 0) <= current; // 当前版本仍受支持才提示
+  if (needUpdate) info.value = manifest;
+});
+
+const btnLabel = computed(() => {
+  if (downloading.value) return '处理中…';
+  if (platform.value === 'ios') return '前往下载新版';
+  return '立即更新';
 });
 
 async function go() {
+  const m = info.value;
+  if (!m) return;
+  if (platform.value === 'ios') {
+    const url = m.releaseUrl || m.apkUrl;
+    if (url) {
+      openExternal(url);
+      info.value = null; // 已引导去下载，关闭弹层
+    }
+    return;
+  }
+  // Android 走原生下载安装
   const upd = nativeUpdate();
-  const u = info.value;
-  if (!upd || !u) return;
-  downloading.value = true;
-  try {
-    await upd.downloadAndInstall({ url: u.url });
-    info.value = null; // 关闭弹层，系统下载通知接管
-  } catch {
-    downloading.value = false;
+  if (upd && m.apkUrl) {
+    downloading.value = true;
+    try {
+      await upd.downloadAndInstall({ url: m.apkUrl });
+      info.value = null; // 关闭弹层，系统下载通知接管
+    } catch {
+      // 失败兜底：打开下载页
+      if (m.releaseUrl) openExternal(m.releaseUrl);
+      downloading.value = false;
+    }
+  } else if (m.releaseUrl) {
+    openExternal(m.releaseUrl);
+    info.value = null;
   }
 }
 
 function later() {
-  try {
-    localStorage.setItem(LS_KEY, String(new Date().getDate()));
-  } catch {
-    /* 忽略 */
-  }
+  try { localStorage.setItem(LS_KEY, String(new Date().getDate())); } catch { /* 忽略 */ }
   info.value = null;
 }
 </script>
@@ -84,13 +187,30 @@ function later() {
   display: flex; align-items: center; justify-content: center; padding: 24px;
 }
 .upd-card {
-  width: min(88vw, 320px); background: var(--color-surface);
+  width: min(92vw, 360px); background: var(--color-surface);
   border-radius: 20px; padding: 26px 22px; text-align: center;
   box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.35);
+  max-height: 86vh; overflow-y: auto;
 }
 .upd-ico { font-size: 40px; }
 .upd-title { margin-top: 10px; font-size: 17px; font-weight: 800; color: var(--color-ink); }
-.upd-log { margin-top: 8px; font-size: 13px; color: var(--color-ink-2); line-height: 1.6; }
+.upd-log {
+  margin-top: 10px; font-size: 13px; color: var(--color-ink-2); line-height: 1.7;
+  text-align: left; white-space: pre-line;
+  background: color-mix(in srgb, var(--color-rose) 6%, transparent);
+  padding: 10px 12px; border-radius: 10px;
+}
+.upd-tip {
+  margin-top: 12px; padding: 12px 14px;
+  background: color-mix(in srgb, var(--color-rose) 10%, transparent);
+  border-radius: 12px; text-align: left;
+}
+.upd-tip-title { font-size: 13px; font-weight: 700; color: var(--color-ink); margin-bottom: 6px; }
+.upd-tip-steps { margin: 0; padding-left: 20px; font-size: 12.5px; color: var(--color-ink-2); line-height: 1.7; }
+.upd-tip-steps code {
+  background: var(--color-surface-2); padding: 1px 6px; border-radius: 4px;
+  font-size: 11.5px; font-family: ui-monospace, monospace;
+}
 .upd-actions { margin-top: 18px; display: flex; gap: 10px; justify-content: center; }
 .upd-btn {
   padding: 10px 22px; border-radius: 999px; border: 1px solid var(--color-border);
