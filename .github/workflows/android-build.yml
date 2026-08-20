@@ -88,6 +88,7 @@ jobs:
       - name: Build release APK
         run: |
           cd mobile/android
+          chmod +x gradlew   # 兜底：Windows 仓库可能丢失可执行位（exit 126）
           ./gradlew :app:assembleRelease --no-daemon
 
       - name: 读取版本号
