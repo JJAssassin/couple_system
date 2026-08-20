@@ -75,11 +75,13 @@ jobs:
           keyPassword=$KEY_PASS
           EOF
 
-      # compileSdk 36：runner 可能未预装该平台，缺则补装（幂等，已装秒过）
-      - name: 确保 Android SDK platform 36
+      # compileSdk 36 + AGP 8.13 默认 build-tools 36.0.0：runner 可能未预装，显式安装并验证
+      - name: 确保 Android SDK platform 36 与 build-tools 36
         run: |
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" >/dev/null 2>&1 || echo "sdkmanager 安装跳过（可能已预装）"
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" 2>&1 | tail -4 || true
+          echo "=== 已安装 SDK 组件 ==="
+          sdkmanager --list_installed 2>/dev/null | grep -E "platforms;android-36|build-tools;36" || echo "WARN: android-36/build-tools 36 未确认"
 
       # 本机 wrapper 指向腾讯云镜像（国内快）；GitHub runner 在海外，换官方源避免下载慢/失败
       - name: 切回官方 Gradle 分发源
