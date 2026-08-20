@@ -80,8 +80,7 @@ jobs:
         run: |
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platforms;android-36" "build-tools;36.0.0" 2>&1 | tail -4 || true
-          echo "=== 已安装 SDK 组件 ==="
-          sdkmanager --list_installed 2>/dev/null | grep -E "platforms;android-36|build-tools;36" || echo "WARN: android-36/build-tools 36 未确认"
+          echo "::error::已装SDK: $(sdkmanager --list_installed 2>/dev/null | grep -E 'platforms;android-36|build-tools;36' | tr '\n' ' ' || echo NONE)"
 
       # 本机 wrapper 指向腾讯云镜像（国内快）；GitHub runner 在海外，换官方源避免下载慢/失败
       - name: 切回官方 Gradle 分发源
@@ -99,8 +98,10 @@ jobs:
           chmod +x gradlew   # 兜底：Windows 仓库可能丢失可执行位（exit 126）
           # 失败时把 gradle 错误摘要注入 annotation，便于在 Actions 页直接定位
           if ! ./gradlew :app:assembleRelease --no-daemon 2>&1 | tee /tmp/gradle.log; then
-            echo "::error::Gradle 构建失败，末尾日志："
-            tail -40 /tmp/gradle.log | sed 's/^/::error::/'
+            echo "::error::Gradle 构建失败，关键错误行："
+            grep -E "Execution failed|Caused by|error:|Exception|FAILURE|What went wrong|aapt2|AAPT|could not|Could not" /tmp/gradle.log | head -25 | sed 's/^/::error::/'
+            echo "::error::末尾日志："
+            tail -8 /tmp/gradle.log | sed 's/^/::error::/'
             exit 1
           fi
 
