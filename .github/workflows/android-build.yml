@@ -118,10 +118,14 @@ jobs:
           TAG=android-v${{ steps.ver.outputs.versionName }}
           if [ -n "$SIGNED" ]; then SIGN_NOTE="正式签名"; else SIGN_NOTE="debug 签名（可安装）"; fi
           gh release delete "$TAG" --yes -R ${{ github.repository }} 2>/dev/null || true
-          gh release create "$TAG" -R ${{ github.repository }} \
+          if ! gh release create "$TAG" -R ${{ github.repository }} \
             --title "我们的小世界 Android v${{ steps.ver.outputs.versionName }}" \
             --notes "APK（$SIGN_NOTE）。构建时间：$(date '+%Y-%m-%d %H:%M')" \
-            mobile/android/app/build/outputs/apk/release/app-release.apk
+            mobile/android/app/build/outputs/apk/release/app-release.apk 2>&1 | tee /tmp/rel.log; then
+            echo "::error::gh release create 失败，末尾日志："
+            tail -15 /tmp/rel.log | sed 's/^/::error::/'
+            exit 1
+          fi
 
       - name: 输出下载直链
         run: |
