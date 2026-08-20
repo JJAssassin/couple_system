@@ -47,7 +47,7 @@ async function onSubmit() {
 }
 </script>
 <style scoped>
-.login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center;
+.login-wrap { min-height: 100dvh; display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, var(--color-cream), var(--color-mist)); padding: 16px; }
 .login-card { width: 340px; background: var(--color-surface); border-radius: 20px; padding: 32px 28px;
   box-shadow: 0 20px 60px rgba(122,100,98,.12); text-align: center; border: 1px solid var(--color-border); }

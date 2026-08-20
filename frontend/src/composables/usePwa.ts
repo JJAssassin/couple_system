@@ -59,6 +59,22 @@ export function usePwa() {
   /** 注册 Service Worker + 监听安装事件（仅生产构建；dev 不注册以免劫持 HMR） */
   function register() {
     if (typeof window === 'undefined') return;
+    // 原生壳（Capacitor iOS / Android）内不启用 Service Worker：
+    // ① 原生 WebView 已是「安装态」，SW 的离线缓存与原生壳冗余；
+    // ② SW 会拦截 /api 与导航请求，在 WKWebView 原生上下文下偶发丢 Authorization 头/凭证，
+    //    导致接口 401 → 触发刷新 → 被踢回登录框（iOS App「点一下退回登录」根因）；
+    //    也可能服务不一致的缓存使界面尺寸错乱。若历史版本已在原生 WebView 注册过 SW，
+    //    这里主动注销，避免继续劫持（下一轮加载即走原生直连）。
+    const cap = (window as any).Capacitor;
+    if (cap?.isNativePlatform?.()) {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((r) => r.unregister().catch(() => {})))
+          .catch(() => {});
+      }
+      return;
+    }
     if (import.meta.env.PROD && 'serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker

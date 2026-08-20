@@ -220,7 +220,7 @@ onUnmounted(() => {
 </script>
 <style scoped>
 .sidebar {
-  position: relative; width: 240px; min-height: 100vh;
+  position: relative; width: 240px; min-height: 100dvh;
   background: var(--color-surface); padding: 20px 14px;
   display: flex; flex-direction: column;
   border-right: 1px solid var(--color-border);

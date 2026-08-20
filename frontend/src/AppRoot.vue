@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { useMessage, useNotification } from 'naive-ui';
 import { useSettingStore } from '@/store/settingStore';
+import { useAuthStore } from '@/store/authStore';
 import { bindNotify } from '@/store/notifyStore';
 import { usePwa } from '@/composables/usePwa';
 import Onboarding from '@/components/Onboarding.vue';
@@ -30,4 +31,11 @@ bindNotify(useMessage(), useNotification());
 const pwa = usePwa();
 pwa.register();
 pwa.setupNotifications();
+
+// 原生 WebView 兜底：重载后内存令牌丢失但 refreshToken 仍在（cookie/localStorage）时，
+// 启动即静默用 refreshToken 续期，避免路由守卫把已登录用户误踢回登录框（iOS App「点一下退回登录」）。
+const auth = useAuthStore();
+if (auth.refreshToken && !auth.accessToken) {
+  auth.restoreSession().catch(() => {});
+}
 </script>

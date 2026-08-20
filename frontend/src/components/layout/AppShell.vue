@@ -189,7 +189,7 @@ function logout() {
 </script>
 
 <style scoped>
-.shell { display: flex; min-height: 100vh; background: transparent; }
+.shell { display: flex; min-height: 100dvh; background: transparent; }
 .shell-side { flex: 0 0 auto; }
 .shell-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 

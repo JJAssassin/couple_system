@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import axios from 'axios';
 import api from '@/utils/request';
-import type { LoginResp, UserProfile } from '@/types';
+import type { ApiResult, LoginResp, UserProfile } from '@/types';
 
 const LS_AT = 'cl_at';
 const LS_RT = 'cl_rt';
@@ -113,5 +114,22 @@ export const useAuthStore = defineStore('auth', () => {
     safeRemove(LS_RT);
   }
 
-  return { accessToken, refreshToken, profile, setTokens, setAccessToken, login, logout };
+  /**
+   * 静默续期：用持久化的 refreshToken 重建 accessToken。
+   * 用于「内存令牌在 WebView 重载后丢失、但 refreshToken 仍在」的场景（iOS 原生 App 偶发），
+   * 避免路由守卫把已登录用户误踢回登录框。用裸 axios 直连 /auth/refresh，绕过请求拦截器，
+   * 以免与拦截器内的刷新逻辑互相递归。
+   */
+  async function restoreSession() {
+    const rt = refreshToken.value;
+    if (!rt) return;
+    const { data } = await axios.post(
+      `${import.meta.env.VITE_API_BASE || '/api'}/auth/refresh`,
+      { refreshToken: rt },
+    );
+    const r = (data as ApiResult<LoginResp>).data;
+    setTokens(r.accessToken, r.refreshToken);
+  }
+
+  return { accessToken, refreshToken, profile, setTokens, setAccessToken, login, logout, restoreSession };
 });

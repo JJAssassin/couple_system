@@ -458,6 +458,6 @@ onMounted(async () => {
 }
 :global(.quiz-modal) { padding: 0 !important; }
 @media (max-width: 767px) {
-  :global(.quiz-modal) { width: 100vw !important; max-width: 100vw !important; height: 100vh; margin: 0; border-radius: 0; }
+  :global(.quiz-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
 }
 </style>
