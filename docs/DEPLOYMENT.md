@@ -23,7 +23,7 @@
 ## 2. 部署配置目录
 
 - **配置文件位置**：`D:\Docker\couple-love-system`
-  - `docker-compose.yml`、`Caddyfile`（历史方案，已弃用）、`certs/`（自签证书，已弃用）
+  - `docker-compose.yml`（Caddyfile / certs / backend-pub 等旧方案文件已清理删除）
   - `secrets/`：`jwt-private.pem`（JWT RSA 私钥）、`couple-release.keystore` + `keystore-password.txt`（APK 正式签名）——**均不入库**
   - `.env`：MySQL 密码等（不入库，参照 `.env.example`）
   - `app/`：APK 自动更新分发目录（`couple-love-vX.Y.apk` + `version.json`，**不入库/不入镜像**）

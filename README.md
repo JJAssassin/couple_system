@@ -20,12 +20,12 @@
 | 🖼️ 相册 | 批量上传、封面视差、回忆胶片 |
 | ☁️ 矛盾 | 矛盾记录 + 和解复盘（情侣吵架也要好好收场） |
 | 💌 书信 | 定时解锁的情书（最长 1 年） |
-| 💰 记账 | 共享账本、月度预算、支出分类 |
+| 💰 记账 | 共享账本、月度预算、消费分类环形图、近 6 月收支趋势、超额提醒、CSV 导出 |
 | ☕ 约会 | 约会计划/成行/评分 |
 | 👣 足迹 | 小确幸计数（抱抱/亲亲/电影） |
 | 🗓️ 纪念日 | 一次/每年重复、提前 N 天提醒（系统通知 + 消息中心） |
 | 📊 我们的一年 | 年度恋爱报告（10+ 项数据 + 图表）→ 一键生成浪漫分享海报 |
-| 📱 PWA / APK | 可安装到桌面/主屏；安卓原生壳（爱心图标、正式签名、**App 内自动更新**） |
+| 📱 PWA / 原生 App | 可安装到桌面/主屏；安卓原生壳（爱心图标、正式签名、**App 内自动更新**）；iOS 壳（GitHub Actions 云构建未签名 ipa + 全能签重签） |
 
 **跨端实时同步**：任一端的写入（日记/愿望/记账/留言…）通过 SignalR 增量推送，另一端即时刷新 + 伴侣活动提示 + 系统通知。
 
@@ -33,13 +33,13 @@
 
 - **后端**：ASP.NET Core 8 · EF Core（MySQL 8）· SignalR · Redis（令牌存储/缓存）· JWT（RSA 非对称）
 - **前端**：Vue 3 + TypeScript + Vite · Pinia · Naive UI · ECharts（按需）· PWA（手写 Service Worker 离线缓存）
-- **移动端**：Capacitor 7 原生壳（在线模式加载 Web，Android APK 自托管分发 + 应用内更新）
+- **移动端**：Capacitor 7 原生壳（远程模式加载 Web；Android APK 自托管分发 + 应用内更新；iOS 未签名 ipa 由 GitHub Actions 自动构建、全能签安装）
 - **部署**：Docker Compose（mysql / redis / backend / frontend / cloudflared）· Cloudflare Tunnel 公网 HTTPS（免公网 IP、免端口转发）
 
 ## 🚀 快速开始
 
 ```bash
-# 1. 部署配置目录（compose / Caddyfile / secrets / .env）
+# 1. 部署配置目录（compose / secrets / .env）
 cd D:\Docker\couple-love-system
 
 # 2. 一键起全部容器（mysql/redis/backend/frontend/cloudflared）
@@ -47,27 +47,27 @@ docker compose up -d --build
 
 # 3. 访问
 #    本机：    http://localhost:8080
-#    公网：    https://<你的域名>   （Cloudflare Tunnel）
+#    公网：    https://7182629.xyz   （Cloudflare Tunnel）
 ```
 
-详细部署、开发、运维手册见 [`docs/`](docs/)：
+详细文档见 [`docs/`](docs/)：
 
-- 📦 [部署手册](docs/DEPLOYMENT.md) —— 容器化部署、域名/隧道、APK 分发、发版流程
-- 💻 [开发指南](docs/DEVELOPMENT.md) —— 架构、模块、测试、构建
-- 🛠️ [运维手册](docs/OPS.md) —— 每日备份/巡检、数据恢复、故障排查
+- 📦 [部署手册](docs/DEPLOYMENT.md) —— 容器化部署、隧道、APK/ipa 分发
+- 🔑 [访问指南](docs/ACCESS.md) —— 三种访问方式、登录账号、App 安装
+- 📢 [发版手册](docs/RELEASE.md) —— 版本号管理、iOS 云构建、发布 checklist
 
 ## 🧪 质量门禁
 
 ```bash
 # 后端测试（InMemory，无需外部依赖）
-dotnet test backend/CoupleLoveSystem.Tests -c Release        # 109 用例
+dotnet test backend/CoupleLoveSystem.Tests -c Release        # 119 用例
 
 # 前端
 cd frontend && node ./node_modules/vue-tsc/bin/vue-tsc.js --noEmit   # 0 错误
 node ./node_modules/vitest/vitest.mjs run                            # 26 用例
 
-# 全栈冒烟（经本机 nginx）
-python D:/Item/cap/workbuddy/scripts/daily_maintenance.py            # 备份 + 巡检
+# 一键健康检查（容器 / 本机 / 外网 / 登录探测）
+bash scripts/healthcheck.sh
 ```
 
 ## 📁 目录结构
