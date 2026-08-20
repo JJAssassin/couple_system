@@ -109,6 +109,13 @@ jobs:
           echo "versionName=$VN" >> "$GITHUB_OUTPUT"
           echo "versionCode=$VC" >> "$GITHUB_OUTPUT"
 
+      # 诊断：把 APK 实际产物路径注入 annotation，方便定位路径问题
+      - name: 列出 APK 产物（诊断）
+        run: |
+          echo "::error::APK 清单: $(find mobile/android -name '*.apk' 2>/dev/null | tr '\n' ' ' || echo 无)"
+          echo "::error::release 目录: $(ls mobile/android/app/build/outputs/apk/release/ 2>/dev/null | tr '\n' ' ' || echo 不存在)"
+          echo "::error::outputs 根: $(ls mobile/android/app/build/outputs/ 2>/dev/null | tr '\n' ' ' || echo 不存在)"
+
       # 发布到 GitHub Release（tag 幂等覆盖），latest 页可直接下载
       - name: 发布 Release
         env:
