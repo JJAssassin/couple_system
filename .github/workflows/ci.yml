@@ -58,7 +58,12 @@ jobs:
 
       - name: 单元测试 (vitest)
         working-directory: frontend
-        run: npm test
+        run: |
+          if ! npm test 2>&1 | tee /tmp/vitest.log; then
+            echo "::error::vitest 失败，末尾日志："
+            tail -40 /tmp/vitest.log | sed 's/^/::error::/'
+            exit 1
+          fi
 
       - name: 类型检查 + 生产构建 (vue-tsc --noEmit && vite build)
         working-directory: frontend
