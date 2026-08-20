@@ -146,6 +146,22 @@
       </div>
     </section>
 
+    <!-- 数据可视化大屏：愿望完成率仪表盘 + 共同收支环形图 -->
+    <section class="block">
+      <IndSectionTitle label="关系数据 · 一目了然" :led="true" />
+      <div class="viz-grid">
+        <IndCard class="viz-card" @click="go('wish')">
+          <div class="viz-title">愿望完成率</div>
+          <ChartWrap :option="wishGaugeOption" height="210px" />
+        </IndCard>
+        <IndCard class="viz-card" @click="go('account')">
+          <div class="viz-title">共同收支</div>
+          <ChartWrap :option="accountDonutOption" height="210px" />
+        </IndCard>
+      </div>
+      <div class="viz-hint">点击卡片可前往对应模块 · 数据随你们的使用实时更新</div>
+    </section>
+
     <!-- 最近动态 feed -->
     <section class="block" v-if="feed.length">
       <IndSectionTitle label="最近动态" :led="true" />
@@ -332,6 +348,46 @@ const conflictOption = computed<EChartsOption>(() => ({
   grid: { left: 30, right: 16, top: 16, bottom: 24 },
 }));
 
+// 愿望完成率仪表盘（玫瑰渐变）
+const wishGaugeOption = computed<EChartsOption>(() => ({
+  series: [{
+    type: 'gauge', startAngle: 210, endAngle: -30, min: 0, max: 100,
+    radius: '98%', center: ['50%', '56%'],
+    progress: { show: true, width: 16, roundCap: true, itemStyle: { color: '#ff6f7d' } },
+    axisLine: { lineStyle: { width: 16, color: [[1, 'rgba(255,111,125,0.14)']] } },
+    pointer: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
+    anchor: { show: false },
+    detail: {
+      valueAnimation: true, formatter: '{value}%', color: '#ff6f7d', fontSize: 30, fontWeight: 800,
+      offsetCenter: [0, '2%'],
+    },
+    title: { show: true, offsetCenter: [0, '32%'], color: 'var(--color-ink-3)', fontSize: 12 },
+    data: [{ value: Math.round(dashboard.value.wishCompleteRate), name: '已达成 / 总愿望' }],
+  }],
+}));
+
+// 共同收支环形图（收入 vs 支出）
+const accountDonutOption = computed<EChartsOption>(() => {
+  const a = dashboard.value.accountSummary;
+  const empty = (a.income <= 0 && a.expend <= 0);
+  return {
+    tooltip: { trigger: 'item', valueFormatter: (v: unknown) => '¥' + Math.round(Number(v)).toLocaleString('zh-CN') },
+    legend: { bottom: 0, icon: 'circle', itemWidth: 8, itemHeight: 8, textStyle: { color: 'var(--color-ink-3)', fontSize: 12 } },
+    series: [{
+      type: 'pie', radius: ['46%', '72%'], center: ['50%', '44%'],
+      label: { show: !empty, formatter: '{b}\n{d}%', color: 'var(--color-ink)', fontSize: 12 },
+      labelLine: { show: !empty, length: 8, length2: 8 },
+      itemStyle: { borderColor: 'var(--color-surface)', borderWidth: 2, borderRadius: 6 },
+      data: empty
+        ? [{ name: '暂无记账', value: 1, itemStyle: { color: 'rgba(122,100,98,0.18)' } }]
+        : [
+            { name: '收入', value: a.income, itemStyle: { color: '#16a34a' } },
+            { name: '支出', value: a.expend, itemStyle: { color: '#dc2626' } },
+          ],
+    }],
+  };
+});
+
 // 各区块独立拉取：任一接口失败只清空该区块，不连累整页（避免 Promise.all 单点失败导致首页全归零）
 async function loadLoveInfo() {
   try { const { data } = await api.get('/home/loveinfo'); loveInfo.value = (data as ApiResult<LoveInfo>).data; } catch { /* 拦截器已提示 */ }
@@ -494,6 +550,13 @@ onMounted(async () => {
 .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .stat-link { cursor: pointer; transition: transform var(--dur-pop) var(--ease-love); }
 .stat-link:hover { transform: translateY(-3px); }
+
+/* 数据可视化大屏 */
+.viz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.viz-card { padding: 14px 14px 8px; cursor: pointer; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
+.viz-card:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.3), 0 10px 28px -10px rgba(122, 100, 98, 0.18); }
+.viz-title { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 2px; }
+.viz-hint { margin-top: 10px; font-size: 12px; color: var(--color-ink-3); text-align: center; }
 
 /* feed */
 .feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
