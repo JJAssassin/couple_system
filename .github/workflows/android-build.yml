@@ -85,6 +85,11 @@ jobs:
       - name: 切回官方 Gradle 分发源
         run: sed -i 's|https://mirrors.cloud.tencent.com/gradle/||' mobile/android/gradle/wrapper/gradle-wrapper.properties
 
+      # build.gradle 的 repositories 阿里云镜像优先（本机国内快）；海外 runner 访问国内镜像极慢/卡死，
+      # 故删除镜像行，让 runner 直连 google()/mavenCentral() 官方源
+      - name: 移除国内 Maven 镜像（海外 runner 直连官方源）
+        run: sed -i "/maven { url 'https:\/\/maven.aliyun.com/d" mobile/android/build.gradle
+
       - name: Build release APK
         run: |
           cd mobile/android
