@@ -22,8 +22,13 @@
 
 ## 原生 App
 
-- **iOS**：用「全能签」安装已签名的 IPA；更新时重装一次即可。
-- **安卓**：安装 APK，App 内自动检测新版本并提示更新。
+> 两个 App 都是**远程模式**：前端新功能随时在线生效，日常使用**无需重装**。
+> 只有换新手机、或想要新版 iOS 启动屏时，才需要重装一次。
+
+- **iOS（v1.3 未签名包）**：用「全能签」重签安装。
+  - 直链：https://github.com/JJAssassin/couple_system/releases/download/ios-unsigned-20260820-060626/App-unsigned.ipa
+  - 或打开 https://github.com/JJAssassin/couple_system/releases/latest 下载 `App-unsigned.ipa`（GitHub Actions 自动构建，每次发版更新）。
+- **安卓**：远程模式自动是最新，无需手动更新；APK 备份：https://7182629.xyz/app/couple-love-v1.2.apk
 
 ## 管理员运维命令
 
