@@ -35,6 +35,9 @@ import { computed, onMounted, ref } from 'vue';
 interface UpdateManifest {
   versionName: string;
   versionCode: number;
+  // Android 为远程 WebView 模式（壳加载公网域名，前端改动实时生效），
+  // 无需随版本重装；用独立版本号避免「更新→装旧壳→再提示」死循环。
+  androidVersionCode?: number;
   changelog?: string;
   apkUrl?: string;
   releaseUrl?: string;
@@ -133,8 +136,14 @@ onMounted(async () => {
   }
   if (!manifest?.versionCode) return;
 
+  // 平台各自比对：Android 用 androidVersionCode（远程模式常驻最新，不提示），
+  // iOS 用 versionCode（原生启动屏需重装才生效，故提示）。
+  const targetCode =
+    platform.value === 'android'
+      ? (manifest.androidVersionCode ?? manifest.versionCode)
+      : manifest.versionCode;
   const needUpdate =
-    manifest.versionCode > current &&
+    targetCode > current &&
     (manifest.minSupportedCode ?? 0) <= current; // 当前版本仍受支持才提示
   if (needUpdate) info.value = manifest;
 });
