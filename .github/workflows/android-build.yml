@@ -1,0 +1,118 @@
+name: Android Build
+
+# Android 云构建（GitHub ubuntu runner）：在 Windows 本机也能产出 APK。
+# 触发：手动运行（Actions → Android Build → Run workflow）或 mobile/android/ 有改动时。
+#
+# 【签名与分发说明】
+# 1) 无证书时：build.gradle 自动回退 debug 签名（keystore.properties 缺失即触发），
+#    产出可直接安装的 app-release.apk（注意：与正式签名包签名不一致，
+#    覆盖安装需先卸载旧版——数据都在云端，卸载重装无损）。
+# 2) 要正式签名（可无缝升级覆盖安装），在仓库 Secrets 配置（Settings → Secrets → Actions）：
+#    - ANDROID_KEYSTORE_BASE64  : couple-release.keystore 的 base64
+#    - ANDROID_KEYSTORE_PASSWORD: keystore 密码
+#    - ANDROID_KEY_ALIAS        : 别名
+#    - ANDROID_KEY_PASSWORD     : key 密码
+#    配置后本 workflow 自动写入 keystore.properties 走正式签名。
+#
+# Release tag 为确定性命名 android-v{versionName}（幂等覆盖），
+# 便于 version.json 的 apkUrl 用固定链接指向最新包。
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'mobile/android/**'
+      - 'mobile/capacitor.config.ts'
+      - 'mobile/package.json'
+      - 'mobile/package-lock.json'
+      - '.github/workflows/android-build.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    env:
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install Capacitor deps & sync Android
+        run: |
+          cd mobile
+          npm install --no-audit --no-fund
+          npx cap sync android
+
+      # 正式签名：有 ANDROID_KEYSTORE_BASE64 secret 时写入 keystore.properties（否则回退 debug 签名）
+      - name: 写入正式签名配置
+        if: ${{ env.HAS_KEYSTORE != '' }}
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$KS_B64" | base64 --decode > /tmp/release.keystore
+          cat > mobile/android/keystore.properties <<EOF
+          storeFile=/tmp/release.keystore
+          storePassword=$KS_PASS
+          keyAlias=$ALIAS
+          keyPassword=$KEY_PASS
+          EOF
+
+      # compileSdk 36：runner 可能未预装该平台，缺则补装（幂等，已装秒过）
+      - name: 确保 Android SDK platform 36
+        run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" >/dev/null 2>&1 || echo "sdkmanager 安装跳过（可能已预装）"
+
+      # 本机 wrapper 指向腾讯云镜像（国内快）；GitHub runner 在海外，换官方源避免下载慢/失败
+      - name: 切回官方 Gradle 分发源
+        run: sed -i 's|https://mirrors.cloud.tencent.com/gradle/||' mobile/android/gradle/wrapper/gradle-wrapper.properties
+
+      - name: Build release APK
+        run: |
+          cd mobile/android
+          ./gradlew :app:assembleRelease --no-daemon
+
+      - name: 读取版本号
+        id: ver
+        run: |
+          VN=$(grep -oP 'versionName\s+"\K[^"]+' mobile/android/app/build.gradle)
+          VC=$(grep -oP 'versionCode\s+\K[0-9]+' mobile/android/app/build.gradle)
+          echo "versionName=$VN" >> "$GITHUB_OUTPUT"
+          echo "versionCode=$VC" >> "$GITHUB_OUTPUT"
+
+      # 发布到 GitHub Release（tag 幂等覆盖），latest 页可直接下载
+      - name: 发布 Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIGNED: ${{ env.HAS_KEYSTORE }}
+        run: |
+          TAG=android-v${{ steps.ver.outputs.versionName }}
+          if [ -n "$SIGNED" ]; then SIGN_NOTE="正式签名"; else SIGN_NOTE="debug 签名（可安装）"; fi
+          gh release delete "$TAG" --yes -R ${{ github.repository }} 2>/dev/null || true
+          gh release create "$TAG" -R ${{ github.repository }} \
+            --title "我们的小世界 Android v${{ steps.ver.outputs.versionName }}" \
+            --notes "APK（$SIGN_NOTE）。构建时间：$(date '+%Y-%m-%d %H:%M')" \
+            mobile/android/app/build/outputs/apk/release/app-release.apk
+
+      - name: 输出下载直链
+        run: |
+          echo "========== APK 直链（version.json apkUrl 用此固定链接） =========="
+          echo "https://github.com/${{ github.repository }}/releases/download/android-v${{ steps.ver.outputs.versionName }}/app-release.apk"
