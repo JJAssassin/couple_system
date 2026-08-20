@@ -89,7 +89,12 @@ jobs:
         run: |
           cd mobile/android
           chmod +x gradlew   # 兜底：Windows 仓库可能丢失可执行位（exit 126）
-          ./gradlew :app:assembleRelease --no-daemon
+          # 失败时把 gradle 错误摘要注入 annotation，便于在 Actions 页直接定位
+          if ! ./gradlew :app:assembleRelease --no-daemon 2>&1 | tee /tmp/gradle.log; then
+            echo "::error::Gradle 构建失败，末尾日志："
+            tail -40 /tmp/gradle.log | sed 's/^/::error::/'
+            exit 1
+          fi
 
       - name: 读取版本号
         id: ver
