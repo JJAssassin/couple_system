@@ -331,6 +331,24 @@ public class MonthlyBudgetDto
     public bool IsOverspent { get; set; }
     public List<MonthlyCategoryStat> Categories { get; set; } = new();
 }
+
+/// <summary>月度趋势点：某月收支汇总（共近 6 个月，含当月）。</summary>
+public class AccountTrendDto
+{
+    public string Month { get; set; } = string.Empty; // "yyyy-MM"
+    public decimal Income { get; set; }
+    public decimal Expense { get; set; }
+}
+
+/// <summary>记账统计：当月收支 + 近 6 个月收支趋势，供趋势/分类可视化。</summary>
+public class AccountStatisticsDto
+{
+    public int Year { get; set; }
+    public int Month { get; set; }
+    public decimal MonthIncome { get; set; }
+    public decimal MonthExpense { get; set; }
+    public List<AccountTrendDto> Trend { get; set; } = new();
+}
 #endregion
 
 #region 约会 DatePlan

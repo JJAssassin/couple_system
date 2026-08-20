@@ -5,6 +5,7 @@ using CoupleLoveSystem.Core.Result;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace CoupleLoveSystem.Application.Services;
 
@@ -88,6 +89,64 @@ public class AccountService
             Income = income,
             Expend = expend
         };
+    }
+
+    /// <summary>记账统计：当月收支 + 近 6 个月（含当月）收支趋势，供月度趋势/分类可视化。</summary>
+    public async Task<AccountStatisticsDto> StatisticsAsync(int year, int month, long currentUserId, CancellationToken ct = default)
+    {
+        if (year < 2000 || year > 2100) throw new ConflictException("年份不合法");
+        if (month < 1 || month > 12) throw new ConflictException("月份需为 1-12");
+
+        var all = await _db.AccountRecords.AsNoTracking().ToListAsync(ct);
+        var monthRecords = all.Where(a => a.RecordTime.Year == year && a.RecordTime.Month == month).ToList();
+
+        // 近 6 个月（含当月）逐月收支
+        var trend = new List<AccountTrendDto>();
+        var cursor = new DateTime(year, month, 1).AddMonths(-5);
+        for (var i = 0; i < 6; i++)
+        {
+            var y = cursor.Year; var m = cursor.Month;
+            var recs = all.Where(a => a.RecordTime.Year == y && a.RecordTime.Month == m).ToList();
+            trend.Add(new AccountTrendDto
+            {
+                Month = $"{y:D4}-{m:D2}",
+                Income = recs.Where(a => a.RecordType == AccountRecordType.Income).Sum(a => a.Amount),
+                Expense = recs.Where(a => a.RecordType == AccountRecordType.Expend).Sum(a => a.Amount),
+            });
+            cursor = cursor.AddMonths(1);
+        }
+
+        return new AccountStatisticsDto
+        {
+            Year = year,
+            Month = month,
+            MonthIncome = monthRecords.Where(a => a.RecordType == AccountRecordType.Income).Sum(a => a.Amount),
+            MonthExpense = monthRecords.Where(a => a.RecordType == AccountRecordType.Expend).Sum(a => a.Amount),
+            Trend = trend,
+        };
+    }
+
+    /// <summary>查询某年某月全部账单（按时间倒序），供 CSV 导出。</summary>
+    public async Task<List<CoupleAccountRecord>> RecordsInMonthAsync(int year, int month, CancellationToken ct = default)
+        => await _db.AccountRecords.AsNoTracking()
+            .Where(a => a.RecordTime.Year == year && a.RecordTime.Month == month)
+            .OrderByDescending(a => a.RecordTime)
+            .ToListAsync(ct);
+
+    /// <summary>把某月账单渲染为 CSV 文本（UTF-8 带 BOM，Excel 直接打开不乱码；逗号/引号做兼容转义）。</summary>
+    public static string ExportCsv(int year, int month, IEnumerable<CoupleAccountRecord> records)
+    {
+        var sb = new StringBuilder();
+        sb.Append('\uFEFF'); // BOM，Excel 识别 UTF-8
+        sb.AppendLine("日期,类型,分类,金额,备注");
+        foreach (var r in records.OrderByDescending(r => r.RecordTime))
+        {
+            var type = r.RecordType == AccountRecordType.Income ? "收入" : "支出";
+            var cat = r.Category.Replace(",", "，").Replace("\"", "“");
+            var remark = (r.Remark ?? "").Replace(",", "，").Replace("\"", "“").Replace("\r", " ").Replace("\n", " ");
+            sb.AppendLine($"{r.RecordTime:yyyy-MM-dd},{type},{cat},{r.Amount:F2},{remark}");
+        }
+        return sb.ToString();
     }
 
     public static AccountRecordDto Map(CoupleAccountRecord a) => new()

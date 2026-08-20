@@ -20,6 +20,8 @@ let refreshing: Promise<string> | null = null;
 
 api.interceptors.response.use(
   (res) => {
+    // 二进制下载（如 CSV/文件导出）不经过 ApiResult 包装，直接放行
+    if (res.config.responseType === 'blob') return res;
     const body = res.data as ApiResult<unknown>;
     if (!body.success) {
       useNotifyStore().error(body.msg || '请求失败');

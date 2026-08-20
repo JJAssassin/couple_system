@@ -365,6 +365,18 @@ export interface MonthlyBudgetDto {
   isOverspent: boolean;
   categories: MonthlyCategoryStat[];
 }
+export interface AccountTrendDto {
+  month: string; // "yyyy-MM"
+  income: number;
+  expense: number;
+}
+export interface AccountStatisticsDto {
+  year: number;
+  month: number;
+  monthIncome: number;
+  monthExpense: number;
+  trend: AccountTrendDto[];
+}
 
 // ---------- 约会 ----------
 export interface DateRecordDto {

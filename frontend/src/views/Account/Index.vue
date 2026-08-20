@@ -58,11 +58,34 @@
       </div>
     </section>
 
+    <!-- 消费分类（当月支出构成，跟随预算月份） -->
+    <section class="block">
+      <div class="block-head">
+        <h2>当月消费分类</h2>
+        <span class="sub-text">钱都花哪了，一目了然</span>
+      </div>
+      <ChartWrap v-if="catPieData.length" :option="catPieOption" />
+      <IndEmpty v-else title="本月还没有支出" desc="记几笔支出，就能看到钱都花在哪啦" />
+    </section>
+
+    <!-- 月度趋势 -->
+    <section class="block">
+      <div class="block-head">
+        <h2>近 6 个月收支趋势</h2>
+        <span class="sub-text">和 TA 一起看看小金库的走势</span>
+      </div>
+      <ChartWrap v-if="stats?.trend?.length" :option="trendOption" />
+      <IndEmpty v-else title="暂无趋势数据" desc="记账后这里会展示你们的收支走向" />
+    </section>
+
     <!-- 记账列表 + 记一笔 -->
     <section class="block">
       <div class="block-head">
         <h2>账单明细</h2>
-        <NButton type="primary" size="small" @click="openCreate">+ 记一笔</NButton>
+        <div class="month-pick">
+          <NButton size="small" quaternary @click="exportCsv">导出 CSV</NButton>
+          <NButton type="primary" size="small" @click="openCreate">+ 记一笔</NButton>
+        </div>
       </div>
       <n-tabs v-model:value="recFilter" type="segment" class="rec-tabs">
         <n-tab-pane name="all" tab="全部" />
@@ -163,7 +186,7 @@ import {
 } from 'naive-ui';
 import type { FormItemRule } from 'naive-ui';
 import type { EChartsOption } from 'echarts';
-import type { AccountRecordDto, MonthlyBudgetDto, BudgetDto } from '@/types';
+import type { AccountRecordDto, MonthlyBudgetDto, BudgetDto, AccountStatisticsDto } from '@/types';
 import * as ac from '@/api/account';
 import * as bg from '@/api/budget';
 import ChartWrap from '@/components/ChartWrap.vue';
@@ -236,6 +259,80 @@ function refreshPie() {
   ];
 }
 
+// —— 统计：当月消费分类 + 近 6 月趋势 ——
+const stats = ref<AccountStatisticsDto | null>(null);
+const catPalette = ['#ff6f7d', '#ff9f6e', '#ffc46b', '#7ec8a4', '#6ba7d6', '#b48ad9', '#e584b4', '#8ec6c5', '#c9b26b', '#9aa5b1'];
+
+const catPieData = computed(() => (budget.value?.categories.filter((c) => c.amount > 0) ?? []).sort((a, b) => b.amount - a.amount));
+
+const catPieOption = computed<EChartsOption>(() => ({
+  tooltip: {
+    trigger: 'item',
+    formatter: (p: any) => `${p.name}：¥${Number(p.value).toFixed(2)}（${p.percent}%）`,
+  },
+  legend: { bottom: 0, type: 'scroll' },
+  series: [{
+    type: 'pie',
+    radius: ['42%', '68%'],
+    center: ['50%', '44%'],
+    avoidLabelOverlap: true,
+    itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+    label: { formatter: '{b}\n¥{c}' },
+    data: catPieData.value.map((c, i) => ({
+      name: c.category || '未分类',
+      value: Number(c.amount.toFixed(2)),
+      itemStyle: { color: catPalette[i % catPalette.length] },
+    })),
+  }],
+}));
+
+const trendOption = computed<EChartsOption>(() => {
+  const t = stats.value?.trend ?? [];
+  return {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0, right: 0 },
+    grid: { left: 8, right: 8, top: 34, bottom: 0, containLabel: true },
+    xAxis: { type: 'category', data: t.map((x) => x.month.slice(5).replace('-', '月') + '月') },
+    yAxis: { type: 'value', axisLabel: { formatter: '{value}' } },
+    series: [
+      {
+        name: '收入', type: 'bar', barMaxWidth: 20,
+        data: t.map((x) => Number(x.income.toFixed(2))),
+        itemStyle: { color: '#5BB98C', borderRadius: [4, 4, 0, 0] },
+      },
+      {
+        name: '支出', type: 'bar', barMaxWidth: 20,
+        data: t.map((x) => Number(x.expense.toFixed(2))),
+        itemStyle: { color: '#ff6f7d', borderRadius: [4, 4, 0, 0] },
+      },
+    ],
+  };
+});
+
+async function loadStatistics() {
+  stats.value = await ac.accountStatistics(budgetYear.value, budgetMonth.value);
+}
+
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function exportCsv() {
+  try {
+    const blob = await ac.exportAccountCsv(budgetYear.value, budgetMonth.value);
+    const name = `couple-account-${budgetYear.value}-${String(budgetMonth.value).padStart(2, '0')}.csv`;
+    downloadBlob(blob, name);
+    feedback.exported('账单 CSV');
+  } catch {
+    feedback.error('导出失败，请稍后再试');
+  }
+}
+
 // —— 预算 ——
 const budget = ref<MonthlyBudgetDto | null>(null);
 const budgetYear = ref(new Date().getFullYear());
@@ -255,6 +352,7 @@ function onBudgetMonthChange(ts: number) {
   budgetYear.value = d.getFullYear();
   budgetMonth.value = d.getMonth() + 1;
   loadBudget();
+  loadStatistics();
 }
 
 const showBudget = ref(false);
@@ -305,7 +403,7 @@ async function loadSummary() {
   refreshPie();
 }
 async function refresh() {
-  await Promise.all([loadSummary(), refreshList(), loadBudget()]);
+  await Promise.all([loadSummary(), refreshList(), loadBudget(), loadStatistics()]);
 }
 
 function openCreate() {
@@ -346,6 +444,19 @@ async function save() {
   }
   showModal.value = false;
   await refresh();
+  // 超额提醒：记了一笔支出后，若当月总预算或分类预算超支，主动提醒一次
+  if (req.recordType === 2) {
+    const b = budget.value;
+    if (b?.totalBudget != null && b.isOverspent) {
+      feedback.warn(`本月总预算超支 ¥${Math.abs(b.remaining).toFixed(2)}，和 TA 一起控制一下支出吧`);
+    } else {
+      const over = b?.categories.filter((c) => c.isOverspent) ?? [];
+      if (over.length) {
+        const c = over[0];
+        feedback.warn(`「${c.category || '未分类'}」已超预算 ¥${Math.abs(c.amount - (c.budget ?? 0)).toFixed(2)}，注意控制哦`);
+      }
+    }
+  }
 }
 async function remove(r: AccountRecordDto) {
   await ac.deleteAccount(r.id);

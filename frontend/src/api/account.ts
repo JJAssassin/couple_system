@@ -1,5 +1,5 @@
 import api from '@/utils/request';
-import type { ApiResult, PagedResult, AccountRecordDto, AccountRecordReq } from '@/types';
+import type { ApiResult, PagedResult, AccountRecordDto, AccountRecordReq, AccountStatisticsDto } from '@/types';
 
 export interface AccountSummary {
   income: number;
@@ -24,4 +24,13 @@ export function deleteAccount(id: number) {
 }
 export function accountSummary() {
   return api.get('/account/summary').then((r) => (r.data as ApiResult<AccountSummary>).data);
+}
+/** 记账统计：当月收支 + 近 6 个月收支趋势 */
+export function accountStatistics(year: number, month: number) {
+  return api.get('/account/statistics', { params: { year, month } }).then((r) => (r.data as ApiResult<AccountStatisticsDto>).data);
+}
+/** 导出某月账单 CSV（返回 Blob，由调用方触发下载） */
+export async function exportAccountCsv(year: number, month: number) {
+  const resp = await api.get('/account/export', { params: { year, month }, responseType: 'blob' });
+  return resp.data as Blob;
 }

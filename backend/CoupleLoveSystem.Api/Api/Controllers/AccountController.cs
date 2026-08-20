@@ -40,4 +40,19 @@ public class AccountController : BaseController
     [HttpGet("summary")]
     public async Task<ActionResult<ApiResult<AccountSummaryDto>>> Summary(CancellationToken ct = default) =>
         Ok(ApiResult<AccountSummaryDto>.Ok(await _svc.SummaryAsync(CurrentUserId, ct)));
+
+    [HttpGet("statistics")]
+    public async Task<ActionResult<ApiResult<AccountStatisticsDto>>> Statistics(
+        [FromQuery] int year, [FromQuery] int month, CancellationToken ct = default) =>
+        Ok(ApiResult<AccountStatisticsDto>.Ok(await _svc.StatisticsAsync(year, month, CurrentUserId, ct)));
+
+    /// <summary>导出某月账单为 CSV（UTF-8 BOM，Excel 直接打开）。返回文件流而非 ApiResult 包装。</summary>
+    [HttpGet("export")]
+    public async Task<IActionResult> Export([FromQuery] int year, [FromQuery] int month, CancellationToken ct = default)
+    {
+        var records = await _svc.RecordsInMonthAsync(year, month, ct);
+        var csv = AccountService.ExportCsv(year, month, records);
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+        return File(bytes, "text/csv; charset=utf-8", $"couple-account-{year:D4}-{month:D2}.csv");
+    }
 }

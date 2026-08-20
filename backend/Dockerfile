@@ -3,6 +3,9 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 # 后端为单项目结构（Api 项目内含 Application/Core/Infrastructure 各层；Tests 不参与发布）
 COPY . .
+# 国内网络下 nuget.org 访问不稳（NU1301），切华为云镜像源保证容器内 restore 可用
+RUN dotnet nuget add source https://repo.huaweicloud.com/repository/nuget/v3/index.json -n huawei \
+    && dotnet nuget disable source nuget.org
 RUN dotnet restore CoupleLoveSystem.Api/CoupleLoveSystem.Api.csproj
 RUN dotnet publish CoupleLoveSystem.Api/CoupleLoveSystem.Api.csproj -c Release -o /app/publish --no-restore
 
