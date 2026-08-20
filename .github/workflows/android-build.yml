@@ -115,6 +115,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           SIGNED: ${{ env.HAS_KEYSTORE }}
         run: |
+          set -o pipefail   # 管道判断 gh 真实退出码（否则 tee 恒 0 掩盖失败）
           TAG=android-v${{ steps.ver.outputs.versionName }}
           if [ -n "$SIGNED" ]; then SIGN_NOTE="正式签名"; else SIGN_NOTE="debug 签名（可安装）"; fi
           gh release delete "$TAG" --yes -R ${{ github.repository }} 2>/dev/null || true
