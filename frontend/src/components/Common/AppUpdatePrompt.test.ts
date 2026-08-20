@@ -1,0 +1,130 @@
+// @vitest-environment jsdom
+/**
+ * AppUpdatePrompt 组件测试：
+ * 覆盖「平台版本比对」核心逻辑 —— Android 用 androidVersionCode（远程模式防死循环）、
+ * iOS 用 versionCode 提示重装，以及「稍后」本地记忆。
+ */
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { mount, flushPromises } from '@vue/test-utils';
+import AppUpdatePrompt from './AppUpdatePrompt.vue';
+
+type Manifest = {
+  versionName: string;
+  versionCode: number;
+  androidVersionCode?: number;
+  changelog?: string;
+  releaseUrl?: string;
+  minSupportedCode?: number;
+};
+
+/** 构造 Capacitor 全局 mock：isNativePlatform / getPlatform / App.getInfo */
+function stubCapacitor(platform: 'ios' | 'android', build: number) {
+  (window as any).Capacitor = {
+    isNativePlatform: () => true,
+    getPlatform: () => platform,
+    Plugins: {
+      App: { getInfo: async () => ({ build: String(build) }) },
+    },
+  };
+}
+
+function stubFetch(manifest: Manifest | null) {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => manifest,
+    })
+  );
+}
+
+const manifest: Manifest = {
+  versionName: '1.3',
+  versionCode: 4,
+  androidVersionCode: 3,
+  changelog: '• 测试更新',
+  releaseUrl: 'https://github.com/JJAssassin/couple_system/releases/latest',
+};
+
+beforeEach(() => {
+  localStorage.clear();
+  vi.restoreAllMocks();
+  delete (window as any).Capacitor;
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe('AppUpdatePrompt 版本比对', () => {
+  it('浏览器/PWA（无 Capacitor）不检测、不弹层', async () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+    const w = mount(AppUpdatePrompt);
+    await flushPromises();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(w.find('.upd-mask').exists()).toBe(false);
+    w.unmount();
+  });
+
+  it('Android 且 androidVersionCode 未增长（远程模式）→ 不提示（防死循环）', async () => {
+    stubCapacitor('android', 3); // 已装壳 code=3
+    stubFetch(manifest);         // 清单 androidVersionCode=3
+    const w = mount(AppUpdatePrompt);
+    await flushPromises();
+    expect(w.find('.upd-mask').exists()).toBe(false);
+    w.unmount();
+  });
+
+  it('Android 且 androidVersionCode 增长 → 提示新版本', async () => {
+    stubCapacitor('android', 2);
+    stubFetch({ ...manifest, androidVersionCode: 4 });
+    const w = mount(AppUpdatePrompt);
+    await flushPromises();
+    expect(w.find('.upd-mask').exists()).toBe(true);
+    expect(w.text()).toContain('v1.3');
+    expect(w.text()).toContain('立即更新');
+    w.unmount();
+  });
+
+  it('iOS 且 versionCode 增长 → 提示并展示全能签引导', async () => {
+    stubCapacitor('ios', 3);
+    stubFetch(manifest); // versionCode=4 > 3
+    const w = mount(AppUpdatePrompt);
+    await flushPromises();
+    expect(w.find('.upd-mask').exists()).toBe(true);
+    expect(w.text()).toContain('v1.3');
+    expect(w.text()).toContain('iOS 更新流程');
+    expect(w.text()).toContain('前往下载新版');
+    w.unmount();
+  });
+
+  it('iOS 版本一致 → 不提示', async () => {
+    stubCapacitor('ios', 4);
+    stubFetch(manifest);
+    const w = mount(AppUpdatePrompt);
+    await flushPromises();
+    expect(w.find('.upd-mask').exists()).toBe(false);
+    w.unmount();
+  });
+
+  it('低于 minSupportedCode（须升级）→ 仍提示', async () => {
+    stubCapacitor('android', 1);
+    stubFetch({ ...manifest, androidVersionCode: 4, minSupportedCode: 2 });
+    const w = mount(AppUpdatePrompt);
+    await flushPromises();
+    expect(w.find('.upd-mask').exists()).toBe(true);
+    w.unmount();
+  });
+
+  it('点「稍后」→ localStorage 记录当天并关闭弹层', async () => {
+    stubCapacitor('ios', 3);
+    stubFetch(manifest);
+    const w = mount(AppUpdatePrompt);
+    await flushPromises();
+    await w.find('.upd-btn:not(.primary)').trigger('click');
+    expect(w.find('.upd-mask').exists()).toBe(false);
+    expect(localStorage.getItem('cl_update_dismiss')).toBe(String(new Date().getDate()));
+    w.unmount();
+  });
+});
