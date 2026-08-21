@@ -55,7 +55,7 @@ public class BoardMessageService
             CreateTime = now,
             ImageUrl = req.ImageUrl,
             IsPrivate = req.IsPrivate,
-            ReceiverUserId = req.ReceiverUserId,
+            ReceiverUserId = req.ReceiverUserId ?? currentUserId,
             ScheduledAt = req.ScheduledAt,
             IsUnlocked = !req.ScheduledAt.HasValue || req.ScheduledAt.Value <= now,
         };
