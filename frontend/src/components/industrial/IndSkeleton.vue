@@ -15,7 +15,7 @@
       </div>
     </template>
 
-    <!-- 列表行占位（消息 / 时间轴 / 书信） -->
+    <!-- 列表行占位（消息 / 时间轴 / 留言） -->
     <template v-else-if="variant === 'list'">
       <div v-for="i in rows" :key="i" class="sk-row">
         <div class="sk-dot sk-base"></div>

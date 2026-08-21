@@ -30,7 +30,6 @@ declare module 'vue' {
     IndSectionTitle: typeof import('./src/components/industrial/IndSectionTitle.vue')['default']
     IndSkeleton: typeof import('./src/components/industrial/IndSkeleton.vue')['default']
     IndStatCard: typeof import('./src/components/industrial/IndStatCard.vue')['default']
-    LetterItem: typeof import('./src/components/Letter/LetterItem.vue')['default']
     LoveCount: typeof import('./src/components/Common/LoveCount.vue')['default']
     MilestoneStrip: typeof import('./src/components/Common/MilestoneStrip.vue')['default']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
