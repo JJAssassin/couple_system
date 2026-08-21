@@ -102,7 +102,6 @@ const items = [
   { to: '/diary', label: '日记', icon: BookOpen },
   { to: '/wish', label: '愿望', icon: Star },
   { to: '/todo', label: '待办', icon: ListChecks },
-  { to: '/task', label: '打卡', icon: Target },
   { to: '/board', label: '留言板', icon: MessageCircle },
   { to: '/quiz', label: '默契问答', icon: Sparkles },
   { to: '/album', label: '相册', icon: Image },

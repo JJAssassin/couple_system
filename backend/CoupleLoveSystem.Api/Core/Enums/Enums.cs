@@ -23,9 +23,3 @@ public enum ConflictLevel { Small = 1, Middle = 2, Serious = 3 }
 public enum AccountRecordType { Income = 1, Expend = 2 }
 
 public enum MessageType { Anniversary = 1, DiaryInteract = 2, WishComplete = 3, Other = 4 }
-
-/// <summary>任务类型：内置系统任务 / 自定义任务</summary>
-public enum TaskType { System = 1, Custom = 2 }
-
-/// <summary>任务频率：每日 / 每周 / 每月 / 一次性</summary>
-public enum TaskFrequency { Daily = 1, Weekly = 2, Monthly = 3, Once = 4 }

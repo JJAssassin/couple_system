@@ -279,28 +279,3 @@ public class CoupleQuote : BaseEntity
     public string? Author { get; set; }
     public int SortOrder { get; set; }
 }
-
-/// <summary>情侣任务模板：定义任务名称、图标、积分、频率等元数据。
-/// 内置系统任务由种子写入；自定义任务由用户创建。</summary>
-[Broadcast("task")]
-public class CoupleTaskTemplate : BaseEntity, ICoupleScoped
-{
-    public string Title { get; set; } = string.Empty;
-    public string? Description { get; set; }
-    public string? Icon { get; set; }          // emoji 或图标 key
-    public int Points { get; set; } = 10;      // 完成一次所得积分
-    public TaskType TaskType { get; set; }     // 系统 / 自定义
-    public TaskFrequency Frequency { get; set; } // 频率
-    public bool IsActive { get; set; } = true; // 是否启用
-}
-
-/// <summary>情侣任务完成记录：某天某任务被谁完成，累计积分与连续打卡天数由此派生。</summary>
-[Broadcast("task")]
-public class CoupleTaskRecord : BaseEntity, ICoupleScoped
-{
-    public long TemplateId { get; set; }
-    public long UserId { get; set; }
-    public DateTime CompleteDate { get; set; } // 以本地日期为准（UTC+8 的日期部分）
-    public int EarnedPoints { get; set; }
-    public string? Remark { get; set; }
-}

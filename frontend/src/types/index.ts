@@ -404,53 +404,6 @@ export interface SystemMessageDto {
   createTime: string;
 }
 
-// ---------- 任务 ----------
-export type TaskType = 1 | 2; // 1=系统 2=自定义
-export type TaskFrequency = 1 | 2 | 3 | 4; // 1=每日 2=每周 3=每月 4=一次性
-
-export interface TaskTemplateDto {
-  id: number;
-  title: string;
-  description?: string;
-  icon?: string;
-  points: number;
-  taskType: TaskType;
-  frequency: TaskFrequency;
-  isActive: boolean;
-  createTime: string;
-}
-export interface TaskTemplateReq {
-  title: string;
-  description?: string;
-  icon?: string;
-  points?: number;
-  taskType?: TaskType;
-  frequency?: TaskFrequency;
-}
-export interface TaskRecordDto {
-  id: number;
-  templateId: number;
-  templateTitle: string;
-  templateIcon?: string;
-  userId: number;
-  completeDate: string;
-  earnedPoints: number;
-  remark?: string;
-  createTime: string;
-}
-export interface TaskRecordReq {
-  templateId: number;
-  remark?: string;
-}
-export interface TaskStatsDto {
-  totalPoints: number;
-  totalCheckIns: number;
-  streakDays: number;
-  activeTaskCount: number;
-  todayCheckedInCount: number;
-}
-
-// ---------- 时间轴 ----------
 export interface TimelineItemDto {
   id: number;
   type: string;

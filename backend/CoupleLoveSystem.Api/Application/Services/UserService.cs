@@ -60,9 +60,7 @@ public class UserService
             Conflicts = await _db.Conflicts.ToListAsync(ct),
             AccountRecords = await _db.AccountRecords.Where(a => a.CreateUserId == currentUserId).ToListAsync(ct),
             DateRecords = await _db.DateRecords.Where(d => d.CreateUserId == currentUserId).ToListAsync(ct),
-            SystemMessages = await _db.SystemMessages.Where(m => m.ReceiverUserId == currentUserId).ToListAsync(ct),
-            TaskTemplates = await _db.TaskTemplates.Where(t => t.CreateUserId == currentUserId && !t.IsDeleted).ToListAsync(ct),
-            TaskRecords = await _db.TaskRecords.Where(r => r.UserId == currentUserId && !r.IsDeleted).ToListAsync(ct)
+            SystemMessages = await _db.SystemMessages.Where(m => m.ReceiverUserId == currentUserId).ToListAsync(ct)
         };
 
         var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });

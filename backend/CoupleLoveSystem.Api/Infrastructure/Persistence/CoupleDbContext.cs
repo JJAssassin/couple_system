@@ -49,9 +49,6 @@ public class CoupleDbContext : DbContext
     public DbSet<CoupleSetting> Settings => Set<CoupleSetting>();
     public DbSet<CoupleFootprint> Footprints => Set<CoupleFootprint>();
     public DbSet<CoupleQuote> Quotes => Set<CoupleQuote>();
-    public DbSet<CoupleTaskTemplate> TaskTemplates => Set<CoupleTaskTemplate>();
-    public DbSet<CoupleTaskRecord> TaskRecords => Set<CoupleTaskRecord>();
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -103,7 +100,6 @@ public class CoupleDbContext : DbContext
         ConfigureSetting(modelBuilder);
         ConfigureFootprint(modelBuilder);
         ConfigureQuote(modelBuilder);
-        ConfigureTask(modelBuilder);
     }
 
     private static void ConfigureAnniversary(ModelBuilder mb)
@@ -158,21 +154,6 @@ public class CoupleDbContext : DbContext
         mb.Entity<CoupleQuote>(e =>
         {
             e.HasIndex(x => x.SortOrder);
-        });
-    }
-    private static void ConfigureTask(ModelBuilder mb)
-    {
-        mb.Entity<CoupleTaskTemplate>(e =>
-        {
-            e.HasIndex(x => new { x.CoupleId, x.IsActive });
-            e.HasIndex(x => x.TaskType);
-        });
-        mb.Entity<CoupleTaskRecord>(e =>
-        {
-            e.HasIndex(x => new { x.TemplateId, x.UserId, x.CompleteDate });
-            e.HasIndex(x => x.UserId);
-            e.HasOne<CoupleTaskTemplate>().WithMany().HasForeignKey(x => x.TemplateId)
-                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

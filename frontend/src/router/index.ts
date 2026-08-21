@@ -21,7 +21,6 @@ const loaders = {
   Anniversary: () => import('@/views/Anniversary/Index.vue'),
   Stats: () => import('@/views/Stats/Index.vue'),
   Setting: () => import('@/views/Setting/Index.vue'),
-  Task: () => import('@/views/Task/Index.vue'),
 };
 
 const router = createRouter({
@@ -56,7 +55,6 @@ const router = createRouter({
         { path: 'anniversary', name: 'Anniversary', component: loaders.Anniversary },
         { path: 'stats', name: 'Stats', component: loaders.Stats },
         { path: 'setting', name: 'Setting', component: loaders.Setting },
-        { path: 'task', name: 'Task', component: loaders.Task },
       ],
     },
     { path: '/:pathMatch(.*)*', redirect: '/home' },

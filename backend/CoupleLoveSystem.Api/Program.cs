@@ -86,8 +86,6 @@ builder.Services.AddScoped<CoupleService>();
 builder.Services.AddScoped<PartnerService>();
 builder.Services.AddScoped<FootprintService>();
 builder.Services.AddScoped<QuoteService>();
-builder.Services.AddScoped<TaskService>();
-builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<SyncBroadcaster>();
 
 // ---- 邮件通知（SMTP，可选）：Email.Enabled=true 且配置 SmtpHost 时走真实 SMTP；否则安全降级为 NoOp（仅日志、不连网）----
