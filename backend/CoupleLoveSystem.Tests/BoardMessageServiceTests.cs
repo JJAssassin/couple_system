@@ -76,4 +76,37 @@ public class BoardMessageServiceTests
         Assert.Equal(b.Id, list.Items[0].Id);
         Assert.True(list.Items[0].Pinned);
     }
+
+    [Fact]
+    public async Task ListAsync_私密消息双方可见()
+    {
+        var svc = Build(out var db);
+        await SeedUser(db, 1, "甲方");
+        await SeedUser(db, 2, "乙方");
+
+        // 甲方发送私密消息给乙方
+        var sent = await svc.CreateAsync(
+            new BoardMessageReq { Content = "给乙方的悄悄话", IsPrivate = true, ReceiverUserId = 2 },
+            currentUserId: 1);
+
+        // 乙方发送私密消息给甲方
+        var received = await svc.CreateAsync(
+            new BoardMessageReq { Content = "给甲方的悄悄话", IsPrivate = true, ReceiverUserId = 1 },
+            currentUserId: 2);
+
+        // 公开消息
+        await svc.CreateAsync(new BoardMessageReq { Content = "公开" }, currentUserId: 1);
+
+        // 甲方视角：应看到自己发送的私密消息 + 乙方发送给她的私密消息 + 公开消息
+        var list1 = await svc.ListAsync(1, 50, currentUserId: 1);
+        Assert.Equal(3, list1.Total);
+        Assert.Contains(list1.Items, m => m.Id == sent.Id);
+        Assert.Contains(list1.Items, m => m.Id == received.Id);
+
+        // 乙方视角：应看到自己发送的私密消息 + 甲方发送给他的私密消息 + 公开消息
+        var list2 = await svc.ListAsync(1, 50, currentUserId: 2);
+        Assert.Equal(3, list2.Total);
+        Assert.Contains(list2.Items, m => m.Id == sent.Id);
+        Assert.Contains(list2.Items, m => m.Id == received.Id);
+    }
 }

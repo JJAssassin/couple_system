@@ -14,11 +14,16 @@ dist/
 dist-ssr/
 dist.del.*
 dist.trash
+dist.bak.*
+dist.old.*
 *.local
 .vite/
 .vite-cache/
 *.tsbuildinfo
 vitest.config.ts.timestamp-*.mjs
+.tmp/
+_tmp_*
+.trash_*.bak
 
 # ===== Secrets / credentials (NEVER commit) =====
 # RSA private key used to sign JWT — leaking this defeats all auth
@@ -46,6 +51,9 @@ certs/
 Thumbs.db
 .idea/
 .vscode/
+*.bak
+*.bak/
+*.bak.*
 
 # ===== Python (if any scripts land in repo) =====
 __pycache__/

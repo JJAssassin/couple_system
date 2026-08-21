@@ -140,6 +140,7 @@ import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useAuthStore } from '@/store/authStore';
+import { usePartnerStore } from '@/store/partnerStore';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
@@ -148,7 +149,9 @@ import { feedback } from '@/utils/feedback';
 
 const auth = useAuthStore();
 const notify = useNotifyStore();
+const partner = usePartnerStore();
 const meId = computed(() => auth.profile?.id ?? 0);
+const partnerId = computed(() => partner.status?.partner?.id ?? null);
 
 const loading = ref(true);
 const sending = ref(false);
@@ -170,7 +173,7 @@ const displayCount = ref(20);
 const displayList = computed(() => {
   const list = messages.value.filter(m => {
     if (activeTab.value === 'public') return !m.isPrivate;
-    return m.isPrivate && m.receiverUserId === meId.value;
+    return m.isPrivate && (m.receiverUserId === meId.value || m.createUserId === meId.value);
   });
   return list.slice(0, displayCount.value);
 });
@@ -185,6 +188,10 @@ function fmt(s: string) {
 async function send() {
   const content = draft.value.trim();
   if (!content) return;
+  if (activeTab.value === 'private' && !partnerId.value) {
+    feedback.warn('请先绑定伴侣再发送私密消息');
+    return;
+  }
   sending.value = true;
   try {
     const req: BoardMessageReq = {
@@ -192,7 +199,7 @@ async function send() {
       color: draftColor.value || undefined,
       imageUrl: draftImage.value,
       isPrivate: activeTab.value === 'private',
-      receiverUserId: activeTab.value === 'private' ? meId.value : undefined,
+      receiverUserId: activeTab.value === 'private' ? partnerId.value! : undefined,
     };
     await createBoard(req);
     feedback.created('留言');

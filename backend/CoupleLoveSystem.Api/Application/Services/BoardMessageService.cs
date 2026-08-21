@@ -20,8 +20,8 @@ public class BoardMessageService
     public async Task<PagedResult<BoardMessageDto>> ListAsync(int page, int pageSize, long currentUserId, CancellationToken ct = default)
     {
         var query = _repo.Query();
-        // 只返回当前用户可见的消息：公开消息 或 私密给当前用户的消息
-        query = query.Where(m => !m.IsPrivate || m.ReceiverUserId == currentUserId);
+        // 可见性：公开消息所有人可见；私密消息发送者 + 接收者双方可见
+        query = query.Where(m => !m.IsPrivate || m.ReceiverUserId == currentUserId || m.CreateUserId == currentUserId);
         
         var all = await query
             .OrderByDescending(m => m.Pinned)

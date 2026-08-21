@@ -1,5 +1,6 @@
 # Capacitor mobile 壳 —— 构建产物/依赖不入库
 node_modules/
+.gradle/
 android/.gradle/
 android/build/
 android/app/build/
@@ -13,3 +14,6 @@ android/captures/
 ios/App/build/
 ios/App/DerivedData/
 ios/App/Pods/
+
+# Capacitor 构建输出（从 frontend 同步而来，每次 npx cap sync 都会覆盖）
+www/
