@@ -66,7 +66,6 @@ public class YearReportService
         dto.ConflictCount = await _db.Conflicts.CountAsync(c => c.OccurTime >= start && c.OccurTime < end, ct);
         dto.ConflictResolved = await _db.Conflicts.CountAsync(
             c => c.OccurTime >= start && c.OccurTime < end && c.ReconcileTime != null, ct);
-        dto.LetterCount = await _db.Letters.CountAsync(l => l.CreateTime >= start && l.CreateTime < end, ct);
         dto.BoardCount = await _db.BoardMessages.CountAsync(b => b.CreateTime >= start && b.CreateTime < end, ct);
         dto.ImageCount = await _db.Images.CountAsync(i => i.CreateTime >= start && i.CreateTime < end, ct);
         dto.FootprintCount = await _db.Footprints.CountAsync(f => f.CreateTime >= start && f.CreateTime < end, ct);

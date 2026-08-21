@@ -27,9 +27,9 @@ import AnniversaryReminder from '@/components/Common/AnniversaryReminder.vue';
 useSettingStore().hydrate();
 bindNotify(useMessage(), useNotification());
 
-// PWA：注册 Service Worker（离线缓存）+ 监听安装引导 + 后台系统通知
+// PWA：VitePWA 自动注册 SW；本处只初始化安装引导 + 后台系统通知
 const pwa = usePwa();
-pwa.register();
+pwa.init();
 pwa.setupNotifications();
 
 // 原生 WebView 兜底：重载后内存令牌丢失但 refreshToken 仍在（cookie/localStorage）时，

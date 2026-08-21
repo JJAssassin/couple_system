@@ -127,8 +127,6 @@ public class HomeService
             .Select(x => x.CreateTime).ToListAsync(ct), days);
         AddDates(await _db.Set<CoupleConflict>().Where(x => x.OccurTime >= since)
             .Select(x => x.OccurTime).ToListAsync(ct), days);
-        AddDates(await _db.Set<CoupleLetter>().Where(x => x.CreateTime >= since)
-            .Select(x => x.CreateTime).ToListAsync(ct), days);
         AddDates(await _db.Set<CoupleFootprint>().Where(x => x.CreateTime >= since)
             .Select(x => x.CreateTime).ToListAsync(ct), days);
         AddDates(await _db.Set<CoupleAlbum>().Where(x => x.CreateTime >= since)

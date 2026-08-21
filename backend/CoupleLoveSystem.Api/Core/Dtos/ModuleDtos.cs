@@ -117,6 +117,11 @@ public class BoardMessageDto
     public string? AuthorName { get; set; }
     public string? Color { get; set; }
     public bool Pinned { get; set; }
+    public string? ImageUrl { get; set; }
+    public long? ReceiverUserId { get; set; }
+    public bool IsPrivate { get; set; }
+    public DateTime? ScheduledAt { get; set; }
+    public bool IsUnlocked { get; set; }
     public long CreateUserId { get; set; }
     public DateTime CreateTime { get; set; }
 }
@@ -124,6 +129,10 @@ public class BoardMessageReq
 {
     public string Content { get; set; } = string.Empty;
     public string? Color { get; set; }
+    public string? ImageUrl { get; set; }
+    public bool IsPrivate { get; set; }
+    public long? ReceiverUserId { get; set; }
+    public DateTime? ScheduledAt { get; set; }
 }
 public class BoardMessageIdReq { public long Id { get; set; } }
 #endregion
@@ -246,28 +255,6 @@ public class ConflictReq
     public string? ReflectA { get; set; }
     public string? ReflectB { get; set; }
     public string? RuleConclusion { get; set; }
-}
-#endregion
-
-#region 书信 Letter
-public class LetterDto
-{
-    public long Id { get; set; }
-    public long ReceiverUserId { get; set; }
-    public string? ReceiverUserName { get; set; }
-    public string Content { get; set; } = string.Empty;
-    public string? CoverImage { get; set; }
-    public DateTime UnlockTime { get; set; }
-    public bool IsUnlocked { get; set; }
-    public long CreateUserId { get; set; }
-    public DateTime CreateTime { get; set; }
-}
-public class LetterReq
-{
-    public long ReceiverUserId { get; set; }
-    public string Content { get; set; } = string.Empty;
-    public string? CoverImage { get; set; }
-    public DateTime UnlockTime { get; set; }
 }
 #endregion
 
@@ -426,5 +413,54 @@ public class ExportResp
     public string DownloadUrl { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
     public int MediaCount { get; set; }
+}
+#endregion
+
+#region 任务 Task
+public class TaskTemplateDto
+{
+    public long Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public int Points { get; set; }
+    public TaskType TaskType { get; set; }
+    public TaskFrequency Frequency { get; set; }
+    public bool IsActive { get; set; }
+    public DateTime CreateTime { get; set; }
+}
+public class TaskTemplateReq
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Icon { get; set; }
+    public int Points { get; set; } = 10;
+    public TaskType TaskType { get; set; } = TaskType.Custom;
+    public TaskFrequency Frequency { get; set; } = TaskFrequency.Daily;
+}
+public class TaskRecordDto
+{
+    public long Id { get; set; }
+    public long TemplateId { get; set; }
+    public string TemplateTitle { get; set; } = string.Empty;
+    public string? TemplateIcon { get; set; }
+    public long UserId { get; set; }
+    public DateTime CompleteDate { get; set; }
+    public int EarnedPoints { get; set; }
+    public string? Remark { get; set; }
+    public DateTime CreateTime { get; set; }
+}
+public class TaskRecordReq
+{
+    public long TemplateId { get; set; }
+    public string? Remark { get; set; }
+}
+public class TaskStatsDto
+{
+    public int TotalPoints { get; set; }
+    public int TotalCheckIns { get; set; }
+    public int StreakDays { get; set; }
+    public int ActiveTaskCount { get; set; }
+    public int TodayCheckedInCount { get; set; }
 }
 #endregion

@@ -23,7 +23,6 @@ public class YearReportDto
     public int TodoDone { get; set; }
     public int ConflictCount { get; set; }
     public int ConflictResolved { get; set; }      // ReconcileTime != null
-    public int LetterCount { get; set; }
     public int BoardCount { get; set; }
     public int ImageCount { get; set; }
     public int FootprintCount { get; set; }

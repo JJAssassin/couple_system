@@ -127,7 +127,8 @@ public class CoupleTodo : BaseEntity, ICoupleScoped
     public string? AssigneeName { get; set; }
 }
 
-/// <summary>私密留言板：仅两人可见的情话 / 留言墙，可置顶。实时同步，数据双方互通。</summary>
+/// <summary>私密留言板：仅两人可见的情话 / 留言墙，可置顶。实时同步，数据双方互通。
+/// 已合并书信能力：支持图片、私密消息、定时发布、解锁机制。</summary>
 [Broadcast("board")]
 public class CoupleBoardMessage : BaseEntity, ICoupleScoped
 {
@@ -135,6 +136,11 @@ public class CoupleBoardMessage : BaseEntity, ICoupleScoped
     public string? AuthorName { get; set; } // 留言人昵称（创建时解析，便于展示）
     public string? Color { get; set; } // 装饰色（如 #ff6f7d）或 emoji 前缀，可选
     public bool Pinned { get; set; } // 是否置顶
+    public string? ImageUrl { get; set; } // 配图（合并自书信 CoverImage）
+    public long? ReceiverUserId { get; set; } // 私密消息接收人；null=公开墙，双方可见
+    public bool IsPrivate { get; set; } // 是否私密消息
+    public DateTime? ScheduledAt { get; set; } // 定时发布时间（UTC）；null=立即发布
+    public bool IsUnlocked { get; set; } // 定时消息是否已解锁（到点后 true）
 }
 
 /// <summary>默契问答题库：选择题，双方基于它发起「默契挑战」。内置题由种子写入（IsBuiltin，不可删），也可自定义添加。</summary>
@@ -201,16 +207,6 @@ public class CoupleConflict : BaseEntity, ICoupleScoped
     public string? ReflectA { get; set; }
     public string? ReflectB { get; set; }
     public string? RuleConclusion { get; set; }
-}
-
-[Broadcast("letter")]
-public class CoupleLetter : BaseEntity, ICoupleScoped
-{
-    public long ReceiverUserId { get; set; }
-    public string Content { get; set; } = string.Empty;
-    public string? CoverImage { get; set; }
-    public DateTime UnlockTime { get; set; }   // 以服务器时间为准
-    public bool IsUnlocked { get; set; }
 }
 
 [Broadcast("account")]
@@ -282,4 +278,29 @@ public class CoupleQuote : BaseEntity
     public string Content { get; set; } = string.Empty;
     public string? Author { get; set; }
     public int SortOrder { get; set; }
+}
+
+/// <summary>情侣任务模板：定义任务名称、图标、积分、频率等元数据。
+/// 内置系统任务由种子写入；自定义任务由用户创建。</summary>
+[Broadcast("task")]
+public class CoupleTaskTemplate : BaseEntity, ICoupleScoped
+{
+    public string Title { get; set; } = string.Empty;
+    public string? Description { get; set; }
+    public string? Icon { get; set; }          // emoji 或图标 key
+    public int Points { get; set; } = 10;      // 完成一次所得积分
+    public TaskType TaskType { get; set; }     // 系统 / 自定义
+    public TaskFrequency Frequency { get; set; } // 频率
+    public bool IsActive { get; set; } = true; // 是否启用
+}
+
+/// <summary>情侣任务完成记录：某天某任务被谁完成，累计积分与连续打卡天数由此派生。</summary>
+[Broadcast("task")]
+public class CoupleTaskRecord : BaseEntity, ICoupleScoped
+{
+    public long TemplateId { get; set; }
+    public long UserId { get; set; }
+    public DateTime CompleteDate { get; set; } // 以本地日期为准（UTC+8 的日期部分）
+    public int EarnedPoints { get; set; }
+    public string? Remark { get; set; }
 }

@@ -90,7 +90,7 @@
       <IndSectionTitle label="回忆胶片" :led="true" />
       <div class="film">
         <div v-for="a in albums" :key="a.id" class="film-cell" @click="go('album')">
-          <img v-if="a.cover" :src="a.cover" :alt="a.albumName" />
+          <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" />
           <div v-else class="film-ph">{{ a.albumName.slice(0, 1) }}</div>
           <div class="film-cap">{{ a.albumName }} · {{ a.imageCount }}张</div>
         </div>
@@ -251,7 +251,7 @@ const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD（本地�
 const icAnniversary = CalendarHeart;
 const icMessage = Mail;
 const FEED_ICONS: Record<string, any> = {
-  Diary: BookOpen, Wish: Star, Anniversary: CalendarHeart, Conflict: CloudFog, Letter: Mail, Album: Image,
+  Diary: BookOpen, Wish: Star, Anniversary: CalendarHeart, Conflict: CloudFog, Album: Image,
 };
 
 function openLoveEditor() {

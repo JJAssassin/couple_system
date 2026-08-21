@@ -49,42 +49,42 @@
       :title="editing ? '编辑复盘' : '记录一次矛盾'"
       style="width: 92%; max-width: 560px;"
     >
-      <n-form ref="formRef" :model="form" label-placement="top">
-        <n-form-item label="发生时间">
-          <n-date-picker v-model:value="form.occurTs" type="datetime" style="width: 100%" />
+      <n-form ref="formRef" :model="form" label-placement="top" class="conflict-form">
+        <n-form-item label="发生时间" class="conflict-form-item">
+          <n-date-picker v-model:value="form.occurTs" type="datetime" style="width: 100%" class="conflict-picker" />
         </n-form-item>
-        <n-form-item label="矛盾摘要" :rule="requiredRule('写一句这次怎么了～')">
-          <n-input v-model:value="form.summary" placeholder="一句话记下这次怎么了" />
+        <n-form-item label="矛盾摘要" :rule="requiredRule('写一句这次怎么了～')" class="conflict-form-item">
+          <n-input v-model:value="form.summary" placeholder="一句话记下这次怎么了" class="conflict-input" />
         </n-form-item>
-        <n-form-item label="争吵等级">
-          <n-select v-model:value="form.conflictLevel" :options="levelOptions" />
+        <n-form-item label="争吵等级" class="conflict-form-item">
+          <n-select v-model:value="form.conflictLevel" :options="levelOptions" class="conflict-select" />
         </n-form-item>
-        <n-form-item label="A 方想法">
-          <n-input v-model:value="form.myThoughtA" type="textarea" placeholder="TA 当时在想什么" />
+        <n-form-item label="A 方想法" class="conflict-form-item">
+          <n-input v-model:value="form.myThoughtA" type="textarea" placeholder="TA 当时在想什么" class="conflict-textarea" />
         </n-form-item>
-        <n-form-item label="B 方想法">
-          <n-input v-model:value="form.myThoughtB" type="textarea" placeholder="我当时在想什么" />
+        <n-form-item label="B 方想法" class="conflict-form-item">
+          <n-input v-model:value="form.myThoughtB" type="textarea" placeholder="我当时在想什么" class="conflict-textarea" />
         </n-form-item>
-        <n-form-item label="和解时间">
-          <n-date-picker v-model:value="form.reconcileTs" type="datetime" clearable style="width: 100%" />
+        <n-form-item label="和解时间" class="conflict-form-item">
+          <n-date-picker v-model:value="form.reconcileTs" type="datetime" clearable style="width: 100%" class="conflict-picker" />
         </n-form-item>
-        <n-form-item label="和解方式">
-          <n-input v-model:value="form.reconcileWay" placeholder="怎么和好的（可选）" />
+        <n-form-item label="和解方式" class="conflict-form-item">
+          <n-input v-model:value="form.reconcileWay" placeholder="怎么和好的（可选）" class="conflict-input" />
         </n-form-item>
-        <n-form-item label="A 方反思">
-          <n-input v-model:value="form.reflectA" type="textarea" placeholder="我后来怎么想（可选）" />
+        <n-form-item label="A 方反思" class="conflict-form-item">
+          <n-input v-model:value="form.reflectA" type="textarea" placeholder="我后来怎么想（可选）" class="conflict-textarea" />
         </n-form-item>
-        <n-form-item label="B 方反思">
-          <n-input v-model:value="form.reflectB" type="textarea" placeholder="对方怎么想（可选）" />
+        <n-form-item label="B 方反思" class="conflict-form-item">
+          <n-input v-model:value="form.reflectB" type="textarea" placeholder="对方怎么想（可选）" class="conflict-textarea" />
         </n-form-item>
-        <n-form-item label="相处约定">
-          <n-input v-model:value="form.ruleConclusion" type="textarea" placeholder="以后我们约定…（可选）" />
+        <n-form-item label="相处约定" class="conflict-form-item">
+          <n-input v-model:value="form.ruleConclusion" type="textarea" placeholder="以后我们约定…（可选）" class="conflict-textarea" />
         </n-form-item>
       </n-form>
       <template #footer>
-        <div class="modal-foot">
-          <n-button @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submitForm">保存</n-button>
+        <div class="conflict-foot">
+          <n-button class="conflict-btn-cancel" @click="showForm = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="submitForm" class="conflict-btn-primary">保存</n-button>
         </div>
       </template>
     </n-modal>
@@ -301,9 +301,87 @@ onMounted(async () => {
 @media (max-width: 767px) {
   .cards { grid-template-columns: 1fr; }
 }
-:global(.conflict-modal) { padding: 0 !important; }
-:global(.conflict-drawer) { max-width: 100vw; }
+
+/* 美化矛盾复盘模态框 */
+:global(.conflict-modal) {
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+:global(.conflict-modal .n-modal-header) {
+  background: linear-gradient(135deg, #fff5f5, var(--color-surface)) !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--color-border);
+}
+:global(.conflict-modal .n-modal-header .n-modal-header__close) {
+  top: 16px;
+  right: 16px;
+}
+:global(.conflict-modal .n-modal-body) {
+  padding: 24px !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+:global(.conflict-modal .n-modal-footer) {
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.conflict-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.conflict-form-item {
+  margin-bottom: 0 !important;
+}
+.conflict-input,
+.conflict-textarea,
+.conflict-select,
+.conflict-picker {
+  border-radius: 10px !important;
+}
+.conflict-textarea :deep(.n-input__textarea),
+.conflict-textarea :deep(textarea) {
+  font-size: 15px;
+  line-height: 1.7;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.conflict-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.conflict-btn-cancel {
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-weight: 500;
+}
+.conflict-btn-primary {
+  border-radius: 10px;
+  padding: 8px 24px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  border: none;
+  box-shadow: 0 4px 12px rgba(255, 111, 125, 0.25);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.conflict-btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(255, 111, 125, 0.35);
+  transform: translateY(-1px);
+}
+
 @media (max-width: 767px) {
-  :global(.conflict-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
+  :global(.conflict-modal) {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0 !important;
+  }
+  :global(.conflict-modal .n-modal-body) {
+    max-height: calc(100dvh - 140px);
+  }
 }
 </style>

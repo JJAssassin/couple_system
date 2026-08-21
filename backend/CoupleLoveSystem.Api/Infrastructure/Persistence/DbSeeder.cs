@@ -214,7 +214,7 @@ public class DbSeeder
         var contentTables = new[]
         {
             "Anniversaries", "Diaries", "DiaryComments", "Wishes", "Albums", "Images",
-            "Conflicts", "Letters", "AccountRecords", "DateRecords",
+            "Conflicts", "AccountRecords", "DateRecords",
             "SystemMessages", "Footprints", "QuizQuestions"
         };
         foreach (var t in contentTables)

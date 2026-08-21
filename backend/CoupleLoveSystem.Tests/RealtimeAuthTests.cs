@@ -100,10 +100,10 @@ public class SyncBroadcasterTests
         Assert.Null(sigA.Changes[0].Id);
 
         CoupleContext.Current = "cid-B";
-        await broadcaster.NotifyAsync("Letter");
+        await broadcaster.NotifyAsync("board");
         Assert.Equal("couple-cid-B", hub.LastGroup);
         var sigB = Assert.IsType<SyncSignal>(hub.LastArg);
-        Assert.Equal("Letter", sigB.Module);
+        Assert.Equal("board", sigB.Module);
     }
 
     [Fact]

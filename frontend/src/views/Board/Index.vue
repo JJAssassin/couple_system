@@ -2,10 +2,24 @@
   <div class="board-page" ref="container">
     <header class="page-head">
       <div class="head-left">
-        <h1>私密留言板</h1>
-        <span class="sub">只属于你们两个人的悄悄话墙</span>
+        <h1>留言板</h1>
+        <span class="sub">公开墙 + 私密信箱，把想说的话都留下来</span>
       </div>
     </header>
+
+    <!-- 标签页 -->
+    <n-tabs v-model:value="activeTab" type="segment" class="tabs">
+      <n-tab-pane name="public" tab="公开墙">
+        <template #tab>
+          <span>公开墙</span>
+        </template>
+      </n-tab-pane>
+      <n-tab-pane name="private" tab="私密信箱">
+        <template #tab>
+          <span>私密信箱</span>
+        </template>
+      </n-tab-pane>
+    </n-tabs>
 
     <!-- 留言编辑区 -->
     <div class="composer love-card">
@@ -13,7 +27,7 @@
         v-model:value="draft"
         type="textarea"
         :autosize="{ minRows: 2, maxRows: 5 }"
-        placeholder="写点什么给对方吧～（情话、叮嘱、今天的碎碎念）"
+        placeholder="写点什么给对方吧～"
         @keydown.ctrl.enter="send"
       />
       <div class="composer-bar">
@@ -29,16 +43,21 @@
           />
           <button class="swatch none" :class="{ on: !draftColor }" aria-label="无颜色" @click="draftColor = ''">无</button>
         </div>
-        <n-button type="primary" round :disabled="!draft.trim()" :loading="sending" @click="send">贴上墙</n-button>
+        <div class="composer-actions">
+          <ImageField v-model="draftImage" />
+          <n-button type="primary" round :disabled="!draft.trim()" :loading="sending" @click="send">
+            {{ activeTab === 'public' ? '贴上墙' : '发送私信' }}
+          </n-button>
+        </div>
       </div>
     </div>
 
     <!-- 列表 -->
     <IndSkeleton v-if="loading" variant="list" :rows="6" />
     <IndEmpty
-      v-else-if="!messages.length"
-      title="留言墙还是空的"
-      desc="留下第一条悄悄话，让 TA 一打开就看到你的心意～"
+      v-else-if="!displayList.length"
+      :title="activeTab === 'public' ? '公开墙还是空的' : '还没有私密消息'"
+      :desc="activeTab === 'public' ? '留下第一条悄悄话，让 TA 一打开就看到你的心意～' : '给 TA 写一封私密消息吧～'"
     />
     <div v-else class="wall">
       <div
@@ -53,6 +72,7 @@
           <span class="author">{{ m.authorName || (m.createUserId === meId ? '我' : 'TA') }}</span>
           <span class="time sub-text">{{ fmt(m.createTime) }}</span>
         </div>
+        <img v-if="m.imageUrl" :src="m.imageUrl" class="msg-img" alt="配图" loading="lazy" />
         <p class="msg-body" :style="m.color ? { color: m.color } : {}">{{ m.content }}</p>
         <div class="msg-actions">
           <n-button size="small" tertiary @click="onPin(m)">{{ m.pinned ? '取消置顶' : '置顶' }}</n-button>
@@ -86,7 +106,7 @@
       title="编辑留言"
       style="width: 92%; max-width: 520px;"
     >
-      <n-input v-model:value="editDraft" type="textarea" :autosize="{ minRows: 2, maxRows: 5 }" />
+      <n-input v-model:value="editDraft" type="textarea" :autosize="{ minRows: 2, maxRows: 5 }" class="board-textarea" />
       <div class="colors edit-colors">
         <button
           v-for="c in colorPresets"
@@ -99,9 +119,9 @@
         <button class="swatch none" :class="{ on: !editColor }" @click="editColor = ''">无</button>
       </div>
       <template #footer>
-        <div class="modal-foot">
-          <n-button @click="showEdit = false">取消</n-button>
-          <n-button type="primary" :loading="sending" @click="submitEdit">保存</n-button>
+        <div class="board-foot">
+          <n-button class="board-btn-cancel" @click="showEdit = false">取消</n-button>
+          <n-button type="primary" :loading="sending" @click="submitEdit" class="board-btn-primary">保存</n-button>
         </div>
       </template>
     </n-modal>
@@ -110,7 +130,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { NButton, NModal, NInput, NPopconfirm } from 'naive-ui';
+import { NButton, NModal, NInput, NPopconfirm, NTabs, NTabPane } from 'naive-ui';
 import { Pin } from 'lucide-vue-next';
 import type { BoardMessageDto, BoardMessageReq } from '@/types';
 import {
@@ -123,6 +143,7 @@ import { useAuthStore } from '@/store/authStore';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
+import ImageField from '@/components/Common/ImageField.vue';
 import { feedback } from '@/utils/feedback';
 
 const auth = useAuthStore();
@@ -133,9 +154,11 @@ const loading = ref(true);
 const sending = ref(false);
 const container = ref<HTMLElement>();
 const messages = ref<BoardMessageDto[]>([]);
+const activeTab = ref<'public' | 'private'>('public');
 
 const draft = ref('');
 const draftColor = ref('');
+const draftImage = ref<string | undefined>(undefined);
 const colorPresets = ['#ff6f7d', '#ff9a76', '#7c83fd', '#43c6ac', '#f6c453', '#c77dff'];
 
 const showEdit = ref(false);
@@ -144,7 +167,13 @@ const editDraft = ref('');
 const editColor = ref('');
 
 const displayCount = ref(20);
-const displayList = computed(() => messages.value.slice(0, displayCount.value));
+const displayList = computed(() => {
+  const list = messages.value.filter(m => {
+    if (activeTab.value === 'public') return !m.isPrivate;
+    return m.isPrivate && m.receiverUserId === meId.value;
+  });
+  return list.slice(0, displayCount.value);
+});
 const hasMore = computed(() => displayCount.value < messages.value.length);
 function loadMore() { displayCount.value += 20; }
 
@@ -158,11 +187,18 @@ async function send() {
   if (!content) return;
   sending.value = true;
   try {
-    const req: BoardMessageReq = { content, color: draftColor.value || undefined };
+    const req: BoardMessageReq = {
+      content,
+      color: draftColor.value || undefined,
+      imageUrl: draftImage.value,
+      isPrivate: activeTab.value === 'private',
+      receiverUserId: activeTab.value === 'private' ? meId.value : undefined,
+    };
     await createBoard(req);
     feedback.created('留言');
     draft.value = '';
     draftColor.value = '';
+    draftImage.value = undefined;
     await load();
   } finally { sending.value = false; }
 }
@@ -216,9 +252,11 @@ onMounted(async () => {
 .page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
 .sub { font-size: 13px; color: var(--color-ink-3); }
+.tabs { margin-bottom: 18px; }
 
 .composer { padding: 14px; margin-bottom: 18px; }
 .composer-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
+.composer-actions { display: flex; align-items: center; gap: 10px; }
 .colors { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .swatch {
   width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
@@ -236,13 +274,74 @@ onMounted(async () => {
 .author { font-weight: 600; color: var(--color-ink); font-size: 13px; }
 .time { margin-left: auto; font-size: 11px; font-family: var(--font-mono); }
 .msg-body { margin: 8px 0 0; white-space: pre-wrap; line-height: 1.6; color: var(--color-ink); }
+.msg-img { width: 100%; border-radius: 12px; object-fit: cover; max-height: 260px; margin-top: 8px; }
 .msg-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .edit-colors { margin-top: 12px; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 
 @media (max-width: 767px) { .composer-bar { flex-direction: column; align-items: stretch; } }
-:global(.board-modal) { padding: 0 !important; }
+
+/* 美化留言板模态框 */
+:global(.board-modal) {
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+:global(.board-modal .n-modal-header) {
+  background: linear-gradient(135deg, #fdf2f8, var(--color-surface)) !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--color-border);
+}
+:global(.board-modal .n-modal-header .n-modal-header__close) {
+  top: 16px;
+  right: 16px;
+}
+:global(.board-modal .n-modal-body) {
+  padding: 24px !important;
+}
+:global(.board-modal .n-modal-footer) {
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.board-textarea :deep(.n-input__textarea),
+.board-textarea :deep(textarea) {
+  font-size: 15px;
+  line-height: 1.7;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.board-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.board-btn-cancel {
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-weight: 500;
+}
+.board-btn-primary {
+  border-radius: 10px;
+  padding: 8px 24px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  border: none;
+  box-shadow: 0 4px 12px rgba(255, 111, 125, 0.25);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.board-btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(255, 111, 125, 0.35);
+  transform: translateY(-1px);
+}
+
 @media (max-width: 767px) {
-  :global(.board-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
+  :global(.board-modal) {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0 !important;
+  }
 }
 </style>

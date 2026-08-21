@@ -11,7 +11,7 @@ namespace CoupleLoveSystem.Application.Services;
 
 /// <summary>
 /// 定时任务托管服务（替代设计文档中的独立 Quartz 项目，零额外依赖、随 API 生命周期）。
-/// 每分钟轮询一次：① 解锁到达时间的定时书信并生成通知；② 触发到期纪念日提醒并重新装填下次提醒时间。
+/// 每分钟轮询一次：① 解锁到达时间的定时私密留言并生成通知；② 触发到期纪念日提醒并重新装填下次提醒时间。
 /// 所有时间以服务器时间(UTC)为准，绝不信任前端传递的时间。
 /// </summary>
 public class ScheduledHostedService : BackgroundService
@@ -51,24 +51,26 @@ public class ScheduledHostedService : BackgroundService
             var toNotify = new System.Collections.Generic.List<CoupleSystemMessage>();
             var now = DateTime.UtcNow;
 
-            // 1) 定时书信解锁（后台作业无 HTTP 上下文，忽略情侣空间过滤以处理全部情侣的到期书信）
-            var locked = await db.Letters.IgnoreQueryFilters().Where(l => !l.IsDeleted && !l.IsUnlocked && l.UnlockTime <= now).ToListAsync(ct);
-            foreach (var letter in locked)
+            // 1) 定时留言解锁（后台作业无 HTTP 上下文，忽略情侣空间过滤以处理全部情侣的到期留言）
+            var locked = await db.BoardMessages.IgnoreQueryFilters()
+                .Where(m => !m.IsDeleted && m.IsPrivate && m.ScheduledAt != null && m.ScheduledAt <= now && !m.IsUnlocked)
+                .ToListAsync(ct);
+            foreach (var msg in locked)
             {
-                letter.IsUnlocked = true;
-                if (letter.CoupleId != null) notify.Add(letter.CoupleId);
-                var letterMsg = new CoupleSystemMessage
+                msg.IsUnlocked = true;
+                if (msg.CoupleId != null) notify.Add(msg.CoupleId);
+                var sysMsg = new CoupleSystemMessage
                 {
-                    ReceiverUserId = letter.ReceiverUserId,
-                    Title = "书信已解锁",
-                    Content = "你有一封定时书信可以查看啦～",
-                    MessageType = MessageType.LetterUnlock,
+                    ReceiverUserId = msg.ReceiverUserId ?? 0,
+                    Title = "私密留言已解锁",
+                    Content = "你有一条定时私密留言可以查看啦～",
+                    MessageType = MessageType.Other,
                     IsRead = false,
-                    CreateUserId = letter.CreateUserId,
+                    CreateUserId = msg.CreateUserId,
                     CreateTime = now
                 };
-                db.SystemMessages.Add(letterMsg);
-                toNotify.Add(letterMsg);
+                db.SystemMessages.Add(sysMsg);
+                toNotify.Add(sysMsg);
             }
 
             // 2) 纪念日提醒（双方都会收到；忽略情侣空间过滤，处理全部情侣的到期提醒）

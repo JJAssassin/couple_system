@@ -1,7 +1,7 @@
 <template>
   <div class="img-field">
     <div class="img-thumb" :style="boxStyle">
-      <img v-if="modelValue" :src="modelValue" :alt="label || '图片'" class="img-img" />
+      <img v-if="modelValue" :src="modelValue" :alt="label || '图片'" class="img-img" loading="lazy" />
       <div v-else class="img-ph">
         <ImageIcon :size="22" :stroke-width="1.6" />
       </div>

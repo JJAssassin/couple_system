@@ -27,8 +27,11 @@
 <script setup lang="ts">
 import { usePwa } from '@/composables/usePwa';
 
-const { installAvailable, promptInstall, dismissInstall, isIOS, showIosHint, dismissIosHint } =
+const { installAvailable, promptInstall, dismissInstall, isIOS, showIosHint, dismissIosHint, init } =
   usePwa();
+
+// 初始化安装提示监听（VitePWA 负责 SW 注册）
+init();
 </script>
 
 <style scoped>

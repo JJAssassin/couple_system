@@ -187,12 +187,21 @@ export interface BoardMessageDto {
   authorName?: string | null;
   color?: string | null;
   pinned: boolean;
+  imageUrl?: string | null;
+  receiverUserId?: number | null;
+  isPrivate: boolean;
+  scheduledAt?: string | null;
+  isUnlocked: boolean;
   createUserId: number;
   createTime: string;
 }
 export interface BoardMessageReq {
   content: string;
   color?: string;
+  imageUrl?: string;
+  isPrivate?: boolean;
+  receiverUserId?: number | null;
+  scheduledAt?: string | null;
 }
 
 // ---------- 默契问答 ----------
@@ -297,25 +306,6 @@ export interface ConflictReq {
   ruleConclusion?: string;
 }
 
-// ---------- 书信 ----------
-export interface LetterDto {
-  id: number;
-  receiverUserId: number;
-  receiverUserName?: string;
-  content: string;
-  coverImage?: string;
-  unlockTime: string;
-  isUnlocked: boolean;
-  createUserId: number;
-  createTime: string;
-}
-export interface LetterReq {
-  receiverUserId: number;
-  content: string;
-  coverImage?: string;
-  unlockTime: string;
-}
-
 // ---------- 记账 ----------
 export interface AccountRecordDto {
   id: number;
@@ -412,6 +402,52 @@ export interface SystemMessageDto {
   messageType: number;
   isRead: boolean;
   createTime: string;
+}
+
+// ---------- 任务 ----------
+export type TaskType = 1 | 2; // 1=系统 2=自定义
+export type TaskFrequency = 1 | 2 | 3 | 4; // 1=每日 2=每周 3=每月 4=一次性
+
+export interface TaskTemplateDto {
+  id: number;
+  title: string;
+  description?: string;
+  icon?: string;
+  points: number;
+  taskType: TaskType;
+  frequency: TaskFrequency;
+  isActive: boolean;
+  createTime: string;
+}
+export interface TaskTemplateReq {
+  title: string;
+  description?: string;
+  icon?: string;
+  points?: number;
+  taskType?: TaskType;
+  frequency?: TaskFrequency;
+}
+export interface TaskRecordDto {
+  id: number;
+  templateId: number;
+  templateTitle: string;
+  templateIcon?: string;
+  userId: number;
+  completeDate: string;
+  earnedPoints: number;
+  remark?: string;
+  createTime: string;
+}
+export interface TaskRecordReq {
+  templateId: number;
+  remark?: string;
+}
+export interface TaskStatsDto {
+  totalPoints: number;
+  totalCheckIns: number;
+  streakDays: number;
+  activeTaskCount: number;
+  todayCheckedInCount: number;
 }
 
 // ---------- 时间轴 ----------

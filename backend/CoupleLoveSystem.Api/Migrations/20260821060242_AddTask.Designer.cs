@@ -4,6 +4,7 @@ using CoupleLoveSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoupleLoveSystem.Migrations
 {
     [DbContext(typeof(CoupleDbContext))]
-    partial class CoupleDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260821060242_AddTask")]
+    partial class AddTask
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -206,26 +209,11 @@ namespace CoupleLoveSystem.Migrations
                     b.Property<long>("CreateUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("longtext");
-
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsPrivate")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsUnlocked")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("Pinned")
                         .HasColumnType("tinyint(1)");
-
-                    b.Property<long?>("ReceiverUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("ScheduledAt")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("UpdateTime")
                         .HasColumnType("datetime(6)");
@@ -236,8 +224,6 @@ namespace CoupleLoveSystem.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CoupleId");
-
-                    b.HasIndex("ReceiverUserId");
 
                     b.ToTable("BoardMessages");
 
@@ -630,6 +616,61 @@ namespace CoupleLoveSystem.Migrations
                     b.HasIndex("CoupleId");
 
                     b.ToTable("Images");
+
+                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
+                });
+
+            modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleLetter", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CoupleId")
+                        .HasColumnType("varchar(255)");
+
+                    b.Property<string>("CoverImage")
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime>("CreateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long>("CreateUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsUnlocked")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<long>("ReceiverUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("UnlockTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("UpdateTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<long?>("UpdateUserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CoupleId");
+
+                    b.HasIndex("ReceiverUserId");
+
+                    b.HasIndex("IsUnlocked", "UnlockTime");
+
+                    b.ToTable("Letters");
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                 });

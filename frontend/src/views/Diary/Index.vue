@@ -63,42 +63,44 @@
     <!-- 写日记：NModal（移动端全屏） -->
     <n-modal
       v-model:show="showWrite"
+      class="diary-modal"
       preset="card"
       title="写日记"
       :style="{ width: modalWidth }"
       :mask-closable="false"
     >
-      <n-form ref="formRef" :model="form" label-placement="top">
-        <n-form-item label="标题" :rule="requiredRule('给日记起个标题吧～')">
-          <n-input v-model:value="form.title" placeholder="今天发生了什么…" maxlength="80" show-count />
+      <n-form ref="formRef" :model="form" label-placement="top" class="diary-form">
+        <n-form-item label="标题" :rule="requiredRule('给日记起个标题吧～')" class="diary-form-item">
+          <n-input v-model:value="form.title" placeholder="今天发生了什么…" maxlength="80" show-count class="diary-input" />
         </n-form-item>
-        <n-form-item label="内容">
+        <n-form-item label="内容" class="diary-form-item">
           <n-input
             v-model:value="form.content"
             type="textarea"
             placeholder="写下你的心情与故事"
             :autosize="{ minRows: 4, maxRows: 10 }"
+            class="diary-textarea"
           />
         </n-form-item>
-        <div class="grid2">
-          <n-form-item label="心情分数 (1-10)">
-            <n-input-number v-model:value="form.moodScore" :min="1" :max="10" />
+        <div class="grid2 diary-grid">
+          <n-form-item label="心情分数 (1-10)" class="diary-form-item">
+            <n-input-number v-model:value="form.moodScore" :min="1" :max="10" class="diary-input" />
           </n-form-item>
-          <n-form-item label="天气">
-            <n-input v-model:value="form.weather" placeholder="晴 / 雨 / 多云" />
+          <n-form-item label="天气" class="diary-form-item">
+            <n-input v-model:value="form.weather" placeholder="晴 / 雨 / 多云" class="diary-input" />
           </n-form-item>
         </div>
-        <n-form-item label="权限">
-          <n-select v-model:value="form.permissionType" :options="permOptions" />
+        <n-form-item label="权限" class="diary-form-item">
+          <n-select v-model:value="form.permissionType" :options="permOptions" class="diary-select" />
         </n-form-item>
-        <n-form-item label="日期">
-          <n-date-picker v-model:value="form.dateTs" type="date" clearable style="width: 100%" />
+        <n-form-item label="日期" class="diary-form-item">
+          <n-date-picker v-model:value="form.dateTs" type="date" clearable style="width: 100%" class="diary-picker" />
         </n-form-item>
       </n-form>
       <template #footer>
-        <div class="foot">
-          <n-button @click="showWrite = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submit">保存</n-button>
+        <div class="diary-foot">
+          <n-button class="diary-btn-cancel" @click="showWrite = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="submit" class="diary-btn-primary">保存</n-button>
         </div>
       </template>
     </n-modal>
@@ -358,4 +360,90 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
   resize: vertical;
 }
 .comment-box .n-button { align-self: flex-end; min-width: 92px; }
+
+/* 美化日记模态框 */
+:global(.diary-modal) {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+:global(.diary-modal .n-modal-header) {
+  background: linear-gradient(135deg, var(--color-rose-soft), var(--color-surface));
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--color-border);
+}
+:global(.diary-modal .n-modal-header .n-modal-header__close) {
+  top: 16px;
+  right: 16px;
+}
+:global(.diary-modal .n-modal-body) {
+  padding: 20px 24px !important;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+:global(.diary-modal .n-modal-footer) {
+  padding: 14px 24px !important;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.diary-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.diary-form-item {
+  margin-bottom: 0 !important;
+}
+.diary-input,
+.diary-textarea,
+.diary-select,
+.diary-picker {
+  border-radius: 10px !important;
+}
+.diary-textarea :deep(.n-input__textarea),
+.diary-textarea :deep(textarea) {
+  font-size: 15px;
+  line-height: 1.7;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.diary-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.diary-btn-cancel {
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-weight: 500;
+}
+.diary-btn-primary {
+  border-radius: 10px;
+  padding: 8px 24px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  border: none;
+  box-shadow: 0 4px 12px rgba(255, 111, 125, 0.25);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.diary-btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(255, 111, 125, 0.35);
+  transform: translateY(-1px);
+}
+.diary-btn-primary:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 767px) {
+  .grid2 { grid-template-columns: 1fr; }
+  :global(.diary-modal) {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0 !important;
+  }
+  :global(.diary-modal .n-modal-body) {
+    max-height: calc(100dvh - 140px);
+  }
+}
 </style>

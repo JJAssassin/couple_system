@@ -514,8 +514,9 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 .yearly-row { display: flex; align-items: center; gap: 12px; }
 .yearly-hint { font-size: 12px; color: var(--color-ink-3); }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
-
+:global(.anniv-modal) { padding: 0 !important; }
 @media (max-width: 767px) {
+  :global(.anniv-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
   .brand { padding: 10px 14px; }
   .brand .ind-label { font-size: 12px; }
   .brand-status { padding: 3px 9px; font-size: 11px; }

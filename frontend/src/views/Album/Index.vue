@@ -24,7 +24,7 @@
           @click="openAlbum(a)"
         >
           <div class="album-cover">
-            <img v-if="a.cover" :src="a.cover" :alt="a.albumName" />
+            <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" />
             <div v-else class="album-cover-ph"></div>
           </div>
           <div class="album-meta">
@@ -126,7 +126,7 @@
     </section>
 
     <!-- ===== 新建相册弹窗 ===== -->
-    <NModal v-model:show="showCreate" title="新建相册" preset="card" style="max-width: 420px">
+    <NModal v-model:show="showCreate" title="新建相册" preset="card" class="album-modal" style="width: 92%; max-width: 420px;">
       <NForm ref="formRef" :model="form" label-placement="top">
         <NFormItem label="相册名称" :rule="requiredRule('给相册起个名字吧～')">
           <NInput v-model:value="form.albumName" placeholder="例如：我们的旅行" />
@@ -353,6 +353,7 @@ html:not(.reduce-motion) .img-cell:hover .img-fav, .img-fav.on { opacity: 1; }
 .img-del { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.45); color: #fff; }
 
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
+:global(.album-modal) { padding: 0 !important; }
 
 .upload-fab {
   position: fixed; left: 16px; right: 16px;
@@ -365,7 +366,7 @@ html:not(.reduce-motion) .img-cell:hover .img-fav, .img-fav.on { opacity: 1; }
 .upload-empty p { margin: 0; color: var(--color-ink-3); }
 .upload-hint { font-size: 12px; color: var(--color-ink-3); margin: 4px 0 0; }
 
-/* 网格首位的“添加照片”磁贴 */
+/* 网格首位的"添加照片"磁贴 */
 .add-tile-wrap { margin-bottom: 8px; break-inside: avoid; }
 .add-tile {
   width: 100%; aspect-ratio: 1 / 1; display: flex; flex-direction: column;
@@ -380,6 +381,7 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: 0
 :deep(.add-tile-wrap .n-upload-trigger) { width: 100%; height: 100%; }
 :deep(.head-upload) { margin-left: auto; }
 @media (max-width: 767px) {
+  :global(.album-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
   .album-grid { grid-template-columns: repeat(2, 1fr); }
   .img-grid { columns: 2; }
 }

@@ -42,7 +42,6 @@ public class CoupleDbContext : DbContext
     public DbSet<CoupleAlbum> Albums => Set<CoupleAlbum>();
     public DbSet<CoupleImage> Images => Set<CoupleImage>();
     public DbSet<CoupleConflict> Conflicts => Set<CoupleConflict>();
-    public DbSet<CoupleLetter> Letters => Set<CoupleLetter>();
     public DbSet<CoupleAccountRecord> AccountRecords => Set<CoupleAccountRecord>();
     public DbSet<CoupleBudget> Budgets => Set<CoupleBudget>();
     public DbSet<CoupleDateRecord> DateRecords => Set<CoupleDateRecord>();
@@ -50,6 +49,8 @@ public class CoupleDbContext : DbContext
     public DbSet<CoupleSetting> Settings => Set<CoupleSetting>();
     public DbSet<CoupleFootprint> Footprints => Set<CoupleFootprint>();
     public DbSet<CoupleQuote> Quotes => Set<CoupleQuote>();
+    public DbSet<CoupleTaskTemplate> TaskTemplates => Set<CoupleTaskTemplate>();
+    public DbSet<CoupleTaskRecord> TaskRecords => Set<CoupleTaskRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -99,10 +100,10 @@ public class CoupleDbContext : DbContext
         ConfigureAnniversary(modelBuilder);
         ConfigureDiary(modelBuilder);
         ConfigureImage(modelBuilder);
-        ConfigureLetter(modelBuilder);
         ConfigureSetting(modelBuilder);
         ConfigureFootprint(modelBuilder);
         ConfigureQuote(modelBuilder);
+        ConfigureTask(modelBuilder);
     }
 
     private static void ConfigureAnniversary(ModelBuilder mb)
@@ -138,14 +139,6 @@ public class CoupleDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }
-    private static void ConfigureLetter(ModelBuilder mb)
-    {
-        mb.Entity<CoupleLetter>(e =>
-        {
-            e.HasIndex(x => new { x.IsUnlocked, x.UnlockTime });
-            e.HasIndex(x => x.ReceiverUserId);
-        });
-    }
     private static void ConfigureSetting(ModelBuilder mb)
     {
         mb.Entity<CoupleSetting>(e =>
@@ -165,6 +158,21 @@ public class CoupleDbContext : DbContext
         mb.Entity<CoupleQuote>(e =>
         {
             e.HasIndex(x => x.SortOrder);
+        });
+    }
+    private static void ConfigureTask(ModelBuilder mb)
+    {
+        mb.Entity<CoupleTaskTemplate>(e =>
+        {
+            e.HasIndex(x => new { x.CoupleId, x.IsActive });
+            e.HasIndex(x => x.TaskType);
+        });
+        mb.Entity<CoupleTaskRecord>(e =>
+        {
+            e.HasIndex(x => new { x.TemplateId, x.UserId, x.CompleteDate });
+            e.HasIndex(x => x.UserId);
+            e.HasOne<CoupleTaskTemplate>().WithMany().HasForeignKey(x => x.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 

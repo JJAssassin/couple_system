@@ -6,12 +6,15 @@
       </n-notification-provider>
     </n-message-provider>
   </n-config-provider>
+  <!-- PWA 安装提示：由 VitePWA 生成 SW，本组件只负责 beforeinstallprompt 引导 -->
+  <PwaInstallPrompt />
 </template>
 <script setup lang="ts">
 import AppRoot from '@/AppRoot.vue';
 import { darkTheme, type GlobalThemeOverrides } from 'naive-ui';
 import { computed } from 'vue';
 import { useSettingStore, ACCENTS } from '@/store/settingStore';
+import PwaInstallPrompt from '@/components/Common/PwaInstallPrompt.vue';
 
 // 让 NaiveUI 组件（对话框/输入/按钮/卡片/表格…）跟随浪漫柔光配色。
 // 颜色尽量引用 CSS 变量，使 html.dark 切换时自动适配，无需两套覆盖。

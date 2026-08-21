@@ -91,30 +91,30 @@
       :title="editing ? '编辑愿望' : '加个愿望'"
       style="width: 92%; max-width: 520px;"
     >
-      <n-form ref="formRef" :model="form" label-placement="top">
-        <n-form-item label="类型">
-          <n-select v-model:value="form.wishType" :options="typeOptions" />
+      <n-form ref="formRef" :model="form" label-placement="top" class="wish-form">
+        <n-form-item label="类型" class="wish-form-item">
+          <n-select v-model:value="form.wishType" :options="typeOptions" class="wish-input" />
         </n-form-item>
-        <n-form-item label="标题" :rule="requiredRule('给愿望起个标题吧～')">
-          <n-input v-model:value="form.title" placeholder="想一起做的事 / 想要的礼物 / 想达成的目标" />
+        <n-form-item label="标题" :rule="requiredRule('给愿望起个标题吧～')" class="wish-form-item">
+          <n-input v-model:value="form.title" placeholder="想一起做的事 / 想要的礼物 / 想达成的目标" class="wish-input" />
         </n-form-item>
-        <n-form-item label="描述">
-          <n-input v-model:value="form.description" type="textarea" placeholder="补充说明（可选）" />
+        <n-form-item label="描述" class="wish-form-item">
+          <n-input v-model:value="form.description" type="textarea" placeholder="补充说明（可选）" class="wish-textarea" />
         </n-form-item>
-        <n-form-item label="预期时间">
-          <n-date-picker v-model:value="expectTs" type="datetime" clearable style="width: 100%" />
+        <n-form-item label="预期时间" class="wish-form-item">
+          <n-date-picker v-model:value="expectTs" type="datetime" clearable style="width: 100%" class="wish-picker" />
         </n-form-item>
-        <n-form-item label="优先级">
-          <n-input-number v-model:value="form.priority" :min="1" :max="3" />
+        <n-form-item label="优先级" class="wish-form-item">
+          <n-input-number v-model:value="form.priority" :min="1" :max="3" class="wish-input" />
         </n-form-item>
-        <n-form-item label="状态">
-          <n-select v-model:value="form.status" :options="statusOptions" />
+        <n-form-item label="状态" class="wish-form-item">
+          <n-select v-model:value="form.status" :options="statusOptions" class="wish-input" />
         </n-form-item>
       </n-form>
       <template #footer>
-        <div class="modal-foot">
-          <n-button @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submitForm">保存</n-button>
+        <div class="wish-foot">
+          <n-button class="wish-btn-cancel" @click="showForm = false">取消</n-button>
+          <n-button type="primary" :loading="submitting" @click="submitForm" class="wish-btn-primary">保存</n-button>
         </div>
       </template>
     </n-modal>
@@ -122,23 +122,23 @@
     <!-- 标记完成 模态 -->
     <n-modal
       v-model:show="showComplete"
-      class="wish-modal"
+      class="wish-modal wish-complete-modal"
       preset="card"
       title="完成感悟"
       style="width: 92%; max-width: 480px;"
     >
-      <n-form label-placement="top">
-        <n-form-item label="完成感悟">
-          <n-input v-model:value="completeForm.completeRemark" type="textarea" placeholder="写下这一刻的心情～" />
+      <n-form label-placement="top" class="wish-form">
+        <n-form-item label="完成感悟" class="wish-form-item">
+          <n-input v-model:value="completeForm.completeRemark" type="textarea" placeholder="写下这一刻的心情～" class="wish-textarea" />
         </n-form-item>
-        <n-form-item label="完成照片（可选）">
+        <n-form-item label="完成照片（可选）" class="wish-form-item">
           <ImageField v-model="completeForm.completeImage" />
         </n-form-item>
       </n-form>
       <template #footer>
-        <div class="modal-foot">
-          <n-button @click="showComplete = false">取消</n-button>
-          <n-button type="success" :loading="submitting" @click="submitComplete">完成啦</n-button>
+        <div class="wish-foot">
+          <n-button class="wish-btn-cancel" @click="showComplete = false">取消</n-button>
+          <n-button type="success" :loading="submitting" @click="submitComplete" class="wish-btn-success">完成啦</n-button>
         </div>
       </template>
     </n-modal>
@@ -361,8 +361,99 @@ onMounted(async () => {
 @media (max-width: 767px) {
   .cards { grid-template-columns: 1fr; }
 }
-:global(.wish-modal) { padding: 0 !important; }
+
+/* 美化愿望模态框 */
+:global(.wish-modal) {
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+:global(.wish-modal .n-modal-header) {
+  background: linear-gradient(135deg, #fff5f6, var(--color-surface)) !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--color-border);
+}
+:global(.wish-modal .n-modal-header .n-modal-header__close) {
+  top: 16px;
+  right: 16px;
+}
+:global(.wish-modal .n-modal-body) {
+  padding: 24px !important;
+}
+:global(.wish-modal .n-modal-footer) {
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.wish-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.wish-form-item {
+  margin-bottom: 0 !important;
+}
+.wish-input,
+.wish-textarea,
+.wish-select,
+.wish-picker {
+  border-radius: 10px !important;
+}
+.wish-textarea :deep(.n-input__textarea),
+.wish-textarea :deep(textarea) {
+  font-size: 15px;
+  line-height: 1.7;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.wish-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.wish-btn-cancel {
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-weight: 500;
+}
+.wish-btn-primary {
+  border-radius: 10px;
+  padding: 8px 24px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  border: none;
+  box-shadow: 0 4px 12px rgba(255, 111, 125, 0.25);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.wish-btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(255, 111, 125, 0.35);
+  transform: translateY(-1px);
+}
+.wish-btn-primary:active {
+  transform: translateY(0);
+}
+.wish-btn-success {
+  border-radius: 10px;
+  padding: 8px 24px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #52c41a, #389e0d);
+  border: none;
+  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.25);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.wish-btn-success:hover {
+  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.35);
+  transform: translateY(-1px);
+}
+
 @media (max-width: 767px) {
-  :global(.wish-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
+  :global(.wish-modal),
+  :global(.wish-complete-modal) {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0 !important;
+  }
 }
 </style>

@@ -62,7 +62,10 @@
     <section class="block">
       <div class="block-head">
         <h2>当月消费分类</h2>
-        <span class="sub-text">钱都花哪了，一目了然</span>
+        <div class="month-pick">
+          <NButton size="small" quaternary @click="showPoster = true">生成海报</NButton>
+          <span class="sub-text">钱都花哪了，一目了然</span>
+        </div>
       </div>
       <ChartWrap v-if="catPieData.length" :option="catPieOption" />
       <IndEmpty v-else title="本月还没有支出" desc="记几笔支出，就能看到钱都花在哪啦" />
@@ -121,41 +124,41 @@
       <IndPager v-if="list.length" mode="more" :page="page" :page-size="pageSize" :loading="listLoading" :has-more="hasMore" :total="total" @load-more="nextPage" />
     </section>
 
-    <NModal v-model:show="showModal" :title="editing ? '编辑记录' : '记一笔'" preset="card" style="max-width: 440px">
-      <NForm ref="formRef" :model="form" :rules="rules">
-        <NFormItem label="类型" path="recordType">
-          <NSelect v-model:value="form.recordType" :options="typeOptions" />
+    <NModal v-model:show="showModal" :title="editing ? '编辑记录' : '记一笔'" preset="card" style="max-width: 440px" class="account-modal">
+      <NForm ref="formRef" :model="form" :rules="rules" class="account-form">
+        <NFormItem label="类型" path="recordType" class="account-form-item">
+          <NSelect v-model:value="form.recordType" :options="typeOptions" class="account-input" />
         </NFormItem>
-        <NFormItem label="分类" path="category">
-          <NInput v-model:value="form.category" placeholder="如：餐饮 / 工资" />
+        <NFormItem label="分类" path="category" class="account-form-item">
+          <NInput v-model:value="form.category" placeholder="如：餐饮 / 工资" class="account-input" />
         </NFormItem>
-        <NFormItem label="金额" path="amount">
-          <NInputNumber v-model:value="form.amount" :min="0" :precision="2" style="width: 100%" />
+        <NFormItem label="金额" path="amount" class="account-form-item">
+          <NInputNumber v-model:value="form.amount" :min="0" :precision="2" style="width: 100%" class="account-input" />
         </NFormItem>
-        <NFormItem label="时间" path="time">
-          <NDatePicker v-model:value="form.time" type="date" style="width: 100%" />
+        <NFormItem label="时间" path="time" class="account-form-item">
+          <NDatePicker v-model:value="form.time" type="date" style="width: 100%" class="account-picker" />
         </NFormItem>
-        <NFormItem label="备注" path="remark">
-          <NInput v-model:value="form.remark" type="textarea" placeholder="可选" />
+        <NFormItem label="备注" path="remark" class="account-form-item">
+          <NInput v-model:value="form.remark" type="textarea" placeholder="可选" class="account-textarea" />
         </NFormItem>
       </NForm>
       <template #footer>
-        <div class="modal-foot">
-          <NButton @click="showModal = false">取消</NButton>
-          <NButton type="primary" @click="save">保存</NButton>
+        <div class="account-foot">
+          <NButton class="account-btn-cancel" @click="showModal = false">取消</NButton>
+          <NButton type="primary" :loading="loading" @click="save" class="account-btn-primary">保存</NButton>
         </div>
       </template>
     </NModal>
 
-    <NModal v-model:show="showBudget" title="设置预算" preset="card" style="max-width: 460px">
-      <NForm>
-        <NFormItem label="月份">
-          <NDatePicker v-model:value="bForm.monthTs" type="month" style="width: 100%" />
+    <NModal v-model:show="showBudget" title="设置预算" preset="card" style="max-width: 460px" class="account-modal budget-modal">
+      <NForm class="budget-form">
+        <NFormItem label="月份" class="budget-form-item">
+          <NDatePicker v-model:value="bForm.monthTs" type="month" style="width: 100%" class="budget-picker" />
         </NFormItem>
-        <NFormItem label="当月总预算（留空 = 不设）">
-          <NInputNumber v-model:value="bForm.total" :min="0" :precision="2" style="width: 100%" placeholder="如 3000" />
+        <NFormItem label="当月总预算（留空 = 不设）" class="budget-form-item">
+          <NInputNumber v-model:value="bForm.total" :min="0" :precision="2" style="width: 100%" placeholder="如 3000" class="budget-input" />
         </NFormItem>
-        <NButton type="primary" block :disabled="bForm.total == null" @click="saveTotal">保存总预算</NButton>
+        <NButton type="primary" block :disabled="bForm.total == null" @click="saveTotal" class="budget-btn-primary">保存总预算</NButton>
       </NForm>
 
       <NDivider>分类预算</NDivider>
@@ -171,10 +174,26 @@
         <IndEmpty v-if="!catBudgets.length" title="还没有分类预算" desc="按分类设额度，超支会标红提醒" />
       </div>
       <div class="cb-add">
-        <NInput v-model:value="bForm.catName" placeholder="分类名（如 餐饮）" style="flex: 1" />
-        <NInputNumber v-model:value="bForm.catLimit" :min="0" :precision="2" placeholder="额度" />
-        <NButton type="primary" size="small" :disabled="!bForm.catName || bForm.catLimit == null" @click="addCatBudget">添加</NButton>
+        <NInput v-model:value="bForm.catName" placeholder="分类名（如 餐饮）" style="flex: 1" class="budget-input" />
+        <NInputNumber v-model:value="bForm.catLimit" :min="0" :precision="2" placeholder="额度" class="budget-input" />
+        <NButton type="primary" size="small" :disabled="!bForm.catName || bForm.catLimit == null" @click="addCatBudget" class="budget-btn-add">添加</NButton>
       </div>
+    </NModal>
+
+    <!-- 月度消费海报 -->
+    <NModal v-model:show="showPoster" preset="card" title="分享你的本月消费" style="max-width: 420px" class="account-modal poster-modal">
+      <ExpensePoster
+        ref="posterRef"
+        :total-expense="summary.expend"
+        :categories="catPieData.map(c => ({ category: c.category, amount: c.amount, percent: (c.amount / Math.max(summary.expend, 0.01)) * 100 }))"
+        :date-text="`${budgetYear} 年 ${budgetMonth} 月`"
+      />
+      <template #footer>
+        <div class="account-foot">
+          <NButton class="account-btn-cancel" @click="showPoster = false">关闭</NButton>
+          <NButton type="primary" @click="posterRef?.download" class="account-btn-primary">保存到相册</NButton>
+        </div>
+      </template>
     </NModal>
   </div>
 </template>
@@ -193,6 +212,7 @@ import ChartWrap from '@/components/ChartWrap.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
+import ExpensePoster from '@/components/Common/ExpensePoster.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { usePagedList } from '@/composables/usePagedList';
 import { feedback } from '@/utils/feedback';
@@ -200,6 +220,8 @@ import { selectRule, dateRule } from '@/utils/formRules';
 
 const loading = ref(true);
 const summary = ref<ac.AccountSummary>({ income: 0, expend: 0, balance: 0 });
+const showPoster = ref(false);
+const posterRef = ref<InstanceType<typeof ExpensePoster> | null>(null);
 const { list, page, pageSize, total, loading: listLoading, hasMore, refresh: refreshList, nextPage } = usePagedList<AccountRecordDto>(
   async (p) => {
     const d = await ac.listAccount({ page: p.page, pageSize: p.pageSize });
@@ -526,5 +548,122 @@ onMounted(async () => {
 @media (max-width: 767px) {
   .records { grid-template-columns: 1fr; }
   .cat-list { grid-template-columns: 1fr; }
+}
+
+/* 美化记账模态框 */
+:global(.account-modal) {
+  border-radius: 16px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+:global(.account-modal .n-modal-header) {
+  background: linear-gradient(135deg, #f0fdf4, var(--color-surface)) !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--color-border);
+}
+:global(.account-modal .n-modal-header .n-modal-header__close) {
+  top: 16px;
+  right: 16px;
+}
+:global(.account-modal .n-modal-body) {
+  padding: 24px !important;
+}
+:global(.account-modal .n-modal-footer) {
+  padding: 16px 24px !important;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+.account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.account-form-item {
+  margin-bottom: 0 !important;
+}
+.account-input,
+.account-textarea,
+.account-select,
+.account-picker {
+  border-radius: 10px !important;
+}
+.account-textarea :deep(.n-input__textarea),
+.account-textarea :deep(textarea) {
+  font-size: 15px;
+  line-height: 1.7;
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.account-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.account-btn-cancel {
+  border-radius: 10px;
+  padding: 8px 20px;
+  font-weight: 500;
+}
+.account-btn-primary {
+  border-radius: 10px;
+  padding: 8px 24px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #5BB98C, #3d9e6b);
+  border: none;
+  box-shadow: 0 4px 12px rgba(91, 185, 140, 0.25);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.account-btn-primary:hover {
+  box-shadow: 0 6px 16px rgba(91, 185, 140, 0.35);
+  transform: translateY(-1px);
+}
+.account-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* 预算模态框 */
+.budget-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.budget-form-item {
+  margin-bottom: 0 !important;
+}
+.budget-input,
+.budget-picker {
+  border-radius: 10px !important;
+}
+.budget-btn-primary {
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-weight: 600;
+}
+.budget-btn-add {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* 海报模态框 */
+:global(.poster-modal) {
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+:global(.poster-modal .n-modal-header) {
+  background: linear-gradient(135deg, #fff5f6, var(--color-surface)) !important;
+  padding: 18px 24px !important;
+  border-bottom: 1px solid var(--color-border);
+}
+
+@media (max-width: 767px) {
+  :global(.account-modal),
+  :global(.budget-modal),
+  :global(.poster-modal) {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0 !important;
+  }
 }
 </style>

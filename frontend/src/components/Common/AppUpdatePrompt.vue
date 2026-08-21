@@ -142,9 +142,7 @@ onMounted(async () => {
     platform.value === 'android'
       ? (manifest.androidVersionCode ?? manifest.versionCode)
       : manifest.versionCode;
-  const needUpdate =
-    targetCode > current &&
-    (manifest.minSupportedCode ?? 0) <= current; // 当前版本仍受支持才提示
+  const needUpdate = targetCode > current;
   if (needUpdate) info.value = manifest;
 });
 

@@ -33,7 +33,6 @@ public class YearReportServiceTests
         db.Todos.Add(new CoupleTodo { Title = "t", IsDone = true, CreateTime = y2026 });
         db.Conflicts.Add(new CoupleConflict { Summary = "c", OccurTime = y2026, ReconcileTime = y2026 });
         db.Conflicts.Add(new CoupleConflict { Summary = "c2", OccurTime = y2025 }); // 去年未和解
-        db.Letters.Add(new CoupleLetter { Content = "l", ReceiverUserId = 2, UnlockTime = y2026, IsUnlocked = true, CreateTime = y2026 });
         db.BoardMessages.Add(new CoupleBoardMessage { Content = "b", CreateTime = y2026 });
         db.Images.Add(new CoupleImage { AlbumId = 1, ImagePath = "/x.png", CreateTime = y2026 });
         db.Footprints.Add(new CoupleFootprint { Title = "f", Count = 1, CreateTime = y2026 });
@@ -58,7 +57,6 @@ public class YearReportServiceTests
         Assert.Equal(1, r.TodoDone);
         Assert.Equal(1, r.ConflictCount);      // 去年那条不计入
         Assert.Equal(1, r.ConflictResolved);   // 已和解 1 条
-        Assert.Equal(1, r.LetterCount);
         Assert.Equal(1, r.BoardCount);
         Assert.Equal(1, r.ImageCount);
         Assert.Equal(1, r.FootprintCount);

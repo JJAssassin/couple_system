@@ -2,16 +2,17 @@
 
 > 项目路径：`D:\Code\My_vscode\couple-love-system`
 > 技术栈：前端 Vue3 + TS + Vite6 + Pinia + NaiveUI + Tailwind v4 + ECharts + GSAP + SignalR；后端 ASP.NET Core 8 + EF Core + MySQL + BCrypt
-> 最后更新：2026-08-16
+> 最后更新：2026-08-21
 
 ## 一、已实现功能（全部模块打通，已实测）
 
-### 前端（13 个功能页面，均真实可用；另含登录页）
+### 前端（14 个功能页面，均真实可用；另含登录页）
 - 登录 `Login`：JWT 双 Token 登录、令牌本地存储、无感刷新
 - 首页 `Home`：恋爱天数数字滚动、ECharts 心情/矛盾趋势、就近纪念日、统计卡片
 - 时间轴 `Timeline`：纪念日/日记/愿望/矛盾/足迹多表聚合，月份筛选，竖线节点
 - 日记 `Diary`：公开/私密 Tab、富文本（HtmlSanitizer 净化）、心情/天气、权限标签、评论；**私密内容后端兜底不可见**
 - 愿望 `Wish`：共同/礼物/成长三类、认领、标记完成、状态进度
+- 任务 `Task`：任务模板 CRUD、打卡备注、撤销、积分统计、连续打卡、最近记录、导出任务数据
 - 相册 `Album`：相册网格、图片上传（NUpload）、大图预览（NImage）
 - 矛盾 `Conflict`：克制风格、等级标记、和解记录、复盘结论
 - 书信 `Letter`：未解锁锁呼吸动画、仅接收人可见、**定时解锁**（服务器时间）
@@ -22,30 +23,28 @@
 - 设置 `Setting`：改资料/密码、深色模式、动效减弱开关、全量导出
 - 通用：PC 侧栏 ↔ 移动底栏自适应、侧栏消息铃（未读角标 + 下拉）、路由转场、`useStaggerEnter` 错落入场、骨架/空态
 
-> 注：`src/views/CheckIn`（打卡）与 `src/views/Score`（互评）目录仍保留，但**已退出路由与导航**（对应后端实体已移除），属历史遗留，不再使用。
-
-### 后端（14 个业务模块 + 横切能力，20 个 Controller / 22 个 Service）
+### 后端（15 个业务模块 + 横切能力，21 个 Controller / 23 个 Service）
 - 认证 `AuthService`：JWT 双 Token（Access 2h / Refresh 7d）+ BCrypt；**RSA 非对称签名，密钥外置**（环境变量 `JWT_RSA_PRIVATE_KEY` 或 `keys/jwt-private.pem`，生产强制 RSA 否则启动失败）
 - 令牌存储 `ITokenStore`：默认 **Redis** 实现（`auth:rt:` 前缀），支持分布式与主动吊销
 - 权限兜底 `PermissionFilter`：`WhereVisible`/`EnsureVisible`/`CanEdit`，**绝不信任前端 ID**
-- 模块 Service/Controller（全部 CRUD 打通）：首页、纪念日、日记+评论、愿望（认领/完成）、相册+图片、矛盾、书信（解锁）、记账、约会、足迹、站内消息、时间轴聚合、用户（改密/导出）、情侣/伙伴/每日一言
+- 模块 Service/Controller（全部 CRUD 打通）：首页、纪念日、日记+评论、愿望（认领/完成）、任务模板+打卡记录、相册+图片、矛盾、书信（解锁）、记账、约会、足迹、站内消息、时间轴聚合、用户（改密/导出）、情侣/伙伴/每日一言
 - 实时同步 `SyncBroadcaster` + SignalR `SyncHub`：写后向 `couple-{cid}` 组广播刷新；**令牌走 Authorization Header（非 URL）**
 - 定时任务 `ScheduledHostedService`（托管服务，零额外依赖）：每分钟轮询，① 到期定时书信自动解锁并生成通知；② 纪念日提醒并重填下次提醒；③ 到期项向对应情侣组推送 `message` 信号。已加 **Redis 分布式锁** 防多实例重复执行
 - 站内消息邮件 `SystemMessageEmailNotifier`：基于 `System.Net.Mail` 零新包；**默认关闭**（`Email:Enabled=false`），启用且有接收人邮箱时才发 HTML（HtmlEncode 防注入）
 - 文件上传 `ImageController`：后缀白名单(jpg/jpeg/png/gif/webp) + ≤5MB + `yyyyMMdd_Guid` 重命名 + 存入 `wwwroot/uploads`
-- 全量导出 `UserService.ExportAsync`：导出当前用户可见数据（含权限过滤）为 JSON
+- 全量导出 `UserService.ExportAsync`：导出当前用户可见数据（含权限过滤）为 JSON，**已包含 Task 模板 + Task 打卡记录**
 - 数据库：EF Core **Migrations**（启动期 `MigrateAsync` 自动迁移），非 `EnsureCreated`
 
-## 二、验证状态（已实测，2026-08-16）
+## 二、验证状态（已实测，2026-08-21）
 
 | 项 | 结果 |
 |---|---|
 | 后端 `dotnet build` | ✅ 通过（.NET 8 SDK 本机编译） |
-| 后端 `dotnet test`（xUnit） | ✅ **65/65 通过**（权限过滤、密码哈希、邮件通知、定时推送集成等） |
-| 前端 `npm run build`（vue-tsc + vite） | ✅ 通过，0 类型错误，构建体积门禁过（echarts≤700KB / naive≤900KB 按需引入） |
+| 后端 `dotnet test`（xUnit） | ✅ **119 用例通过** |
+| 前端 `npm run build`（vue-tsc + vite） | ✅ 通过，0 类型错误 |
 | 前端 `npm run test`（vitest） | ✅ **26/26 通过** |
 | `vue-tsc --noEmit` | ✅ 0 错误 |
-| 全栈冒烟 `smoke_api.py` | ✅ 登录 + 读端点 + 写闭环(create→update→delete) + 401 鉴权门禁全绿 |
+| 全栈冒烟（手动 curl） | ✅ 登录 + 任务模板 + 打卡 + 统计 + 日记 + 愿望 + 纪念日全绿 |
 
 ## 三、如何运行
 
@@ -81,16 +80,19 @@ dotnet run --urls http://localhost:5199   # 启动期自动迁移建表 + 写入
 - 图片走 `/uploads` 但 dev 代理只代理 `/api` → `vite.config.ts` 增加 `/uploads` 代理
 - 后端所有 Service 统一在 `Program.cs` 注册；静态文件 `app.UseStaticFiles()` 提供上传图片
 - 定时任务用内置托管服务替代独立 Quartz 工程（更简单、零依赖）
-- 构建体积门禁：ECharts / Naive UI 按需引入，CI 脚本 `ci-gate.sh` 六阶段全绿
+- 构建体积门禁：ECharts / Naive UI 按需引入
+- 任务模块：新增 `CoupleTaskTemplate` / `CoupleTaskRecord` 实体，配套 Migration `20260821060242_AddTask`，前后端 CRUD + 打卡 + 统计全通
+- 前端构建产物清理：移除 `.trash_*` 目录与 `vitest.config.ts.timestamp-*.mjs` 临时文件
+- 任务模块前端优化：打卡备注输入与展示、最近打卡记录布局优化、任务数据导出按钮
+- 全量导出增强：`UserService.ExportAsync` 现已包含 `TaskTemplates` 与 `TaskRecords`
+- 前端构建：因本地 esbuild 临时文件清理被安全钩子拦截，改用 Docker 容器构建前端产物并同步至 `mobile/www`
 
 ## 五、已知限制 / 后续 TODO（仅列仍开放的，已实现的从略）
-1. **富文本净化**：日记已接入 `HtmlSanitizerService` 做净化；如需更强策略可继续调
-2. **图片物理删除**：`ImageController` 删除仅逻辑删除 DB，磁盘文件未物理清理（标 TODO，需回收策略）
-3. **导出格式**：`export/alldata` 仅导出元数据 JSON，图片打包进 zip 未做（标 TODO）
-4. **安全加固**：上线前请配置 HTTPS/HSTS、CORS 白名单、IIS 对 `uploads` 目录禁脚本执行、MySQL 仅本机连接
-5. **技术债（可选重构）**：`SyncBroadcaster.NotifyAsync` 仍 7 处手写（可改 AOP 自动广播）；`SyncBroadcaster` 未带增量载荷；`TokenStore` 生产仍允许 InMemory 配置级降级
-6. **部署**：可补 docker-compose（MySQL + Redis + 后端 + 前端）与 CI/CD
+1. **图片物理删除**：`ImageController` 删除仅逻辑删除 DB，磁盘文件未物理清理（标 TODO，需回收策略）
+2. **导出格式**：`export/alldata` 仅导出元数据 JSON，图片打包进 zip 未做（标 TODO）
+3. **技术债（可选重构）**：`SyncBroadcaster.NotifyAsync` 仍 7 处手写（可改 AOP 自动广播）；`SyncBroadcaster` 未带增量载荷；`TokenStore` 生产仍允许 InMemory 配置级降级
+4. **部署**：可补 docker-compose（MySQL + Redis + 后端 + 前端）与 CI/CD
 
 ## 六、版本控制
 - 项目已 `git init`，首次提交 `f012118`（分支 `master`）。提交已排除：bin/obj/node_modules/dist/密钥/密码文件。
-- 当前**无远程仓库**；如需备份到 GitHub/Gitee，请提供远程 URL，再 `git remote add origin <url> && git push -u origin master`。
+- 已推送到 GitHub（SSH）：`git remote add origin git@github.com:<user>/<repo>.git`，远端 `refs/heads/master` 跟踪。

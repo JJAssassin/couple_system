@@ -66,7 +66,7 @@ import { gsap } from 'gsap';
 import {
   Mail, Home, History, BookOpen, Star, ListChecks, MessageCircle, Sparkles, Image, CloudFog,
   CircleCheck, Wallet, Coffee, Settings, HeartHandshake, Footprints, CalendarHeart, Heart,
-  BarChart3,
+  BarChart3, Target,
 } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import api from '@/utils/request';
@@ -102,11 +102,11 @@ const items = [
   { to: '/diary', label: '日记', icon: BookOpen },
   { to: '/wish', label: '愿望', icon: Star },
   { to: '/todo', label: '待办', icon: ListChecks },
+  { to: '/task', label: '打卡', icon: Target },
   { to: '/board', label: '留言板', icon: MessageCircle },
   { to: '/quiz', label: '默契问答', icon: Sparkles },
   { to: '/album', label: '相册', icon: Image },
   { to: '/conflict', label: '矛盾', icon: CloudFog },
-  { to: '/letter', label: '书信', icon: Mail },
   { to: '/account', label: '记账', icon: Wallet },
   { to: '/dateplan', label: '约会', icon: Coffee },
   { to: '/footprint', label: '足迹', icon: Footprints },

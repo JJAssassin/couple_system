@@ -76,7 +76,6 @@ builder.Services.AddScoped<BoardMessageService>();
 builder.Services.AddScoped<QuizService>();
 builder.Services.AddScoped<AlbumService>();
 builder.Services.AddScoped<ConflictService>();
-builder.Services.AddScoped<LetterService>();
 builder.Services.AddScoped<AccountService>();
 builder.Services.AddScoped<BudgetService>();
 builder.Services.AddScoped<DatePlanService>();
@@ -87,6 +86,8 @@ builder.Services.AddScoped<CoupleService>();
 builder.Services.AddScoped<PartnerService>();
 builder.Services.AddScoped<FootprintService>();
 builder.Services.AddScoped<QuoteService>();
+builder.Services.AddScoped<TaskService>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<SyncBroadcaster>();
 
 // ---- 邮件通知（SMTP，可选）：Email.Enabled=true 且配置 SmtpHost 时走真实 SMTP；否则安全降级为 NoOp（仅日志、不连网）----
@@ -206,6 +207,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.UseSwagger(); app.UseSwaggerUI();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseMiddleware<AccessTokenScrubMiddleware>(); // 防御性脱敏：摘除任何 ?access_token=，防令牌写入日志
+app.UseMiddleware<SecurityHeadersMiddleware>(); // 安全响应头：HSTS / CSP / X-Frame-Options / nosniff 等
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseCoupleScope(); // 在每个请求中写入当前情侣空间（CoupleContext.Current），供隔离过滤与盖章使用

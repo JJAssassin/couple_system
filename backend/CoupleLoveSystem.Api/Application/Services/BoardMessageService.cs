@@ -19,7 +19,11 @@ public class BoardMessageService
 
     public async Task<PagedResult<BoardMessageDto>> ListAsync(int page, int pageSize, long currentUserId, CancellationToken ct = default)
     {
-        var all = await _repo.Query()
+        var query = _repo.Query();
+        // 只返回当前用户可见的消息：公开消息 或 私密给当前用户的消息
+        query = query.Where(m => !m.IsPrivate || m.ReceiverUserId == currentUserId);
+        
+        var all = await query
             .OrderByDescending(m => m.Pinned)
             .ThenByDescending(m => m.CreateTime)
             .ToListAsync(ct);
@@ -41,13 +45,19 @@ public class BoardMessageService
     public async Task<BoardMessageDto> CreateAsync(BoardMessageReq req, long currentUserId, CancellationToken ct = default)
     {
         var author = await _userRepo.GetByIdAsync(currentUserId, ct);
+        var now = DateTime.UtcNow;
         var m = new CoupleBoardMessage
         {
             Content = req.Content,
             Color = req.Color,
             AuthorName = author?.NickName,
             CreateUserId = currentUserId,
-            CreateTime = DateTime.UtcNow,
+            CreateTime = now,
+            ImageUrl = req.ImageUrl,
+            IsPrivate = req.IsPrivate,
+            ReceiverUserId = req.ReceiverUserId,
+            ScheduledAt = req.ScheduledAt,
+            IsUnlocked = !req.ScheduledAt.HasValue || req.ScheduledAt.Value <= now,
         };
         await _repo.AddAsync(m, ct);
         await _repo.SaveChangesAsync(ct);
@@ -59,6 +69,9 @@ public class BoardMessageService
         var m = await _repo.GetByIdAsync(id, ct) ?? throw new NotFoundException("留言不存在");
         m.Content = req.Content;
         m.Color = req.Color;
+        m.ImageUrl = req.ImageUrl;
+        m.IsPrivate = req.IsPrivate;
+        m.ReceiverUserId = req.ReceiverUserId;
         m.UpdateUserId = currentUserId;
         _repo.Update(m);
         await _repo.SaveChangesAsync(ct);
@@ -90,6 +103,11 @@ public class BoardMessageService
         AuthorName = m.AuthorName,
         Color = m.Color,
         Pinned = m.Pinned,
+        ImageUrl = m.ImageUrl,
+        ReceiverUserId = m.ReceiverUserId,
+        IsPrivate = m.IsPrivate,
+        ScheduledAt = m.ScheduledAt,
+        IsUnlocked = m.IsUnlocked,
         CreateUserId = m.CreateUserId,
         CreateTime = m.CreateTime,
     };
