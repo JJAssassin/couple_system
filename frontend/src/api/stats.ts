@@ -30,7 +30,6 @@ export interface YearReport {
   todoDone: number;
   conflictCount: number;
   conflictResolved: number;
-  letterCount: number;
   boardCount: number;
   imageCount: number;
   footprintCount: number;

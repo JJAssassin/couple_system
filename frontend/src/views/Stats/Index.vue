@@ -32,7 +32,6 @@
           <div class="card"><div class="num">{{ report.imageCount }}</div><div class="lbl">张照片定格瞬间</div></div>
           <div class="card"><div class="num">{{ report.wishDone }}/{{ report.wishCreated }}</div><div class="lbl">愿望达成</div></div>
           <div class="card"><div class="num">{{ report.quizRounds }}</div><div class="lbl">轮默契问答 · 默契率 {{ report.matchRate }}%</div></div>
-          <div class="card"><div class="num">{{ report.letterCount }}</div><div class="lbl">封信，纸短情长</div></div>
           <div class="card"><div class="num">{{ report.boardCount }}</div><div class="lbl">条留言悄悄话</div></div>
           <div class="card"><div class="num">{{ report.footprintCount }}</div><div class="lbl">个小确幸足迹</div></div>
           <div class="card"><div class="num">{{ report.dateCompleted }}/{{ report.dateCount }}</div><div class="lbl">次约会成行</div></div>

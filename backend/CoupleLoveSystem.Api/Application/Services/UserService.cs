@@ -48,7 +48,7 @@ public class UserService
         var user = await _userRepo.GetByIdAsync(currentUserId, ct)
             ?? throw new NotFoundException("用户不存在");
 
-        // 仅导出当前用户可见数据：日记按权限过滤（排除对方 PrivateSelf），书信取接收人为本人的，其余按 CreateUserId/UserId 归属本人
+        // 仅导出当前用户可见数据：日记按权限过滤（排除对方 PrivateSelf），私密留言取接收人为本人的，其余按 CreateUserId/UserId 归属本人
         var diaries = await PermissionFilter.WhereVisible(_db.Diaries, currentUserId).ToListAsync(ct);
         var payload = new
         {

@@ -155,7 +155,7 @@
     <!-- 数据备份 -->
     <section class="block love-card">
       <h2>数据备份</h2>
-      <p class="sub-text">导出当前账号可见的全部数据（纪念日 / 日记 / 愿望 / 矛盾 / 书信 / 记账 / 约会 / 消息）。</p>
+      <p class="sub-text">导出当前账号可见的全部数据（纪念日 / 日记 / 愿望 / 矛盾 / 留言 / 记账 / 约会 / 消息）。</p>
       <NButton :loading="exporting" @click="doExport">导出全部数据</NButton>
     </section>
   </div>

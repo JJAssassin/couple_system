@@ -60,11 +60,6 @@ const MODULE_META: Record<string, { icon: string; display: string; lines: string
     display: '矛盾记录',
     lines: ['ta 记下了一件事想跟你好好聊', 'ta 写下了想被理解的心情', 'ta 留了一笔，等你一起消化'],
   },
-  letter: {
-    icon: '💌',
-    display: '信件',
-    lines: ['ta 给你写了一封信 💌', 'ta 写了一段只对你说的话', 'ta 把心里话塞进了信箱'],
-  },
   account: {
     icon: '🧾',
     display: '记账',

@@ -167,7 +167,7 @@ function prefetchData() {
 /* 面包屑当前页标题（与 Sidebar 导航项对应） */
 const TITLE_MAP: Record<string, string> = {
   home: '首页', timeline: '时间轴', diary: '日记', wish: '愿望', todo: '待办', board: '留言板', quiz: '默契问答', album: '相册',
-  conflict: '矛盾', letter: '书信', account: '记账', dateplan: '约会',
+  conflict: '矛盾', account: '记账', dateplan: '约会',
   footprint: '足迹', anniversary: '纪念日', message: '消息', setting: '设置', stats: '我们的一年',
 };
 const currentTitle = computed(() => {

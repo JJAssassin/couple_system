@@ -57,7 +57,7 @@ public class DashboardDataDto
     public List<ChartPointDto> ConflictTrend { get; set; } = new();
     public double WishCompleteRate { get; set; }
     public AccountSummaryDto AccountSummary { get; set; } = new();
-    /// <summary>连续互动天数：以「任一方当日有内容产出（日记/愿望/矛盾/书信/足迹/相册/照片）」为活跃日，
+    /// <summary>连续互动天数：以「任一方当日有内容产出（日记/愿望/矛盾/留言/足迹/相册/照片）」为活跃日，
     /// 从今天（或昨天若今天尚未记录）往前连续计数的天数。由 HomeService 实时派生并缓存到当日。</summary>
     public int ActiveStreakDays { get; set; }
 }

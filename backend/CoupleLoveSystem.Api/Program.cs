@@ -102,7 +102,7 @@ builder.Services.AddScoped<IEmailSender>(sp =>
     return new NoOpEmailSender(sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<NoOpEmailSender>>());
 });
 
-// ---- 定时任务（纪念日提醒 / 书信解锁），用托管服务替代独立 Quartz 项目，零额外依赖 ----
+// ---- 定时任务（纪念日提醒 / 私密留言解锁），用托管服务替代独立 Quartz 项目，零额外依赖 ----
 builder.Services.AddHostedService<ScheduledHostedService>();
 
 // ---- 定时任务分布式锁：Redis(Provider=Redis) 跨实例互斥，否则进程内互斥，避免重复发提醒 ----

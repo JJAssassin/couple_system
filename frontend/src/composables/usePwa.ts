@@ -39,7 +39,6 @@ const MODULE_CN: Record<string, string> = {
   diary: '日记',
   anniversary: '纪念日',
   conflict: '矛盾',
-  letter: '书信',
   account: '记账',
   setting: '设置',
   footprint: '足迹',
