@@ -49,7 +49,7 @@
         :key="item.to"
         :to="item.to"
         class="nav-item"
-        @click="onClickNav"
+        @click="hapticForAction('tap'); onClickNav"
       >
         <span class="ico"><component :is="item.icon" :size="18" :stroke-width="1.8" /></span>
         <span v-if="!collapsed" class="lbl">{{ item.label }}</span>
@@ -75,6 +75,7 @@ import { useRealtime } from '@/composables/useRealtime';
 import { useSettingStore } from '@/store/settingStore';
 import { useNotifyStore } from '@/store/notifyStore';
 import { usePartnerStore } from '@/store/partnerStore';
+import { hapticForAction } from '@/composables/useHaptic';
 import GradientText from '@/components/Common/GradientText.vue';
 import * as msgApi from '@/api/message';
 

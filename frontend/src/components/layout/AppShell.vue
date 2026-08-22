@@ -76,12 +76,12 @@
         :key="t.to"
         :to="t.to"
         class="tab"
-        @click="drawerOpen = false"
+        @click="hapticForAction('tap'); drawerOpen = false"
       >
         <component :is="t.icon" :size="22" :stroke-width="1.8" />
         <span class="tab-lbl">{{ t.label }}</span>
       </router-link>
-      <button class="tab" aria-label="更多" @click="drawerOpen = true">
+      <button class="tab" aria-label="更多" @click="hapticForAction('tap'); drawerOpen = true">
         <Menu :size="22" :stroke-width="1.8" />
         <span class="tab-lbl">更多</span>
       </button>
@@ -106,6 +106,7 @@ import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';
 import { useSettingStore } from '@/store/settingStore';
 import { useRealtime } from '@/composables/useRealtime';
+import { hapticForAction } from '@/composables/useHaptic';
 
 useDevice();
 const route = useRoute();

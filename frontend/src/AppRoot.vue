@@ -14,6 +14,7 @@ import { useSettingStore } from '@/store/settingStore';
 import { useAuthStore } from '@/store/authStore';
 import { bindNotify } from '@/store/notifyStore';
 import { usePwa } from '@/composables/usePwa';
+import { useSwipeBack } from '@/composables/useSwipeBack';
 import Onboarding from '@/components/Onboarding.vue';
 import HeartBurstLayer from '@/components/Common/HeartBurstLayer.vue';
 import PartnerActivityToast from '@/components/Common/PartnerActivityToast.vue';
@@ -31,6 +32,9 @@ bindNotify(useMessage(), useNotification());
 const pwa = usePwa();
 pwa.init();
 pwa.setupNotifications();
+
+// 移动端：左边缘右滑返回上一页
+useSwipeBack();
 
 // 原生 WebView 兜底：重载后内存令牌丢失但 refreshToken 仍在（cookie/localStorage）时，
 // 启动即静默用 refreshToken 续期，避免路由守卫把已登录用户误踢回登录框（iOS App「点一下退回登录」）。

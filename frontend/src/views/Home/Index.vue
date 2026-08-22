@@ -1,6 +1,7 @@
 <template>
   <IndSkeleton v-if="loading" variant="hero" />
-  <div v-else class="home" ref="container">
+  <PullRefresh v-else @refresh="onRefresh">
+    <div class="home" ref="container">
     <!-- 圆整节点庆祝横幅 -->
     <transition name="cele">
       <div v-if="celebrate" class="cele-banner">
@@ -178,6 +179,7 @@
       </IndCard>
     </section>
   </div>
+  </PullRefresh>
 </template>
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
@@ -207,9 +209,12 @@ import { useSettingStore } from '@/store/settingStore';
 import { useRealtime } from '@/composables/useRealtime';
 import * as coupleApi from '@/api/couple';
 import { getDailyQuote } from '@/api/quote';
+import PullRefresh from '@/components/Common/PullRefresh.vue';
+import { hapticForAction } from '@/composables/useHaptic';
 
 const { onSync } = useRealtime();
 const loading = ref(true);
+const refreshing = ref(false);
 const loveInfo = ref<LoveInfo>({ hasLoveStart: false, totalDays: 0, totalHours: 0, totalMinutes: 0, loveStartTime: '' });
 const dashboard = ref<DashboardData>({ moodTrend: [], conflictTrend: [], wishCompleteRate: 0, accountSummary: { income: 0, expend: 0, balance: 0 }, activeStreakDays: 0 });
 const nearest = ref<AnniversaryDto[]>([]);
@@ -306,6 +311,7 @@ const extraQuotes = [
 ];
 function shuffleQuote() {
   if (extraQuotes.length === 0) return;
+  hapticForAction('tap');
   let q = quote.value.content;
   let guard = 0;
   while (q === quote.value.content && guard++ < 12) {
@@ -409,6 +415,17 @@ async function loadFeed() {
 }
 async function loadQuote() {
   try { const { data } = await api.get('/quote/today'); quote.value = (data as ApiResult<DailyQuoteDto>).data ?? { content: '' }; } catch { /* 拦截器已提示 */ }
+}
+
+/** 下拉刷新：重载首页所有数据 */
+async function onRefresh() {
+  refreshing.value = true;
+  await Promise.all([
+    loadLoveInfo(), loadDashboard(), loadNearest(), loadUnread(),
+    loadAlbums(), loadFeed(), loadQuote(),
+  ]);
+  checkMilestone();
+  refreshing.value = false;
 }
 
 onMounted(async () => {

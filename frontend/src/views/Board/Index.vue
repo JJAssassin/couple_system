@@ -1,5 +1,6 @@
 <template>
-  <div class="board-page" ref="container">
+  <PullRefresh @refresh="onRefresh">
+    <div class="board-page" ref="container">
     <header class="page-head">
       <div class="head-left">
         <h1>留言板</h1>
@@ -39,9 +40,9 @@
             :class="{ on: draftColor === c }"
             :style="{ background: c }"
             :aria-label="`颜色 ${c}`"
-            @click="draftColor = draftColor === c ? '' : c"
+            @click="hapticForAction('tap'); draftColor = draftColor === c ? '' : c"
           />
-          <button class="swatch none" :class="{ on: !draftColor }" aria-label="无颜色" @click="draftColor = ''">无</button>
+          <button class="swatch none" :class="{ on: !draftColor }" aria-label="无颜色" @click="hapticForAction('tap'); draftColor = ''">无</button>
         </div>
         <div class="composer-actions">
           <ImageField v-model="draftImage" />
@@ -114,9 +115,9 @@
           class="swatch"
           :class="{ on: editColor === c }"
           :style="{ background: c }"
-          @click="editColor = editColor === c ? '' : c"
+          @click="hapticForAction('tap'); editColor = editColor === c ? '' : c"
         />
-        <button class="swatch none" :class="{ on: !editColor }" @click="editColor = ''">无</button>
+        <button class="swatch none" :class="{ on: !editColor }" @click="hapticForAction('tap'); editColor = ''">无</button>
       </div>
       <template #footer>
         <div class="board-foot">
@@ -126,6 +127,7 @@
       </template>
     </n-modal>
   </div>
+  </PullRefresh>
 </template>
 
 <script setup lang="ts">
@@ -146,6 +148,8 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import ImageField from '@/components/Common/ImageField.vue';
 import { feedback } from '@/utils/feedback';
+import PullRefresh from '@/components/Common/PullRefresh.vue';
+import { hapticForAction } from '@/composables/useHaptic';
 
 const auth = useAuthStore();
 const notify = useNotifyStore();
@@ -202,6 +206,7 @@ async function send() {
       receiverUserId: activeTab.value === 'private' ? partnerId.value! : undefined,
     };
     await createBoard(req);
+    hapticForAction('success');
     feedback.created('留言');
     draft.value = '';
     draftColor.value = '';
@@ -244,6 +249,10 @@ async function load() {
     const p = await listBoard({ page: 1, pageSize: 300 });
     messages.value = p.items;
   } finally { loading.value = false; }
+}
+
+async function onRefresh() {
+  await load();
 }
 
 useStaggerEnter(container, '.love-card', { stagger: 0.05, y: 12 });
