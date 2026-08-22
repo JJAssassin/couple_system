@@ -1,6 +1,7 @@
 using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Enums;
+using CoupleLoveSystem.Core.Result;
 using CoupleLoveSystem.Infrastructure.Cache;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,43 @@ public class YearReportService
         var cid = CoupleContext.Current ?? "anon";
         return await _cache.GetOrCreateAsync($"stats:yearreport:{cid}:{year}", TimeSpan.FromMinutes(10),
             _ => ComputeAsync(year, ct), ct);
+    }
+
+    /// <summary>取指定年度心情日历（缓存 10 分钟）。</summary>
+    public async Task<MoodCalendarDto> GetMoodCalendarAsync(int year, CancellationToken ct = default)
+    {
+        var cid = CoupleContext.Current ?? "anon";
+        return await _cache.GetOrCreateAsync($"stats:moodcalendar:{cid}:{year}", TimeSpan.FromMinutes(10),
+            _ => ComputeMoodCalendarAsync(year, ct), ct);
+    }
+
+    private async Task<MoodCalendarDto> ComputeMoodCalendarAsync(int year, CancellationToken ct)
+    {
+        var start = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        var end = start.AddYears(1);
+
+        // 取该年度所有日记（按 DiaryDate 归属，无 DiaryDate 的跳过）
+        var diaries = await _db.Diaries
+            .Where(d => d.DiaryDate >= start && d.DiaryDate < end)
+            .Select(d => new { d.DiaryDate, d.MoodScore, d.MoodTag })
+            .ToListAsync(ct);
+
+        // 按日期去重（同一日期多条取最后一条）
+        var daily = diaries
+            .GroupBy(d => d.DiaryDate!.Value.Date)
+            .Select(g => g.Last())
+            .OrderBy(d => d.DiaryDate)
+            .ToList();
+
+        var dto = new MoodCalendarDto { Year = year };
+        dto.Days = daily.Select(d => new MoodDayDto
+        {
+            Date = d.DiaryDate!.Value.ToString("yyyy-MM-dd"),
+            MoodScore = d.MoodScore,
+            MoodTag = d.MoodTag,
+        }).ToList();
+
+        return dto;
     }
 
     private async Task<YearReportDto> ComputeAsync(int year, CancellationToken ct)

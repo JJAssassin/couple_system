@@ -21,4 +21,12 @@ public class StatsController : BaseController
         var y = year ?? DateTime.UtcNow.Year;
         return Ok(ApiResult<YearReportDto>.Ok(await _yearReport.GetYearReportAsync(y, ct)));
     }
+
+    /// <summary>心情日历：GET /api/stats/mood-calendar?year=2026（缺省为当前年）</summary>
+    [HttpGet("mood-calendar")]
+    public async Task<ActionResult<ApiResult<MoodCalendarDto>>> MoodCalendar([FromQuery] int? year, CancellationToken ct)
+    {
+        var y = year ?? DateTime.UtcNow.Year;
+        return Ok(ApiResult<MoodCalendarDto>.Ok(await _yearReport.GetMoodCalendarAsync(y, ct)));
+    }
 }

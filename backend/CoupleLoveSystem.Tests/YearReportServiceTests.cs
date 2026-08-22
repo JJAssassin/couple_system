@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Enums;
 using CoupleLoveSystem.Infrastructure.Persistence;
@@ -103,5 +104,34 @@ public class YearReportServiceTests
         Assert.Equal(12, r.MonthlyFinance.Count); // 结构仍补齐 12 个月
         Assert.Equal(12, r.MoodTrend.Count);      // 趋势同样固定 12 个月
         Assert.Equal(0, r.Anniversaries.Count);
+    }
+
+    [Fact]
+    public async Task GetMoodCalendarAsync_返回指定年度每日心情()
+    {
+        var svc = Build(out var db);
+        var d1 = new DateTime(2026, 8, 10, 0, 0, 0, DateTimeKind.Utc);
+        var d2 = new DateTime(2026, 8, 11, 0, 0, 0, DateTimeKind.Utc);
+        db.Diaries.Add(new CoupleDiary { Title = "a", Content = "x", MoodScore = 9, MoodTag = "开心", DiaryDate = d1, CreateTime = d1 });
+        db.Diaries.Add(new CoupleDiary { Title = "b", Content = "y", MoodScore = 3, MoodTag = "低落", DiaryDate = d2, CreateTime = d2 });
+        // 无 DiaryDate 的不计入
+        db.Diaries.Add(new CoupleDiary { Title = "c", Content = "z", MoodScore = 7, CreateTime = d1 });
+        await db.SaveChangesAsync();
+
+        var r = await svc.GetMoodCalendarAsync(2026);
+
+        Assert.Equal(2026, r.Year);
+        Assert.Equal(2, r.Days.Count);
+        Assert.Contains(r.Days, x => x.Date == "2026-08-10" && x.MoodScore == 9 && x.MoodTag == "开心");
+        Assert.Contains(r.Days, x => x.Date == "2026-08-11" && x.MoodScore == 3 && x.MoodTag == "低落");
+    }
+
+    [Fact]
+    public async Task GetMoodCalendarAsync_无日记返回空()
+    {
+        var svc = Build(out _);
+        var r = await svc.GetMoodCalendarAsync(1999);
+        Assert.Equal(1999, r.Year);
+        Assert.Empty(r.Days);
     }
 }

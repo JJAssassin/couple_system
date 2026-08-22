@@ -47,7 +47,23 @@ export interface YearReport {
   conflictTrend: ChartPoint[];
 }
 
+export interface MoodCalendar {
+  year: number;
+  days: MoodDay[];
+}
+
+export interface MoodDay {
+  date: string;        // "2026-08-22"
+  moodScore?: number;  // 1-10，undefined 表示无记录
+  moodTag?: string;
+}
+
 export async function fetchYearReport(year: number): Promise<YearReport> {
   const { data } = await api.get('/stats/yearreport', { params: { year } });
   return (data as { data: YearReport }).data;
+}
+
+export async function fetchMoodCalendar(year: number): Promise<MoodCalendar> {
+  const { data } = await api.get('/stats/mood-calendar', { params: { year } });
+  return (data as { data: MoodCalendar }).data;
 }
