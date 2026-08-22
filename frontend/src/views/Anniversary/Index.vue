@@ -105,6 +105,7 @@
           </div>
 
           <div class="ac-actions">
+            <button class="ac-btn" @click="openPoster(a)">🎨 海报</button>
             <button class="ac-btn" @click="openEdit(a)">编辑</button>
             <n-popconfirm
               positive-text="删除"
@@ -170,6 +171,9 @@
         </div>
       </template>
     </n-modal>
+
+    <!-- 纪念日分享海报 -->
+    <AnniversaryPoster :anniversary="selectedAnniversary" />
   </div>
 </template>
 
@@ -190,6 +194,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import ImageField from '@/components/Common/ImageField.vue';
 import GradientText from '@/components/Common/GradientText.vue';
+import AnniversaryPoster from '@/components/Common/AnniversaryPoster.vue';
 import { feedback } from '@/utils/feedback';
 import { requiredRule, dateRule } from '@/utils/formRules';
 
@@ -202,6 +207,12 @@ const showForm = ref(false);
 const submitting = ref(false);
 const editingId = ref<number | null>(null);
 const poppingId = ref<number | null>(null);
+const selectedAnniversary = ref<AnniversaryDto | null>(null);
+
+function openPoster(a: AnniversaryDto) {
+  selectedAnniversary.value = a;
+  // nextTick is handled inside AnniversaryPoster
+}
 
 /* ---------- 实时倒计时引擎：每秒刷新 now，驱动所有倒计时 ---------- */
 const now = ref(Date.now());
