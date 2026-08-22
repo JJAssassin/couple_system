@@ -202,6 +202,25 @@ app.UseStaticFiles(new StaticFileOptions
             ctx.Context.Response.StatusCode = 404;
     }
 });
+
+// 托管 /app/version.json：供前端 AppUpdatePrompt 检测版本更新
+var appRoot = Path.Combine(app.Environment.WebRootPath ?? app.Environment.ContentRootPath, "app");
+if (!Directory.Exists(appRoot)) Directory.CreateDirectory(appRoot);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(appRoot),
+    RequestPath = "/app",
+    OnPrepareResponse = ctx =>
+    {
+        // 版本文件需可缓存但前端加了 cache: 'no-store'，此处不过度限制
+        var ext = Path.GetExtension(ctx.File.Name);
+        if (ext.Equals(".json", StringComparison.OrdinalIgnoreCase))
+        {
+            ctx.Context.Response.ContentType = "application/json";
+        }
+    }
+});
+
 app.UseSwagger(); app.UseSwaggerUI();
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseMiddleware<AccessTokenScrubMiddleware>(); // 防御性脱敏：摘除任何 ?access_token=，防令牌写入日志

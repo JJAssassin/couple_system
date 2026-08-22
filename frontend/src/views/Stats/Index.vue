@@ -12,7 +12,7 @@
 
     <!-- 骨架 / 空 -->
     <template v-if="!report">
-      <div class="block cards"><div v-for="i in 4" :key="i" class="skeleton card" /></div>
+      <IndSkeleton variant="grid" :rows="4" :columns="2" />
     </template>
 
     <template v-else>
@@ -85,6 +85,7 @@ import ChartWrap from '@/components/ChartWrap.vue';
 import AuroraBackdrop from '@/components/Common/AuroraBackdrop.vue';
 import GradientText from '@/components/Common/GradientText.vue';
 import YearPoster from '@/components/Common/YearPoster.vue';
+import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import { fetchYearReport, type YearReport } from '@/api/stats';
 
 const currentYear = new Date().getFullYear();

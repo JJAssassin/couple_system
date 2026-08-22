@@ -146,8 +146,8 @@ export default defineConfig({
           signalr: ['@microsoft/signalr'],
           gsap: ['gsap'],
           icons: ['@iconify/vue', 'lucide-vue-next'],
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 });

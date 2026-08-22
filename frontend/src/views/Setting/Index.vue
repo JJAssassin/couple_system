@@ -1,5 +1,5 @@
 <template>
-  <div v-if="loading" class="skeleton">加载中…</div>
+  <IndSkeleton v-if="loading" variant="text" :rows="4" />
   <div v-else class="set-page">
     <!-- 帐号 -->
     <section class="block love-card">
@@ -176,6 +176,7 @@ import { useRealtime } from '@/composables/useRealtime';
 import { usePwa, notificationsSupported } from '@/composables/usePwa';
 import { feedback } from '@/utils/feedback';
 import ImageField from '@/components/Common/ImageField.vue';
+import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import { maxLenRule } from '@/utils/formRules';
 import type { FormItemRule } from 'naive-ui';
 
