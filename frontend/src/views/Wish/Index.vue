@@ -39,12 +39,12 @@
       <div v-else class="cards">
         <template v-for="w in displayList" :key="w.id">
           <!-- 已完成：外层 SwipeCard 向左滑「抽走」= 归档（可逆，非删除） -->
-          <SwipeCard v-if="w.status === 3" :threshold="90" @dismiss="archiveWish(w)">
+          <SwipeCard v-if="w.status === 3" class="wish-card" :threshold="90" @dismiss="archiveWish(w)">
             <FlipCard
               :model-value="!!flips[w.id]"
               @update:model-value="(v) => setFlip(w.id, v)"
               interactive
-              class="wish done"
+              class="wish done wish-card"
             >
               <template #front>
                 <div class="wish-face">
@@ -87,7 +87,7 @@
             :model-value="!!flips[w.id]"
             @update:model-value="(v) => setFlip(w.id, v)"
             interactive
-            class="wish"
+            class="wish wish-card"
             :class="{ done: w.status === 3 }"
           >
             <template #front>
@@ -391,7 +391,7 @@ async function load() {
   } finally { loading.value = false; }
 }
 
-useStaggerEnter(container, '.wish-face', { stagger: 0.06, y: 14 });
+useStaggerEnter(container, '.wish-card', { stagger: 0.06, y: 14 });
 const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await load();

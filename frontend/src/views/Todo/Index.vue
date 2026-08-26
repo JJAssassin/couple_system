@@ -32,15 +32,58 @@
       @action="openAdd"
     />
     <div v-else class="cards">
-      <div
-        v-for="t in displayList"
+      <!-- 未完成：外层 SwipeCard 向左滑「抽走」= 标记完成（划掉即了结，可逆非删除） -->
+      <SwipeCard
+        v-for="t in activeList"
         :key="t.id"
-        class="love-card todo"
-        :class="{ done: t.isDone }"
+        :threshold="90"
+        @dismiss="onSwipeDone(t)"
+      >
+        <div class="love-card todo">
+          <div class="todo-top">
+            <button class="check" :aria-label="'标记完成'" @click="onToggle(t)"></button>
+            <span class="todo-title title-clamp">{{ t.title }}</span>
+            <n-tag v-if="t.category" size="small" round type="info" class="cat-tag">{{ t.category }}</n-tag>
+          </div>
+
+          <p v-if="t.description" class="todo-desc sub-text title-clamp">{{ t.description }}</p>
+
+          <div class="todo-meta sub-text">
+            <span>优先级 {{ '★'.repeat(t.priority) || '—' }}</span>
+            <span v-if="t.dueTime">期限 {{ fmt(t.dueTime) }}</span>
+            <span v-if="t.assigneeName">负责人：{{ t.assigneeName }}</span>
+          </div>
+
+          <div class="todo-actions">
+            <n-popselect
+              :value="t.assigneeUserId ?? -1"
+              :options="assignOptions"
+              size="small"
+              trigger="click"
+              @update:value="(v: number) => onAssign(t, v)"
+            >
+              <n-button size="small" tertiary>指派</n-button>
+            </n-popselect>
+            <n-button size="small" tertiary @click="openEdit(t)">编辑</n-button>
+            <n-popconfirm @positive-click="onDelete(t.id)">
+              <template #trigger>
+                <n-button size="small" tertiary type="error">删除</n-button>
+              </template>
+              确定删除这个待办吗？
+            </n-popconfirm>
+          </div>
+        </div>
+      </SwipeCard>
+
+      <!-- 已完成：普通卡片，点击勾选可取消完成 -->
+      <div
+        v-for="t in doneList"
+        :key="t.id"
+        class="love-card todo done"
       >
         <div class="todo-top">
-          <button class="check" :class="{ on: t.isDone }" :aria-label="t.isDone ? '标记未完成' : '标记完成'" @click="onToggle(t)">
-            <SuccessCheck v-if="t.isDone" :active="true" :size="16" :show-circle="false" color="#fff" />
+          <button class="check on" :aria-label="'标记未完成'" @click="onToggle(t)">
+            <SuccessCheck :active="true" :size="16" :show-circle="false" color="#fff" />
           </button>
           <span class="todo-title title-clamp">{{ t.title }}</span>
           <n-tag v-if="t.category" size="small" round type="info" class="cat-tag">{{ t.category }}</n-tag>
@@ -52,19 +95,10 @@
           <span>优先级 {{ '★'.repeat(t.priority) || '—' }}</span>
           <span v-if="t.dueTime">期限 {{ fmt(t.dueTime) }}</span>
           <span v-if="t.assigneeName">负责人：{{ t.assigneeName }}</span>
-          <span v-if="t.isDone && t.doneUserName">完成者：{{ t.doneUserName }}</span>
+          <span v-if="t.doneUserName">完成者：{{ t.doneUserName }}</span>
         </div>
 
         <div class="todo-actions">
-          <n-popselect
-            :value="t.assigneeUserId ?? -1"
-            :options="assignOptions"
-            size="small"
-            trigger="click"
-            @update:value="(v: number) => onAssign(t, v)"
-          >
-            <n-button size="small" tertiary>指派</n-button>
-          </n-popselect>
           <n-button size="small" tertiary @click="openEdit(t)">编辑</n-button>
           <n-popconfirm @positive-click="onDelete(t.id)">
             <template #trigger>
@@ -132,7 +166,7 @@ import {
   NSelect, NDatePicker, NTag, NPopconfirm, NTabs, NTabPane, NPopselect,
 } from 'naive-ui';
 import type { FormInst } from 'naive-ui';
-import { SuccessCheck } from '@/interactions';
+import { SuccessCheck, SwipeCard } from '@/interactions';
 import type { TodoDto, TodoReq } from '@/types';
 import {
   listTodo, createTodo, updateTodo, deleteTodo, toggleTodo, assignTodo,
@@ -194,6 +228,8 @@ const rate = computed(() => {
 
 const displayCount = ref(12);
 const displayList = computed(() => filtered.value.slice(0, displayCount.value));
+const activeList = computed(() => displayList.value.filter((t) => !t.isDone));
+const doneList = computed(() => displayList.value.filter((t) => t.isDone));
 const hasMore = computed(() => displayCount.value < filtered.value.length);
 function loadMore() { displayCount.value += 12; }
 watch(filtered, () => { displayCount.value = 12; });
@@ -273,6 +309,13 @@ async function submitForm() {
 async function onToggle(t: TodoDto) {
   await toggleTodo({ id: t.id });
   notify.success(t.isDone ? '已标记未完成' : '已完成，棒棒哒');
+  await load();
+}
+// 11 卡片抽走：未完成项向左滑「抽走」= 标记完成（可逆、非删除）
+async function onSwipeDone(t: TodoDto) {
+  if (t.isDone) return;
+  await toggleTodo({ id: t.id });
+  notify.success('已完成，棒棒哒');
   await load();
 }
 async function onAssign(t: TodoDto, v: number) {
