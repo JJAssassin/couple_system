@@ -6,7 +6,7 @@
         <h1>待办清单</h1>
         <IndProgressRing :value="rate" :size="62" :stroke="8" sublabel="完成率" />
       </div>
-      <n-button type="primary" round @click="openAdd">+ 加待办</n-button>
+      <n-button type="primary" round v-press-bounce @click="openAdd">+ 加待办</n-button>
     </header>
 
     <!-- 筛选条 -->
@@ -118,7 +118,7 @@
       <template #footer>
         <div class="modal-foot">
           <n-button @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submitForm">保存</n-button>
+          <n-button type="primary" :loading="submitting" v-press-bounce @click="submitForm">保存</n-button>
         </div>
       </template>
     </n-modal>

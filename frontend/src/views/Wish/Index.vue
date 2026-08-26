@@ -6,7 +6,7 @@
         <h1>愿望清单</h1>
         <IndProgressRing :value="rate" :size="62" :stroke="8" sublabel="完成率" />
       </div>
-      <n-button type="primary" round @click="openAdd">+ 加愿望</n-button>
+      <n-button type="primary" round v-press-bounce @click="openAdd">+ 加愿望</n-button>
     </header>
 
     <!-- 分类 + 状态：单排筛选条 -->
@@ -83,14 +83,8 @@
       @load-more="loadMore"
     />
 
-    <!-- 新增 / 编辑 模态 -->
-    <n-modal
-      v-model:show="showForm"
-      class="wish-modal"
-      preset="card"
-      :title="editing ? '编辑愿望' : '加个愿望'"
-      style="width: 92%; max-width: 520px;"
-    >
+    <!-- 新增 / 编辑 抽屉（底部抽屉） -->
+    <BottomDrawer v-model="showForm" :title="editing ? '编辑愿望' : '加个愿望'">
       <n-form ref="formRef" :model="form" label-placement="top" class="wish-form">
         <n-form-item label="类型" class="wish-form-item">
           <n-select v-model:value="form.wishType" :options="typeOptions" class="wish-input" />
@@ -111,13 +105,11 @@
           <n-select v-model:value="form.status" :options="statusOptions" class="wish-input" />
         </n-form-item>
       </n-form>
-      <template #footer>
-        <div class="wish-foot">
-          <n-button class="wish-btn-cancel" @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submitForm" class="wish-btn-primary">保存</n-button>
-        </div>
-      </template>
-    </n-modal>
+      <div class="wish-foot">
+        <n-button class="wish-btn-cancel" @click="showForm = false">取消</n-button>
+        <n-button type="primary" :loading="submitting" v-press-bounce @click="submitForm" class="wish-btn-primary">保存</n-button>
+      </div>
+    </BottomDrawer>
 
     <!-- 标记完成 模态 -->
     <n-modal
@@ -138,7 +130,7 @@
       <template #footer>
         <div class="wish-foot">
           <n-button class="wish-btn-cancel" @click="showComplete = false">取消</n-button>
-          <n-button type="success" :loading="submitting" @click="submitComplete" class="wish-btn-success">完成啦</n-button>
+          <n-button type="success" :loading="submitting" v-click-burst @click="submitComplete" class="wish-btn-success">完成啦</n-button>
         </div>
       </template>
     </n-modal>
@@ -163,6 +155,7 @@ import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import ImageField from '@/components/Common/ImageField.vue';
+import { BottomDrawer } from '@/interactions';
 import { feedback } from '@/utils/feedback';
 import { requiredRule } from '@/utils/formRules';
 

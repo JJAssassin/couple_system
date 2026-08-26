@@ -50,21 +50,23 @@
 
 | # | 交互 | 传达的感受 | 实现（文件） | 已接入位置 |
 |---|------|-----------|--------------|-----------|
-| 01 | 按压回弹 | 按键有重量，下压过基准再回弹 | 指令 `v-press-bounce`（`directives.ts`） | 指令全局可用，Showcase 演示 |
-| 02 | 弹性开关 | 滑块有质量，起步先拉长再归位 | `FinesseSwitch.vue` | 组件库；Showcase 演示 |
+| 01 | 按压回弹 | 按键有重量，下压过基准再回弹 | 指令 `v-press-bounce`（`directives.ts`） | **设置/愿望/记账/待办 主操作按钮**已接入 |
+| 02 | 弹性开关 | 滑块有质量，起步先拉长再归位 | `FinesseSwitch.vue` | **设置页 减少动效 / 系统通知 两开关**已接入 |
 | 03 | 水波按钮 | 反馈跟随手指，从点击点扩散 | 指令 `v-ripple`（`directives.ts`） | **侧边栏导航项 / 消息铃**已接入 |
-| 04 | 点击爆散 | 力度匹配操作，强化「按到了」 | 指令 `v-click-burst`（`directives.ts`） | 指令全局可用，Showcase 演示 |
+| 04 | 点击爆散 | 力度匹配操作，强化「按到了」 | 指令 `v-click-burst`（`directives.ts`） | **记账·保存到相册 / 愿望·完成啦**已接入 |
 | 05 | 成功勾选 | 对勾逐笔绘制，体现完成过程 | `SuccessCheck.vue` | **待办完成勾选**已接入 |
-| 06 | 液态滑块 | 轨道/滑钮/数值三组同频同步 | `LiquidSlider.vue` | 组件库；Showcase 演示 |
+| 06 | 液态滑块 | 轨道/滑钮/数值三组同频同步 | `LiquidSlider.vue` | **记账·当月总预算**已接入 |
 | 07 | 数字滚动 | 缓慢减速停下，不硬切 | `NumberRoll.vue` + `useNumberRoll` | **年度统计 KPI**已接入 |
 | 08 | 骨架落位 | 骨架与内容同尺寸，切换不跳动 | `SkeletonSettle.vue` | 组件库；Showcase 演示 |
 | 09 | 卡片翻面 | 正反面预藏，翻转不穿帮 | `FlipCard.vue` | 组件库；Showcase 演示 |
 | 10 | 汉堡变叉 | 单一元件形变，不丢视觉锚点 | `HamburgerIcon.vue` | **AppShell 移动端菜单键**已接入 |
 | 11 | 卡片抽走 | 上层移开露出下层，体现堆叠 | `SwipeCard.vue` | 组件库；Showcase 演示 |
-| 12 | 底部抽屉 | 关键帧留停顿，让人「看见」停下了 | `BottomDrawer.vue` | 组件库；Showcase 演示 |
+| 12 | 底部抽屉 | 关键帧留停顿，让人「看见」停下了 | `BottomDrawer.vue` | **愿望·加愿望 / 编辑表单**已接入 |
 
 > 标注「已接入」的为真实页面改动；其余以组件/指令形式就位于 `src/interactions/`，
 > 由 Showcase（`/finesse` 路由）统一演示，可按需继续接入任意页面。
+> 截至本轮，**12 项中已有 9 项接入真实页面**（01/02/03/04/05/06/07/10/12），
+> 仅 08 骨架落位、09 卡片翻面、11 卡片抽走 仍在 Showcase 演示。
 
 ---
 
@@ -83,6 +85,7 @@
 ```html
 <FinesseSwitch v-model="on" />
 ```
+已接入设置页「减少动效」「系统通知」两处开关（`v-model` 绑定 `setting.reduceMotion` / `setting.notifications`，`update:modelValue` 调 `setReduceMotion` / `onToggleNotify`）。
 
 ### 03 水波按钮 · `v-ripple`
 `pointerdown` 注入 `<span class="fx-ripple">`，波纹半径取「到最远角距离」，从点击点扩散并淡出；
@@ -97,6 +100,7 @@
 ```html
 <button v-click-burst>点我迸发</button>
 ```
+适合「点赞 / 收藏 / 完成」等轻量确认。已接入记账页「保存到相册」、愿望页「完成啦」。
 
 ### 05 成功勾选 · `SuccessCheck`
 SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`active` 变 true 时重放，
@@ -111,6 +115,7 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 ```html
 <LiquidSlider v-model="v" :min="0" :max="100" suffix="%" />
 ```
+已接入记账页「当月总预算」设定（`v-model` 绑定计算属性 `budgetTotal` 桥接 `bForm.total`，范围 0–20000 / 步进 100 / 单位 元）。
 
 ### 07 数字滚动 · `NumberRoll`
 监听目标值变化，用 `requestAnimationFrame` + `easeOutQuart` 把显示值**缓慢减速**到目标，
@@ -153,6 +158,7 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 ```html
 <BottomDrawer v-model="open" title="给 TA 的一句话"><!-- 内容 --></BottomDrawer>
 ```
+已接入愿望页「加愿望 / 编辑」表单（替代原居中模态，移动端从底部升起更自然；Esc / 点遮罩关闭）。
 
 ---
 

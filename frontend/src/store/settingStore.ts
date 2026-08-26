@@ -113,6 +113,12 @@ export const useSettingStore = defineStore('setting', () => {
     localStorage.setItem(LS_MOTION, reduceMotion.value ? '1' : '0');
     apply();
   }
+  // 显式设置（供 FinesseSwitch 双向绑定的 update:modelValue 使用）
+  function setReduceMotion(v: boolean) {
+    reduceMotion.value = v;
+    localStorage.setItem(LS_MOTION, v ? '1' : '0');
+    apply();
+  }
   // 消息系统通知开关（开启时由 PWA 后台通知触发；真实授权在设置页切开关时申请）
   function setNotifications(v: boolean) {
     notifications.value = v;
@@ -130,5 +136,5 @@ export const useSettingStore = defineStore('setting', () => {
   // 解析值变化即重应用（覆盖 systemDark 变化 / 直接切 mode 两种路径）
   watch(dark, apply);
 
-  return { mode, dark, reduceMotion, accent, notifications, hydrate, setMode, toggleDark, toggleMotion, setNotifications, setAccent };
+  return { mode, dark, reduceMotion, accent, notifications, hydrate, setMode, toggleDark, toggleMotion, setReduceMotion, setNotifications, setAccent };
 });

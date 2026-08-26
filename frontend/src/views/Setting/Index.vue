@@ -17,7 +17,7 @@
         <NFormItem label="新密码">
           <NInput v-model:value="form.newPassword" type="password" placeholder="新密码" show-password-on="click" />
         </NFormItem>
-        <NButton type="primary" :loading="saving" @click="saveProfile">保存修改</NButton>
+        <NButton type="primary" :loading="saving" v-press-bounce @click="saveProfile">保存修改</NButton>
       </NForm>
     </section>
 
@@ -38,7 +38,7 @@
           <NInput v-model:value="coupleName" placeholder="例如：小爱与阿攀" />
         </NFormItem>
       </NForm>
-      <NButton type="primary" :loading="savingCS" @click="saveCouple">保存共同信息</NButton>
+      <NButton type="primary" :loading="savingCS" v-press-bounce @click="saveCouple">保存共同信息</NButton>
     </section>
 
     <!-- TA 的绑定（双向同步） -->
@@ -84,7 +84,7 @@
               <NButton size="small" quaternary @click="resetInvite">重新生成</NButton>
             </div>
           </template>
-          <NButton v-else type="primary" :loading="ui.inviting" @click="doInvite">生成邀请码</NButton>
+          <NButton v-else type="primary" :loading="ui.inviting" v-press-bounce @click="doInvite">生成邀请码</NButton>
         </div>
 
         <!-- 输入邀请码 -->
@@ -111,7 +111,7 @@
       </p>
       <div class="set-row">
         <span>减少动效</span>
-        <NSwitch :value="setting.reduceMotion" @update:value="setting.toggleMotion()" />
+        <FinesseSwitch :model-value="setting.reduceMotion" @update:model-value="(v: boolean) => setting.setReduceMotion(v)" />
       </div>
       <div class="set-row">
         <span>主题色</span>
@@ -139,7 +139,7 @@
       <p class="sub-text">开启后，App 在后台时收到 TA 的新消息或动态，会以系统通知提醒你（需先授权通知权限）。</p>
       <div class="set-row">
         <span>系统通知</span>
-        <NSwitch :value="setting.notifications" :disabled="!notifySupported" @update:value="onToggleNotify" />
+        <FinesseSwitch :model-value="setting.notifications" :disabled="!notifySupported" @update:model-value="onToggleNotify" />
       </div>
       <p v-if="!notifySupported" class="theme-hint">
         当前浏览器不支持系统通知；可在手机浏览器「添加到主屏」获得类 App 体验。
@@ -156,7 +156,7 @@
     <section class="block love-card">
       <h2>数据备份</h2>
       <p class="sub-text">导出当前账号可见的全部数据（纪念日 / 日记 / 愿望 / 矛盾 / 留言 / 记账 / 约会 / 消息）。</p>
-      <NButton :loading="exporting" @click="doExport">导出全部数据</NButton>
+      <NButton :loading="exporting" v-press-bounce @click="doExport">导出全部数据</NButton>
     </section>
   </div>
 </template>
@@ -164,7 +164,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue';
 import { useMessage } from 'naive-ui';
-import { NForm, NFormItem, NInput, NButton, NSwitch, NPopconfirm } from 'naive-ui';
+import { NForm, NFormItem, NInput, NButton, NPopconfirm } from 'naive-ui';
 import { updateProfile, exportAll } from '@/api/user';
 import * as coupleApi from '@/api/couple';
 import * as partnerApi from '@/api/partner';
@@ -177,6 +177,7 @@ import { usePwa, notificationsSupported } from '@/composables/usePwa';
 import { feedback } from '@/utils/feedback';
 import ImageField from '@/components/Common/ImageField.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import { FinesseSwitch } from '@/interactions';
 import { maxLenRule } from '@/utils/formRules';
 import type { FormItemRule } from 'naive-ui';
 

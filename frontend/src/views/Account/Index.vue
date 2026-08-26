@@ -87,7 +87,7 @@
         <h2>账单明细</h2>
         <div class="month-pick">
           <NButton size="small" quaternary @click="exportCsv">导出 CSV</NButton>
-          <NButton type="primary" size="small" @click="openCreate">+ 记一笔</NButton>
+          <NButton type="primary" size="small" v-press-bounce @click="openCreate">+ 记一笔</NButton>
         </div>
       </div>
       <n-tabs v-model:value="recFilter" type="segment" class="rec-tabs">
@@ -145,7 +145,7 @@
       <template #footer>
         <div class="account-foot">
           <NButton class="account-btn-cancel" @click="showModal = false">取消</NButton>
-          <NButton type="primary" :loading="loading" @click="save" class="account-btn-primary">保存</NButton>
+          <NButton type="primary" :loading="loading" v-press-bounce @click="save" class="account-btn-primary">保存</NButton>
         </div>
       </template>
     </NModal>
@@ -155,8 +155,8 @@
         <NFormItem label="月份" class="budget-form-item">
           <NDatePicker v-model:value="bForm.monthTs" type="month" style="width: 100%" class="budget-picker" />
         </NFormItem>
-        <NFormItem label="当月总预算（留空 = 不设）" class="budget-form-item">
-          <NInputNumber v-model:value="bForm.total" :min="0" :precision="2" style="width: 100%" placeholder="如 3000" class="budget-input" />
+        <NFormItem label="当月总预算（拖动滑块快速设定）" class="budget-form-item">
+          <LiquidSlider v-model="budgetTotal" :min="0" :max="20000" :step="100" suffix="元" />
         </NFormItem>
         <NButton type="primary" block :disabled="bForm.total == null" @click="saveTotal" class="budget-btn-primary">保存总预算</NButton>
       </NForm>
@@ -191,7 +191,7 @@
       <template #footer>
         <div class="account-foot">
           <NButton class="account-btn-cancel" @click="showPoster = false">关闭</NButton>
-          <NButton type="primary" @click="posterRef?.download" class="account-btn-primary">保存到相册</NButton>
+          <NButton type="primary" v-click-burst @click="posterRef?.download" class="account-btn-primary">保存到相册</NButton>
         </div>
       </template>
     </NModal>
@@ -213,6 +213,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import ExpensePoster from '@/components/Common/ExpensePoster.vue';
+import { LiquidSlider } from '@/interactions';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { usePagedList } from '@/composables/usePagedList';
 import { feedback } from '@/utils/feedback';
@@ -381,6 +382,11 @@ const showBudget = ref(false);
 const catBudgets = ref<BudgetDto[]>([]);
 const bForm = ref<{ monthTs: number; total: number | null; catName: string; catLimit: number | null }>({
   monthTs: budgetMonthTs.value, total: null, catName: '', catLimit: null,
+});
+// 液态滑块只接受 number，用计算属性桥接 bForm.total（null 时回退 0 仅用于滑块显示）
+const budgetTotal = computed({
+  get: () => bForm.value.total ?? 0,
+  set: (v: number) => { bForm.value.total = v; },
 });
 async function openBudget() {
   bForm.value.monthTs = budgetMonthTs.value;
