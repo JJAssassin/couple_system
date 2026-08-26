@@ -21,16 +21,16 @@ function onClick() {
 <style scoped>
 .fx-flip {
   perspective: 1200px;
-  width: 100%; height: 100%;
+  width: 100%;
 }
 .fx-flip__inner {
-  position: relative; width: 100%; height: 100%;
+  display: grid; /* 正反面同格堆叠：容器高度随内容自适应，兼容变高卡片 */
   transform-style: preserve-3d;
   transition: transform var(--fx-dur-settle, 420ms) var(--fx-ease-out, ease);
 }
 .fx-flip.flipped .fx-flip__inner { transform: rotateY(180deg); }
 .fx-flip__face {
-  position: absolute; inset: 0;
+  grid-area: 1 / 1; /* 两张面叠在同一格，高度取两者最大 */
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   border-radius: var(--radius-lg, 16px);

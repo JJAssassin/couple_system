@@ -24,53 +24,108 @@
       />
     </div>
 
-    <!-- 列表 -->
-    <IndSkeleton v-if="loading" variant="grid" :rows="6" :columns="3" />
-    <IndEmpty
-      v-else-if="!filtered.length"
-      title="愿望清单还是空的"
-      :desc="`这里还没有${tabLabel}～去添加一个吧`"
-      actionText="加个愿望"
-      @action="openAdd"
-    />
-    <div v-else class="cards">
-      <div v-for="w in displayList" :key="w.id" class="love-card wish" :class="{ done: w.status === 3 }">
-        <div class="wish-top">
-          <span class="wish-title title-clamp">{{ w.title }}</span>
-          <n-tag :type="statusMap[w.status]?.type ?? 'default'" size="small" round>{{ statusMap[w.status]?.label ?? '未知' }}</n-tag>
-        </div>
+    <!-- 列表：08 骨架落位（加载骨架 → 内容，同尺寸不跳动） -->
+    <SkeletonSettle :loading="loading">
+      <template #skeleton>
+        <IndSkeleton variant="grid" :rows="6" :columns="3" />
+      </template>
+      <IndEmpty
+        v-if="!filtered.length"
+        title="愿望清单还是空的"
+        :desc="`这里还没有${tabLabel}～去添加一个吧`"
+        actionText="加个愿望"
+        @action="openAdd"
+      />
+      <div v-else class="cards">
+        <template v-for="w in displayList" :key="w.id">
+          <!-- 已完成：外层 SwipeCard 向左滑「抽走」= 归档（可逆，非删除） -->
+          <SwipeCard v-if="w.status === 3" :threshold="90" @dismiss="archiveWish(w)">
+            <FlipCard
+              :model-value="!!flips[w.id]"
+              @update:model-value="(v) => setFlip(w.id, v)"
+              interactive
+              class="wish done"
+            >
+              <template #front>
+                <div class="wish-face">
+                  <div class="wish-top">
+                    <span class="wish-title title-clamp">{{ w.title }}</span>
+                    <n-tag :type="statusMap[w.status]?.type ?? 'default'" size="small" round>{{ statusMap[w.status]?.label ?? '未知' }}</n-tag>
+                  </div>
+                  <div class="wish-meta sub-text">
+                    <span>优先级 {{ '★'.repeat(w.priority) || '—' }}</span>
+                    <span v-if="w.expectTime">期望 {{ fmt(w.expectTime) }}</span>
+                    <span v-if="w.claimUserName">认领人：{{ w.claimUserName }}</span>
+                  </div>
+                  <div class="progress anim"><div class="bar" :style="{ width: progressOf(w) + '%' }"></div></div>
+                  <div class="wish-actions" @click.stop>
+                    <n-button size="small" tertiary @click="openEdit(w)">编辑</n-button>
+                    <n-popconfirm @positive-click="onDelete(w.id)">
+                      <template #trigger>
+                        <n-button size="small" tertiary type="error">删除</n-button>
+                      </template>
+                      确定删除这个愿望吗？
+                    </n-popconfirm>
+                    <span class="wish-flip-hint">← 左滑归档 · 点击翻面 →</span>
+                  </div>
+                </div>
+              </template>
+              <template #back>
+                <div class="wish-face">
+                  <div class="wish-back-label">愿望详情</div>
+                  <p class="wish-desc-full">{{ w.description || '（暂无描述）' }}</p>
+                  <p v-if="w.completeRemark" class="wish-complete sub-text">{{ w.completeRemark }}</p>
+                  <div class="wish-back-hint">点击返回正面</div>
+                </div>
+              </template>
+            </FlipCard>
+          </SwipeCard>
 
-        <p v-if="w.description" class="wish-desc sub-text title-clamp">{{ w.description }}</p>
-
-        <div class="wish-meta sub-text">
-          <span>优先级 {{ '★'.repeat(w.priority) || '—' }}</span>
-          <span v-if="w.expectTime">期望 {{ fmt(w.expectTime) }}</span>
-          <span v-if="w.claimUserName">认领人：{{ w.claimUserName }}</span>
-        </div>
-
-        <!-- 进度 -->
-        <div class="progress" :class="{ anim: w.status === 3 }">
-          <div class="bar" :style="{ width: progressOf(w) + '%' }"></div>
-        </div>
-
-        <!-- 操作 -->
-        <div class="wish-actions">
-          <n-button v-if="w.wishType === 2 && !w.claimUserId" size="small" tertiary type="warning" @click="onClaim(w)">认领</n-button>
-          <n-button v-if="w.status !== 3" size="small" tertiary type="success" @click="openComplete(w)">标记完成</n-button>
-          <n-button size="small" tertiary @click="openEdit(w)">编辑</n-button>
-          <n-popconfirm @positive-click="onDelete(w.id)">
-            <template #trigger>
-              <n-button size="small" tertiary type="error">删除</n-button>
+          <!-- 进行中 / 未开始：卡片翻面看详情 -->
+          <FlipCard
+            v-else
+            :model-value="!!flips[w.id]"
+            @update:model-value="(v) => setFlip(w.id, v)"
+            interactive
+            class="wish"
+            :class="{ done: w.status === 3 }"
+          >
+            <template #front>
+              <div class="wish-face">
+                <div class="wish-top">
+                  <span class="wish-title title-clamp">{{ w.title }}</span>
+                  <n-tag :type="statusMap[w.status]?.type ?? 'default'" size="small" round>{{ statusMap[w.status]?.label ?? '未知' }}</n-tag>
+                </div>
+                <div class="wish-meta sub-text">
+                  <span>优先级 {{ '★'.repeat(w.priority) || '—' }}</span>
+                  <span v-if="w.expectTime">期望 {{ fmt(w.expectTime) }}</span>
+                  <span v-if="w.claimUserName">认领人：{{ w.claimUserName }}</span>
+                </div>
+                <div class="progress" :class="{ anim: w.status === 3 }"><div class="bar" :style="{ width: progressOf(w) + '%' }"></div></div>
+                <div class="wish-actions" @click.stop>
+                  <n-button v-if="w.wishType === 2 && !w.claimUserId" size="small" tertiary type="warning" @click="onClaim(w)">认领</n-button>
+                  <n-button v-if="w.status !== 3" size="small" tertiary type="success" @click="openComplete(w)">标记完成</n-button>
+                  <n-button size="small" tertiary @click="openEdit(w)">编辑</n-button>
+                  <n-popconfirm @positive-click="onDelete(w.id)">
+                    <template #trigger>
+                      <n-button size="small" tertiary type="error">删除</n-button>
+                    </template>
+                    确定删除这个愿望吗？
+                  </n-popconfirm>
+                </div>
+              </div>
             </template>
-            确定删除这个愿望吗？
-          </n-popconfirm>
-        </div>
-
-        <div v-if="w.status === 3 && w.completeRemark" class="wish-complete sub-text">
-          {{ w.completeRemark }}
-        </div>
+            <template #back>
+              <div class="wish-face">
+                <div class="wish-back-label">愿望详情</div>
+                <p class="wish-desc-full">{{ w.description || '（暂无描述）' }}</p>
+                <div class="wish-back-hint">点击返回正面</div>
+              </div>
+            </template>
+          </FlipCard>
+        </template>
       </div>
-    </div>
+    </SkeletonSettle>
 
     <IndPager
       v-if="filtered.length"
@@ -155,7 +210,7 @@ import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import ImageField from '@/components/Common/ImageField.vue';
-import { BottomDrawer } from '@/interactions';
+import { BottomDrawer, SkeletonSettle, FlipCard, SwipeCard } from '@/interactions';
 import { feedback } from '@/utils/feedback';
 import { requiredRule } from '@/utils/formRules';
 
@@ -169,6 +224,12 @@ const activeTab = ref<number>(1);
 const statusFilter = ref<string>('all');
 const wishes = ref<WishDto[]>([]);
 
+// 卡片翻面状态（09 卡片翻面）：逐卡记录是否翻到背面
+const flips = reactive<Record<number, boolean>>({});
+function setFlip(id: number, v: boolean) {
+  flips[id] = v;
+}
+
 const tabLabel = computed(() => ['', '共同心愿', '礼物心愿', '成长目标'][activeTab.value]);
 const rate = computed(() => {
   if (!wishes.value.length) return 0;
@@ -178,7 +239,7 @@ const rate = computed(() => {
 const filtered = computed(() =>
   wishes.value.filter((w) => {
     if (w.wishType !== activeTab.value) return false;
-    if (statusFilter.value === 'all') return true;
+    if (statusFilter.value === 'all') return w.status !== 4; // 已归档不进默认列表，左滑归档即从列表抽走
     if (statusFilter.value === 'done') return w.status === 3 || w.status === 4;
     return w.status === 1 || w.status === 2;
   })
@@ -308,6 +369,20 @@ async function onDelete(id: number) {
   await load();
 }
 
+// 11 卡片抽走：已完成愿望向左滑「抽走」= 归档（status→4 已归档，可逆、非删除）
+async function archiveWish(w: WishDto) {
+  try {
+    await updateWish(w.id, {
+      wishType: w.wishType, title: w.title, description: w.description,
+      expectTime: w.expectTime, priority: w.priority, status: 4,
+    });
+    feedback.saved('已归档愿望');
+    await load();
+  } catch {
+    // 归档失败：保留原卡片，下次刷新自然恢复
+  }
+}
+
 async function load() {
   loading.value = true;
   try {
@@ -316,7 +391,7 @@ async function load() {
   } finally { loading.value = false; }
 }
 
-useStaggerEnter(container, '.love-card', { stagger: 0.06, y: 14 });
+useStaggerEnter(container, '.wish-face', { stagger: 0.06, y: 14 });
 const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await load();
@@ -341,6 +416,28 @@ onMounted(async () => {
 .wish-title { font-size: 16px; font-weight: 500; color: var(--color-ink); }
 .wish.done .wish-title { color: var(--color-ink-3); text-decoration: line-through; }
 .wish-desc { margin: 8px 0 0; }
+/* 09/11 翻面 & 抽走：卡片视觉落到 .wish-face（正反面共用，翻转不穿帮） */
+.wish-face {
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
+}
+html:not(.reduce-motion) .wish-face:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 18px rgba(122, 100, 98, 0.16);
+}
+.wish-back-label { font-weight: 600; color: var(--color-ink); }
+.wish-desc-full { margin: 0; color: var(--color-ink-2); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+.wish-back-hint,
+.wish-flip-hint { margin-top: auto; font-size: 12px; color: var(--color-ink-3); }
+.wish-flip-hint { padding-top: 6px; }
 .wish-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
 .progress { height: 6px; border-radius: 999px; background: var(--color-ink-soft); margin: 12px 0; overflow: hidden; }
 .progress .bar { height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--color-rose), var(--color-rose-hover)); transition: width var(--dur-page) var(--ease-love); }

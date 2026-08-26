@@ -57,17 +57,19 @@
 | 05 | 成功勾选 | 对勾逐笔绘制，体现完成过程 | `SuccessCheck.vue` | **待办完成勾选**已接入 |
 | 06 | 液态滑块 | 轨道/滑钮/数值三组同频同步 | `LiquidSlider.vue` | **记账·当月总预算**已接入 |
 | 07 | 数字滚动 | 缓慢减速停下，不硬切 | `NumberRoll.vue` + `useNumberRoll` | **年度统计 KPI**已接入 |
-| 08 | 骨架落位 | 骨架与内容同尺寸，切换不跳动 | `SkeletonSettle.vue` | 组件库；Showcase 演示 |
-| 09 | 卡片翻面 | 正反面预藏，翻转不穿帮 | `FlipCard.vue` | 组件库；Showcase 演示 |
+| 08 | 骨架落位 | 骨架与内容同尺寸，切换不跳动 | `SkeletonSettle.vue` | **愿望·列表加载态**已接入 |
+| 09 | 卡片翻面 | 正反面预藏，翻转不穿帮 | `FlipCard.vue` | **愿望·卡片点击翻面看详情**已接入 |
 | 10 | 汉堡变叉 | 单一元件形变，不丢视觉锚点 | `HamburgerIcon.vue` | **AppShell 移动端菜单键**已接入 |
-| 11 | 卡片抽走 | 上层移开露出下层，体现堆叠 | `SwipeCard.vue` | 组件库；Showcase 演示 |
+| 11 | 卡片抽走 | 上层移开露出下层，体现堆叠 | `SwipeCard.vue` | **愿望·已完成向左滑抽走=归档**已接入 |
 | 12 | 底部抽屉 | 关键帧留停顿，让人「看见」停下了 | `BottomDrawer.vue` | **愿望·加愿望 / 编辑表单**已接入 |
 
 > 标注「已接入」的为真实页面改动；其余以组件/指令形式就位于 `src/interactions/`，
 > 由 Showcase（`/finesse` 路由）统一演示，可按需继续接入任意页面。
-> 截至本轮，**12 项均有真实落点**：01/04 以指令形式点缀于 14 个页面共 29/6 处，
-> 02/03/05/06/07/10/12 为组件级真实接入；仅 08 骨架落位、09 卡片翻面、11 卡片抽走
-> 因无天然低风险节点，仍保留在 Showcase 演示（详见 §6）。
+> 截至本轮，**12 项微交互全部接入真实页面**：
+> - 指令级铺开：01 按压回弹（14 页面 29 处主操作）、04 点击爆散（6 处庆祝性动作）、03 水波（侧边栏/消息铃）
+> - 组件级接入：02 弹性开关（设置页）、05 成功勾选（待办）、06 液态滑块（记账预算）、
+>   07 数字滚动（年度统计）、10 汉堡变叉（AppShell）、12 底部抽屉（愿望表单）、
+>   08 骨架落位（愿望列表加载）、09 卡片翻面（愿望卡翻面看详情）、11 卡片抽走（已完成愿望左滑归档）
 
 ---
 
@@ -131,6 +133,7 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 ```html
 <SkeletonSettle :loading="loading" :lines="3"><!-- 真实内容 --></SkeletonSettle>
 ```
+> **已接入**：愿望页列表加载态——`<SkeletonSettle :loading="loading">` 包裹 `IndSkeleton` 骨架与 `.cards` 内容，加载完成骨架"落位"为真实卡片，不跳动。
 
 ### 09 卡片翻面 · `FlipCard`
 容器 `perspective` + 内层 `preserve-3d`，正反面 `backface-visibility:hidden` 提前藏好背面，
@@ -138,6 +141,7 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 ```html
 <FlipCard v-model="flipped" interactive><template #front>…</template><template #back>…</template></FlipCard>
 ```
+> **已接入**：愿望页卡片——点击整卡翻面，正面为标题/状态/操作，背面为描述与完成感悟（逐卡 `flips` 状态控制，操作按钮区 `@click.stop` 防误翻）。组件已从 `position:absolute` 改为 grid 同格堆叠，自适应变高内容，Showcase 不受影响。
 
 ### 10 汉堡变叉 · `HamburgerIcon`
 三道横杠单一元件形变（旋转 45° + 中杠淡出），形变过程保持居中，**用户不丢失视觉锚点**。
@@ -152,6 +156,7 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 ```html
 <SwipeCard @dismiss="remove(item)"><!-- 卡片内容 --></SwipeCard>
 ```
+> **已接入**：愿望页——已完成的愿望卡片外层包 `SwipeCard`，向左滑「抽走」即归档（`status→4 已归档`，可逆、非删除）；默认列表过滤掉已归档项，抽走后下层卡片自然补位，符合"堆叠"语义。
 
 ### 12 底部抽屉 · `BottomDrawer`
 面板用 `fx-drawer-up` 关键帧：上滑到位（72%）→ 轻微过冲（82%，-6px）→ 落定（100%），
