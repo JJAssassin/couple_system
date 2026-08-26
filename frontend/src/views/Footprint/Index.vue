@@ -101,6 +101,7 @@ import type { FootprintDto } from '@/types';
 import { listFootprints, createFootprint, deleteFootprint, incrementFootprint, updateFootprint } from '@/api/footprint';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useStaggerEnter } from '@/composables/useAnimation';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
@@ -205,6 +206,8 @@ onMounted(async () => {
   await load();
   loading.value = false;
   useModuleSync('footprint', { items, getId: i => i.id, load, map: overlaySyncMap });
+  // 伴侣新增小确幸时，足迹卡错落入场
+  useSyncSettle('footprint', container, items, '.fp-card');
 });
 </script>
 

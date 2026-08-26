@@ -274,10 +274,13 @@ async function onDelete(id: number) {
 
 useStaggerEnter(container, '.love-card', { stagger: 0.06, y: 14 });
 import { useRealtime } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 const { onSync } = useRealtime();
 onMounted(async () => {
   await loadFirst();
   onSync('conflict', () => refresh());
+  // 伴侣新增/和解矛盾时，卡片错落入场
+  useSyncSettle('conflict', container, list, '.love-card');
 });
 </script>
 

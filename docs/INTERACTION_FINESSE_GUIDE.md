@@ -200,7 +200,8 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
   - 尊重 `html.reduce-motion` / `prefers-reduced-motion`，降级时不播。
   - 只动 `opacity + transform`（`fx-settle-in` 关键帧），不引发重排。
 - 已接入：`Wish`(`.wish-card`) / `Todo`(`.love-card`) / `Diary`(`.diary-card`) / `Anniversary`(`.anniv-card`) /
-  `Album`(`.album-card`) / `Board`(`.msg`) 六个列表页。
+  `Album`(`.album-card`) / `Board`(`.msg`) / `Conflict`(`.love-card`) / `Footprint`(`.fp-card`) 八个列表页
+  （覆盖所有已注册实时同步的列表型模块；Message / DatePlan 等未订阅实时，暂不融合）。
 
 > 离线能力（PWA）：`public/sw.js` 为手写 Service Worker（离线 app-shell + 运行时缓存；
 > `/api` 按 token 隔离、`/hub` 直通、`/uploads` cache-first、`/assets` SWR），`main.ts` 仅在生产构建注册。
