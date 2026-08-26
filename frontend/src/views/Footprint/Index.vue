@@ -9,7 +9,7 @@
 
     <section class="block head-row">
       <IndSectionTitle label="我们的小确幸" :led="true" />
-      <button class="add-btn" @click="showForm = true">＋ 新增足迹</button>
+      <button class="add-btn" v-press-bounce @click="showForm = true">＋ 新增足迹</button>
     </section>
 
     <section class="block">
@@ -87,7 +87,7 @@
       <template #footer>
         <div class="modal-foot">
           <n-button @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submit">{{ editingId == null ? '创建' : '保存' }}</n-button>
+          <n-button type="primary" :loading="submitting" v-press-bounce @click="submit">{{ editingId == null ? '创建' : '保存' }}</n-button>
         </div>
       </template>
     </n-modal>

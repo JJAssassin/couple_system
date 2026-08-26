@@ -27,7 +27,7 @@
         </div>
         <div v-if="showLoveEditor" class="hero-set-form">
           <input type="date" v-model="loveStartInput" class="love-input" :max="todayStr" />
-          <NButton size="small" type="primary" :loading="savingLove" @click="saveLoveStart">保存</NButton>
+          <NButton size="small" type="primary" :loading="savingLove" v-press-bounce @click="saveLoveStart">保存</NButton>
           <NButton size="small" quaternary @click="showLoveEditor = false">取消</NButton>
         </div>
       </template>
@@ -37,7 +37,7 @@
           <div v-if="!showLoveEditor" class="hero-set-cta" @click="openLoveEditor">＋ 设置相恋纪念日</div>
           <div v-else class="hero-set-form">
             <input type="date" v-model="loveStartInput" class="love-input" :max="todayStr" />
-            <NButton size="small" type="primary" :loading="savingLove" @click="saveLoveStart">保存</NButton>
+            <NButton size="small" type="primary" :loading="savingLove" v-press-bounce @click="saveLoveStart">保存</NButton>
             <NButton size="small" quaternary @click="showLoveEditor = false">取消</NButton>
           </div>
         </div>

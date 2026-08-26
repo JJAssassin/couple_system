@@ -3,7 +3,7 @@
     <!-- 顶部：标题 + 写日记 -->
     <div class="bar">
       <h2>双人日记</h2>
-      <n-button type="primary" @click="openWrite">写日记</n-button>
+      <n-button type="primary" v-press-bounce @click="openWrite">写日记</n-button>
     </div>
 
     <!-- 分段：全部 / 我写的 / 对方写的 -->
@@ -100,7 +100,7 @@
       <template #footer>
         <div class="diary-foot">
           <n-button class="diary-btn-cancel" @click="showWrite = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submit" class="diary-btn-primary">保存</n-button>
+          <n-button type="primary" :loading="submitting" v-press-bounce @click="submit" class="diary-btn-primary">保存</n-button>
         </div>
       </template>
     </n-modal>
@@ -137,7 +137,7 @@
               class="comment-input"
               :autosize="{ minRows: 3, maxRows: 8 }"
             />
-            <n-button type="primary" :loading="sending" :disabled="!commentText.trim()" @click="sendComment">
+            <n-button type="primary" :loading="sending" :disabled="!commentText.trim()" v-click-burst @click="sendComment">
               发送
             </n-button>
           </div>

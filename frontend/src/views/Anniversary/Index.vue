@@ -54,7 +54,7 @@
 
     <section class="block head-row">
       <IndSectionTitle label="我们的重要日子" :led="true" />
-      <button class="add-btn" @click="openCreate">＋ 新增纪念日</button>
+      <button class="add-btn" v-press-bounce @click="openCreate">＋ 新增纪念日</button>
     </section>
 
     <section class="block">
@@ -167,7 +167,7 @@
       <template #footer>
         <div class="modal-foot">
           <n-button @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submit">保存</n-button>
+          <n-button type="primary" :loading="submitting" v-press-bounce @click="submit">保存</n-button>
         </div>
       </template>
     </n-modal>

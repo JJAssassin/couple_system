@@ -46,7 +46,7 @@
         </div>
         <div class="composer-actions">
           <ImageField v-model="draftImage" />
-          <n-button type="primary" round :disabled="!draft.trim()" :loading="sending" @click="send">
+          <n-button type="primary" round :disabled="!draft.trim()" :loading="sending" v-click-burst @click="send">
             {{ activeTab === 'public' ? '贴上墙' : '发送私信' }}
           </n-button>
         </div>
@@ -122,7 +122,7 @@
       <template #footer>
         <div class="board-foot">
           <n-button class="board-btn-cancel" @click="showEdit = false">取消</n-button>
-          <n-button type="primary" :loading="sending" @click="submitEdit" class="board-btn-primary">保存</n-button>
+          <n-button type="primary" :loading="sending" v-press-bounce @click="submitEdit" class="board-btn-primary">保存</n-button>
         </div>
       </template>
     </n-modal>

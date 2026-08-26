@@ -82,7 +82,7 @@
       <div v-else class="starter love-card">
         <p class="starter-tip">来一局？随机抽一道题，两个人分别作答。</p>
         <div class="starter-actions">
-          <n-button type="primary" round :loading="starting" @click="onStart(null)">
+          <n-button type="primary" round :loading="starting" v-press-bounce @click="onStart(null)">
             <template #icon><Dices :size="16" /></template>
             随机抽一题
           </n-button>
@@ -176,7 +176,7 @@
             加选项
           </n-button>
           <n-input v-model:value="newCategory" size="small" placeholder="分类（可选）" class="cat-input" />
-          <n-button type="primary" size="small" :loading="savingQ" :disabled="!canAddQuestion" @click="onAddQuestion">
+          <n-button type="primary" size="small" :loading="savingQ" :disabled="!canAddQuestion" v-press-bounce @click="onAddQuestion">
             添加题目
           </n-button>
         </div>

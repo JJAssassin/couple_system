@@ -21,7 +21,7 @@
     <section class="block">
       <div class="block-head">
         <h2>待执行约会</h2>
-        <NButton type="primary" size="small" @click="openCreate">+ 加约会</NButton>
+        <NButton type="primary" size="small" v-press-bounce @click="openCreate">+ 加约会</NButton>
       </div>
       <div v-if="pending.length" class="cards">
         <div v-for="d in pending" :key="d.id" class="love-card card">
@@ -37,7 +37,7 @@
           <div class="card-plan">{{ fmtTime(d.planTime) }}</div>
           <div class="card-loc">{{ d.location || '地点待定' }}</div>
           <div class="sub-text">预算 ¥{{ (d.budget ?? 0).toFixed(2) }}</div>
-          <NButton block type="primary" class="card-btn" @click="openComplete(d)">标记完成</NButton>
+          <NButton block type="primary" class="card-btn" v-press-bounce @click="openComplete(d)">标记完成</NButton>
         </div>
       </div>
       <IndEmpty v-else title="暂无待执行的约会" desc="去计划一次浪漫的约会吧，给彼此一个小期待" />
@@ -87,7 +87,7 @@
       <template #footer>
         <div class="dateplan-foot">
           <NButton class="dateplan-btn-cancel" @click="showCreate = false">取消</NButton>
-          <NButton type="primary" :loading="saving" @click="saveCreate" class="dateplan-btn-primary">保存</NButton>
+          <NButton type="primary" :loading="saving" v-press-bounce @click="saveCreate" class="dateplan-btn-primary">保存</NButton>
         </div>
       </template>
     </NModal>
@@ -105,7 +105,7 @@
       <template #footer>
         <div class="dateplan-foot">
           <NButton class="dateplan-btn-cancel" @click="showComplete = false">取消</NButton>
-          <NButton type="success" :loading="saving" @click="saveComplete" class="dateplan-btn-success">完成啦</NButton>
+          <NButton type="success" :loading="saving" v-click-burst @click="saveComplete" class="dateplan-btn-success">完成啦</NButton>
         </div>
       </template>
     </NModal>

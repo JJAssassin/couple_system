@@ -2,7 +2,7 @@
   <div class="conflict-page" ref="container">
     <header class="page-head">
       <h1>矛盾复盘</h1>
-      <n-button type="primary" round @click="openAdd">+ 记录矛盾</n-button>
+      <n-button type="primary" round v-press-bounce @click="openAdd">+ 记录矛盾</n-button>
     </header>
 
     <IndSkeleton v-if="loading" variant="list" :rows="6" />
@@ -84,7 +84,7 @@
       <template #footer>
         <div class="conflict-foot">
           <n-button class="conflict-btn-cancel" @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" @click="submitForm" class="conflict-btn-primary">保存</n-button>
+          <n-button type="primary" :loading="submitting" v-press-bounce @click="submitForm" class="conflict-btn-primary">保存</n-button>
         </div>
       </template>
     </n-modal>
@@ -112,7 +112,7 @@
           <div class="detail-block"><span class="k">相处约定</span><p>{{ detail.ruleConclusion || '—' }}</p></div>
 
           <div class="detail-actions">
-            <n-button v-if="!detail.reconcileTime" type="success" block @click="markReconciled">
+            <n-button v-if="!detail.reconcileTime" type="success" block v-click-burst @click="markReconciled">
               标记和解
             </n-button>
             <n-popconfirm @positive-click="onDelete(detail.id)">

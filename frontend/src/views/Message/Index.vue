@@ -7,7 +7,7 @@
       </div>
       <div class="ops">
         <NButton size="small" :loading="loading" @click="onRefreshClick">刷新</NButton>
-        <NButton size="small" type="primary" :disabled="unread === 0" @click="markAllRead">全部已读</NButton>
+        <NButton size="small" type="primary" :disabled="unread === 0" v-press-bounce @click="markAllRead">全部已读</NButton>
       </div>
     </div>
 

@@ -4,7 +4,7 @@
     <section v-if="!currentAlbum" class="stagger-item">
       <div class="page-head">
         <h2>双人相册</h2>
-        <NButton type="primary" size="small" @click="showCreate = true">＋ 新建相册</NButton>
+        <NButton type="primary" size="small" v-press-bounce @click="showCreate = true">＋ 新建相册</NButton>
       </div>
 
       <IndSkeleton v-if="loading" variant="grid" :rows="6" :columns="3" />
@@ -141,7 +141,7 @@
       <template #footer>
         <div class="modal-foot">
           <NButton @click="showCreate = false">取消</NButton>
-          <NButton type="primary" :loading="creating" @click="createAlbum">创建</NButton>
+          <NButton type="primary" :loading="creating" v-press-bounce @click="createAlbum">创建</NButton>
         </div>
       </template>
     </NModal>
