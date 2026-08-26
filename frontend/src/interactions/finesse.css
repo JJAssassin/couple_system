@@ -90,6 +90,13 @@
 }
 .fx-press-bounce { animation: fx-press-back var(--fx-dur-pop, 320ms) var(--fx-ease-back, ease); }
 
+/* —— 通用：KPI 数字变化时的轻微「弹一下」脉冲（缩放回弹，让数值有生命力） —— */
+@keyframes fx-num-bump {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.08); }  /* 略微放大，再回落，避免过头变弹簧 */
+  100% { transform: scale(1); }
+}
+
 /* 统一降级：reduce-motion 时关闭所有非必要位移动画 */
 html.reduce-motion .fx-ripple,
 html.reduce-motion .fx-burst,

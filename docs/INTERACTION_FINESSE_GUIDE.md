@@ -123,6 +123,7 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 ### 07 数字滚动 · `NumberRoll`
 监听目标值变化，用 `requestAnimationFrame` + `easeOutQuart` 把显示值**缓慢减速**到目标，
 绝不在中途硬切；`reduce-motion` 时直接跳变。已接入年度统计的全部 KPI。
+> **手感打磨（数值脉冲）**：值变化时（刷新/重算）整段数字轻微 `scale(1→1.08→1)` 回弹一次（`fx-num-bump` 关键帧，时长 `--fx-dur-pop`、缓动 `--fx-ease-soft`），让 KPI 更有生命力；`<span>` 改为 `inline-block` 才能承接 transform。`reduce-motion` 下由 finesse.css 的 `[class*="fx-"]` 全局兜底关闭。
 ```html
 <NumberRoll :value="report.loveDays" />  <!-- 自动千分位 -->
 ```
