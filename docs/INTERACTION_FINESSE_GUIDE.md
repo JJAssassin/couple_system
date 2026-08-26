@@ -199,7 +199,8 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
   - 收到信号只「武装」标记，真正播放等列表变更后，避免与 `load()` 的异步请求竞速。
   - 尊重 `html.reduce-motion` / `prefers-reduced-motion`，降级时不播。
   - 只动 `opacity + transform`（`fx-settle-in` 关键帧），不引发重排。
-- 已接入：`Wish`(`.wish-card`) / `Todo`(`.love-card`) / `Diary`(`.diary-card`) 三个高频列表页。
+- 已接入：`Wish`(`.wish-card`) / `Todo`(`.love-card`) / `Diary`(`.diary-card`) / `Anniversary`(`.anniv-card`) /
+  `Album`(`.album-card`) / `Board`(`.msg`) 六个列表页。
 
 > 离线能力（PWA）：`public/sw.js` 为手写 Service Worker（离线 app-shell + 运行时缓存；
 > `/api` 按 token 隔离、`/hub` 直通、`/uploads` cache-first、`/assets` SWR），`main.ts` 仅在生产构建注册。

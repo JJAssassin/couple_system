@@ -141,6 +141,7 @@ import {
 import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
@@ -260,6 +261,8 @@ const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await load();
   useModuleSync('board', { items: messages, getId: (i) => i.id, load, map: overlaySyncMap });
+  // 伴侣发来新留言时，消息卡错落入场（避开编辑区 composer）
+  useSyncSettle('board', container, messages, '.msg');
 });
 </script>
 

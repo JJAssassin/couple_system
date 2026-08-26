@@ -187,6 +187,7 @@ import {
 } from '@/api/anniversary';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useStaggerEnter } from '@/composables/useAnimation';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
@@ -402,6 +403,8 @@ onMounted(async () => {
   await load();
   loading.value = false;
   useModuleSync('anniversary', { items, getId: i => i.id, load, map: overlaySyncMap });
+  // 伴侣在另一台设备新增/刷新纪念日时，卡片错落入场
+  useSyncSettle('anniversary', container, items, '.anniv-card');
 });
 onUnmounted(() => { if (timer) clearInterval(timer); });
 </script>

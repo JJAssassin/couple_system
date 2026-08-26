@@ -306,10 +306,13 @@ async function removeImage(img: ImageDto) {
 }
 
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await loadAlbums();
   useModuleSync('album', { items: albums, getId: i => i.id, load: loadAlbums, map: overlaySyncMap });
+  // 伴侣新建相册时，相册卡错落入场
+  useSyncSettle('album', container, albums, '.album-card');
   window.addEventListener('scroll', onScrollParallax, { passive: true });
   window.addEventListener('resize', onScrollParallax);
 });
