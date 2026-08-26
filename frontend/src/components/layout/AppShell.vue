@@ -29,7 +29,7 @@
       <!-- 顶部磨砂导航条：面包屑 + 双人头像 + 主题切换 + 退出 -->
       <header class="topbar">
         <button v-if="isMobile()" class="tb-icon" aria-label="菜单" @click="drawerOpen = true">
-          <Menu :size="20" :stroke-width="1.8" />
+          <HamburgerIcon :model-value="drawerOpen" />
         </button>
         <nav class="crumb">
           <span class="crumb-root">我们的小世界</span>
@@ -101,6 +101,7 @@ import PageTransition from '@/components/Common/PageTransition.vue';
 import AuroraBackdrop from '@/components/Common/AuroraBackdrop.vue';
 import RouteProgress from '@/components/Common/RouteProgress.vue';
 import { prefetchRoutes } from '@/router';
+import { HamburgerIcon } from '@/interactions';
 import { isMobile, useDevice } from '@/composables/useDevice';
 import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';

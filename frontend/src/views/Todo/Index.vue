@@ -40,7 +40,7 @@
       >
         <div class="todo-top">
           <button class="check" :class="{ on: t.isDone }" :aria-label="t.isDone ? '标记未完成' : '标记完成'" @click="onToggle(t)">
-            <Check v-if="t.isDone" :size="16" :stroke-width="3" />
+            <SuccessCheck v-if="t.isDone" :active="true" :size="16" :show-circle="false" color="#fff" />
           </button>
           <span class="todo-title title-clamp">{{ t.title }}</span>
           <n-tag v-if="t.category" size="small" round type="info" class="cat-tag">{{ t.category }}</n-tag>
@@ -132,7 +132,7 @@ import {
   NSelect, NDatePicker, NTag, NPopconfirm, NTabs, NTabPane, NPopselect,
 } from 'naive-ui';
 import type { FormInst } from 'naive-ui';
-import { Check } from 'lucide-vue-next';
+import { SuccessCheck } from '@/interactions';
 import type { TodoDto, TodoReq } from '@/types';
 import {
   listTodo, createTodo, updateTodo, deleteTodo, toggleTodo, assignTodo,

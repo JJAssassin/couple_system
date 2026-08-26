@@ -3,7 +3,7 @@
     <div class="brand">
       <span class="brand-mark"><Heart :size="18" :stroke-width="1.8" /></span>
       <GradientText v-if="!collapsed" tag="span" class="brand-name">我们的小世界</GradientText>
-      <button v-if="!collapsed" class="bell" @click="togglePanel" title="消息">
+      <button v-if="!collapsed" class="bell" v-ripple @click="togglePanel" title="消息">
         <Mail :size="18" :stroke-width="1.8" />
         <span v-if="unread > 0" class="badge">{{ unread > 99 ? '99+' : unread }}</span>
       </button>
@@ -49,6 +49,7 @@
         :key="item.to"
         :to="item.to"
         class="nav-item"
+        v-ripple
         @click="hapticForAction('tap'); onClickNav"
       >
         <span class="ico"><component :is="item.icon" :size="18" :stroke-width="1.8" /></span>

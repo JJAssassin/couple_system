@@ -19,7 +19,7 @@
       <!-- 总览大数字：恋爱天数 -->
       <section class="hero block">
         <AuroraBackdrop class="hero-aurora" />
-        <div class="hero-num"><GradientText tag="span">{{ report.loveDays }}</GradientText><span class="hero-unit">天</span></div>
+        <div class="hero-num"><GradientText tag="span"><NumberRoll :value="report.loveDays" /></GradientText><span class="hero-unit">天</span></div>
         <div class="hero-txt">这一年，我们继续爱着彼此 · 共 {{ report.anniversaryTotal }} 个纪念日</div>
         <button class="poster-btn" @click="poster?.open()">✨ 生成我们的海报</button>
       </section>
@@ -28,15 +28,15 @@
       <section class="block">
         <h2 class="sec-title">我们的痕迹</h2>
         <div class="cards">
-          <div class="card"><div class="num">{{ report.diaryCount }}</div><div class="lbl">篇日记 · 平均心情 {{ report.avgMood }} 分</div></div>
-          <div class="card"><div class="num">{{ report.imageCount }}</div><div class="lbl">张照片定格瞬间</div></div>
-          <div class="card"><div class="num">{{ report.wishDone }}/{{ report.wishCreated }}</div><div class="lbl">愿望达成</div></div>
-          <div class="card"><div class="num">{{ report.quizRounds }}</div><div class="lbl">轮默契问答 · 默契率 {{ report.matchRate }}%</div></div>
-          <div class="card"><div class="num">{{ report.boardCount }}</div><div class="lbl">条留言悄悄话</div></div>
-          <div class="card"><div class="num">{{ report.footprintCount }}</div><div class="lbl">个小确幸足迹</div></div>
-          <div class="card"><div class="num">{{ report.dateCompleted }}/{{ report.dateCount }}</div><div class="lbl">次约会成行</div></div>
-          <div class="card"><div class="num">{{ report.todoDone }}</div><div class="lbl">件待办完成</div></div>
-          <div class="card"><div class="num">{{ report.conflictResolved }}/{{ report.conflictCount }}</div><div class="lbl">次矛盾已和解</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.diaryCount" /></div><div class="lbl">篇日记 · 平均心情 <NumberRoll :value="report.avgMood" :decimals="1" /> 分</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.imageCount" /></div><div class="lbl">张照片定格瞬间</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.wishDone" />/<NumberRoll :value="report.wishCreated" /></div><div class="lbl">愿望达成</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.quizRounds" /></div><div class="lbl">轮默契问答 · 默契率 <NumberRoll :value="report.matchRate" />%</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.boardCount" /></div><div class="lbl">条留言悄悄话</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.footprintCount" /></div><div class="lbl">个小确幸足迹</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.dateCompleted" />/<NumberRoll :value="report.dateCount" /></div><div class="lbl">次约会成行</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.todoDone" /></div><div class="lbl">件待办完成</div></div>
+          <div class="card"><div class="num"><NumberRoll :value="report.conflictResolved" />/<NumberRoll :value="report.conflictCount" /></div><div class="lbl">次矛盾已和解</div></div>
         </div>
       </section>
 
@@ -86,6 +86,7 @@ import AuroraBackdrop from '@/components/Common/AuroraBackdrop.vue';
 import GradientText from '@/components/Common/GradientText.vue';
 import YearPoster from '@/components/Common/YearPoster.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import { NumberRoll } from '@/interactions';
 import { fetchYearReport, type YearReport } from '@/api/stats';
 
 const currentYear = new Date().getFullYear();
