@@ -31,7 +31,7 @@
       actionText="加个待办"
       @action="openAdd"
     />
-    <div v-else class="cards">
+    <div v-else class="cards" ref="listEl">
       <!-- 未完成：外层 SwipeCard 向左滑「抽走」= 标记完成（划掉即了结，可逆非删除） -->
       <SwipeCard
         v-for="t in activeList"
@@ -174,6 +174,7 @@ import {
 import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
@@ -189,6 +190,7 @@ const notify = useNotifyStore();
 const loading = ref(true);
 const submitting = ref(false);
 const container = ref<HTMLElement>();
+const listEl = ref<HTMLElement>();
 const formRef = ref<FormInst | null>(null);
 
 const meId = computed(() => auth.profile?.id ?? 0);
@@ -339,6 +341,8 @@ async function load() {
 }
 
 useStaggerEnter(container, '.love-card', { stagger: 0.06, y: 14 });
+// 实时融合：伴侣在别处新增/刷新待办时，本端卡片错落入场（非自己操作、尊重降级）
+useSyncSettle('todo', listEl, todos, '.love-card');
 const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await load();

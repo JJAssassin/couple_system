@@ -36,7 +36,7 @@
         actionText="加个愿望"
         @action="openAdd"
       />
-      <div v-else class="cards">
+      <div v-else class="cards" ref="listEl">
         <template v-for="w in displayList" :key="w.id">
           <!-- 已完成：外层 SwipeCard 向左滑「抽走」= 归档（可逆，非删除） -->
           <SwipeCard v-if="w.status === 3" class="wish-card" :threshold="90" @dismiss="archiveWish(w)">
@@ -206,6 +206,7 @@ import {
 import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
@@ -218,6 +219,7 @@ const notify = useNotifyStore();
 const loading = ref(true);
 const submitting = ref(false);
 const container = ref<HTMLElement>();
+const listEl = ref<HTMLElement>();
 const formRef = ref<FormInst | null>(null);
 
 const activeTab = ref<number>(1);
@@ -392,6 +394,8 @@ async function load() {
 }
 
 useStaggerEnter(container, '.wish-card', { stagger: 0.06, y: 14 });
+// 实时融合：伴侣在别处新增/刷新愿望时，本端卡片错落入场（非自己操作、尊重降级）
+useSyncSettle('wish', listEl, wishes, '.wish-card');
 const { useModuleSync } = useRealtime();
 onMounted(async () => {
   await load();

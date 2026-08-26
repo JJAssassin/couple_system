@@ -163,6 +163,7 @@ import { useStaggerEnter } from '@/composables/useAnimation';
 import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { feedback } from '@/utils/feedback';
@@ -186,6 +187,8 @@ const container = ref<HTMLElement>();
 const tab = ref<'all' | 'mine' | 'partner'>('all');
 
 useStaggerEnter(container, '.diary-card', { stagger: 0.08, y: 16 });
+// 实时融合：伴侣在别处写/刷新日记时，本端卡片错落入场（非自己操作、尊重降级）
+useSyncSettle('diary', container, list, '.diary-card');
 
 const filtered = computed(() =>
   list.value.filter((d) => {

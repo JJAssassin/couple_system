@@ -186,6 +186,27 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 
 ---
 
+## 7. 实时同步 × 微交互融合（`useSyncSettle`）
+
+情侣 app 的灵魂是「对方一动、本端即应」。实时层 `useRealtime` 早已打通（13 个页面注册了
+`onSync` / `onAnySync` / `useModuleSync`，并有 `PartnerActivityToast` 伴侣活动提示）。在此之上新增融合层：
+
+- **`src/composables/useSyncSettle.ts`**：订阅某模块的 `onSync`，当 **伴侣（senderId ≠ 我）** 触发了
+  `created / reload` 类变更时，等底层列表 ref 真正变更（watch `flush:'post'`，DOM 已更新）后，
+  对卡片以 `fx-settle-in` 错落入场，而非静默出现。
+- 设计要点：
+  - 仅对**伴侣来源**触发；自己的改动已有本地乐观更新反馈，避免重复播动画。
+  - 收到信号只「武装」标记，真正播放等列表变更后，避免与 `load()` 的异步请求竞速。
+  - 尊重 `html.reduce-motion` / `prefers-reduced-motion`，降级时不播。
+  - 只动 `opacity + transform`（`fx-settle-in` 关键帧），不引发重排。
+- 已接入：`Wish`(`.wish-card`) / `Todo`(`.love-card`) / `Diary`(`.diary-card`) 三个高频列表页。
+
+> 离线能力（PWA）：`public/sw.js` 为手写 Service Worker（离线 app-shell + 运行时缓存；
+> `/api` 按 token 隔离、`/hub` 直通、`/uploads` cache-first、`/assets` SWR），`main.ts` 仅在生产构建注册。
+> 配合 `public/manifest.webmanifest` 与图标，可「添加到主屏」离线使用。
+
+---
+
 ## 6. 文件索引
 
 ```
@@ -206,7 +227,8 @@ src/interactions/
 ├── composables/
 │   ├── useNumberRoll.ts       # 07 减速滚动核心
 │   ├── useCardFlip.ts         # 09 状态
-│   └── useBottomDrawer.ts     # 12 状态
+│   ├── useBottomDrawer.ts     # 12 状态
+│   └── useSyncSettle.ts       # 实时同步×微交互融合（伴侣改动→卡片错落入场）
 └── Showcase.vue               # /finesse 演示页（12 项全演示）
 ```
 

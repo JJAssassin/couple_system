@@ -17,3 +17,11 @@ registerFinesseDirectives(app); // 注册 v-ripple / v-press-bounce / v-click-bu
 app.component('HeroIcon', HeroIcon); // 本地 Heroicons 统一入口（src/assets/icons/heroicons/*.svg）
 
 app.mount('#app');
+
+// PWA：仅在「生产构建」注册手写 Service Worker（public/sw.js，离线 app-shell + 运行时缓存）。
+// 开发环境跳过，避免 Service Worker 缓存 HMR 模块导致改了代码不生效。
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
