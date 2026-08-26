@@ -94,10 +94,75 @@ jobs:
           '
 
   # ─────────────────────────────────────────────────────────────
-  # 全栈冒烟（登录 + 28 读 + 12 写闭环 + 401 门）不在此 CI 内：
-  # 依赖本机 MySQL / Redis 与机器绝对路径脚本
-  # （D:/Item/cap/workbuddy/smoke_api.py），无法在 GitHub 托管 runner 上跑。
-  # 本地请使用仓库根的 ci-gate.sh（已自动拉起后端并完成 6 阶段门禁）。
-  # 若将来需要云端集成测试，可在此加一个带 mysql:8 / redis:7 service 的 job，
-  # 并通过 ConnectionStrings__MySql / TokenStore__* 等环境变量注入配置。
+  # 全栈集成冒烟：GitHub service container 起 MySQL 8.0.39，
+  # 后端 MigrateAsync 自动迁移建表 + 种子，再跑仓库内 scripts/smoke.py
+  # （登录 + 30 只读 + 11 写闭环 + 401 门）。仅依赖 MySQL，使用 InMemory
+  # TokenStore（Development 环境，规避 Production 对 Redis 的强制要求），
+  # JWT 用临时生成的 RSA 私钥（环境变量注入，不入库）。
+  # 这一步能在 CI 中复现「从迁移全新建库」场景，正是最容易遗漏的回归点
+  # （例如某次 EnhanceBoard 迁移因缺 [Migration] 特性未被应用，导致 /board 500）。
   # ─────────────────────────────────────────────────────────────
+  integration:
+    name: 全栈集成冒烟 (MySQL + 后端 + 冒烟脚本)
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0.39
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: couple_love
+          MYSQL_USER: app
+          MYSQL_PASSWORD: apppass
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -prootpass"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__MySql: "Server=127.0.0.1;Port=3306;Database=couple_love;User=app;Password=apppass;CharSet=utf8mb4;SslMode=None;AllowPublicKeyRetrieval=true;"
+      TokenStore__Provider: InMemory
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 生成 RSA 私钥 (JWT 签名，不入库)
+        run: |
+          openssl genrsa -out jwt-private.pem 2048
+          echo "JWT_RSA_PRIVATE_KEY<<EOF" >> "$GITHUB_ENV"
+          cat jwt-private.pem >> "$GITHUB_ENV"
+          echo "EOF" >> "$GITHUB_ENV"
+
+      - name: 构建后端
+        run: dotnet build backend/CoupleLoveSystem.Api/CoupleLoveSystem.Api.csproj -c Debug
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 启动后端并跑全栈冒烟
+        run: |
+          dotnet run --project backend/CoupleLoveSystem.Api --urls http://localhost:5199 > /tmp/backend.log 2>&1 &
+          BGPID=$!
+          for i in $(seq 1 90); do
+            if curl -s -o /dev/null http://localhost:5199/ ; then echo "backend is up"; break; fi
+            sleep 2
+          done
+          sleep 5
+          python scripts/smoke.py
+          RC=$?
+          kill $BGPID 2>/dev/null || true
+          exit $RC
+
+      - name: 失败诊断
+        if: failure()
+        run: |
+          echo "----- backend startup log -----"
+          tail -n 80 /tmp/backend.log || true

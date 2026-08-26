@@ -10,7 +10,7 @@ cd "$REPO_ROOT"
 
 DOTNET="${DOTNET:-D:/System_Environment/dotnet/dotnet.exe}"
 NODE_BIN="$REPO_ROOT/frontend/node_modules/.bin"
-SMOKE_PY="${SMOKE_PY:-D:/Item/cap/workbuddy/smoke_api.py}"
+SMOKE_PY="${SMOKE_PY:-$REPO_ROOT/scripts/smoke.py}"
 API_DLL="backend/CoupleLoveSystem.Api/bin/Debug/net8.0/CoupleLoveSystem.Api.dll"
 PORT=5199
 

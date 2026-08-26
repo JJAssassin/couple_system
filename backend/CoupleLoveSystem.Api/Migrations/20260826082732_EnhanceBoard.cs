@@ -1,6 +1,4 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -44,39 +42,13 @@ namespace CoupleLoveSystem.Migrations
                 table: "BoardMessages",
                 type: "datetime(6)",
                 nullable: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BoardMessages_ReceiverUserId",
-                table: "BoardMessages",
-                column: "ReceiverUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BoardMessages_ScheduledAt_IsUnlocked",
-                table: "BoardMessages",
-                columns: new[] { "ScheduledAt", "IsUnlocked" });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_BoardMessages_ReceiverUserId",
-                table: "BoardMessages");
-
-            migrationBuilder.DropIndex(
-                name: "IX_BoardMessages_ScheduledAt_IsUnlocked",
-                table: "BoardMessages");
-
             migrationBuilder.DropColumn(
-                name: "ImageUrl",
-                table: "BoardMessages");
-
-            migrationBuilder.DropColumn(
-                name: "IsPrivate",
-                table: "BoardMessages");
-
-            migrationBuilder.DropColumn(
-                name: "IsUnlocked",
+                name: "ScheduledAt",
                 table: "BoardMessages");
 
             migrationBuilder.DropColumn(
@@ -84,7 +56,15 @@ namespace CoupleLoveSystem.Migrations
                 table: "BoardMessages");
 
             migrationBuilder.DropColumn(
-                name: "ScheduledAt",
+                name: "IsUnlocked",
+                table: "BoardMessages");
+
+            migrationBuilder.DropColumn(
+                name: "IsPrivate",
+                table: "BoardMessages");
+
+            migrationBuilder.DropColumn(
+                name: "ImageUrl",
                 table: "BoardMessages");
         }
     }

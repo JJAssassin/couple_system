@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoupleLoveSystem.Migrations
 {
     [DbContext(typeof(CoupleDbContext))]
-    [Migration("20260821060242_AddTask")]
-    partial class AddTask
+    [Migration("20260826082732_EnhanceBoard")]
+    partial class EnhanceBoard
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -209,11 +209,26 @@ namespace CoupleLoveSystem.Migrations
                     b.Property<long>("CreateUserId")
                         .HasColumnType("bigint");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("longtext");
+
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsPrivate")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsUnlocked")
                         .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("Pinned")
                         .HasColumnType("tinyint(1)");
+
+                    b.Property<long?>("ReceiverUserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ScheduledAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<DateTime?>("UpdateTime")
                         .HasColumnType("datetime(6)");
@@ -620,61 +635,6 @@ namespace CoupleLoveSystem.Migrations
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                 });
 
-            modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleLetter", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("CoupleId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("CoverImage")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long>("CreateUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsUnlocked")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<long>("ReceiverUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime>("UnlockTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime?>("UpdateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("UpdateUserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CoupleId");
-
-                    b.HasIndex("ReceiverUserId");
-
-                    b.HasIndex("IsUnlocked", "UnlockTime");
-
-                    b.ToTable("Letters");
-
-                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
-                });
-
             modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleQuizQuestion", b =>
                 {
                     b.Property<long>("Id")
@@ -944,121 +904,6 @@ namespace CoupleLoveSystem.Migrations
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                 });
 
-            modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleTaskRecord", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CompleteDate")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<string>("CoupleId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("CreateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long>("CreateUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("EarnedPoints")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<string>("Remark")
-                        .HasColumnType("longtext");
-
-                    b.Property<long>("TemplateId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("UpdateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("UpdateUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CoupleId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("TemplateId", "UserId", "CompleteDate");
-
-                    b.ToTable("TaskRecords");
-
-                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
-                });
-
-            modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleTaskTemplate", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("CoupleId")
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<DateTime>("CreateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long>("CreateUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("Frequency")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Icon")
-                        .HasColumnType("longtext");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("tinyint(1)");
-
-                    b.Property<int>("Points")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TaskType")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("UpdateTime")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<long?>("UpdateUserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CoupleId");
-
-                    b.HasIndex("TaskType");
-
-                    b.HasIndex("CoupleId", "IsActive");
-
-                    b.ToTable("TaskTemplates");
-
-                    MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
-                });
-
             modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleTodo", b =>
                 {
                     b.Property<long>("Id")
@@ -1274,15 +1119,6 @@ namespace CoupleLoveSystem.Migrations
                     b.HasOne("CoupleLoveSystem.Core.Entities.CoupleAlbum", null)
                         .WithMany()
                         .HasForeignKey("AlbumId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleTaskRecord", b =>
-                {
-                    b.HasOne("CoupleLoveSystem.Core.Entities.CoupleTaskTemplate", null)
-                        .WithMany()
-                        .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -237,8 +237,6 @@ namespace CoupleLoveSystem.Migrations
 
                     b.HasIndex("CoupleId");
 
-                    b.HasIndex("ReceiverUserId");
-
                     b.ToTable("BoardMessages");
 
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
@@ -903,7 +901,6 @@ namespace CoupleLoveSystem.Migrations
                     MySqlEntityTypeBuilderExtensions.HasCharSet(b, "utf8mb4");
                 });
 
-
             modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleTodo", b =>
                 {
                     b.Property<long>("Id")
@@ -1119,15 +1116,6 @@ namespace CoupleLoveSystem.Migrations
                     b.HasOne("CoupleLoveSystem.Core.Entities.CoupleAlbum", null)
                         .WithMany()
                         .HasForeignKey("AlbumId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("CoupleLoveSystem.Core.Entities.CoupleTaskRecord", b =>
-                {
-                    b.HasOne("CoupleLoveSystem.Core.Entities.CoupleTaskTemplate", null)
-                        .WithMany()
-                        .HasForeignKey("TemplateId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
