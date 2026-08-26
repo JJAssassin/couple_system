@@ -142,6 +142,8 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 <FlipCard v-model="flipped" interactive><template #front>…</template><template #back>…</template></FlipCard>
 ```
 > **已接入**：愿望页卡片——点击整卡翻面，正面为标题/状态/操作，背面为描述与完成感悟（逐卡 `flips` 状态控制，操作按钮区 `@click.stop` 防误翻）。组件已从 `position:absolute` 改为 grid 同格堆叠，自适应变高内容，Showcase 不受影响。
+>
+> **手感打磨（3D 进深）**：`perspective` 由 1200px 收紧到 1000px（翻转透视更明显）；正反面沿 Z 轴错开 ±1px，旋转中呈现约 2px 虚拟厚度，不再是单层纸片；未翻转时悬停卡片轻微抬起（`translateY(-4px)`）+ 投影加深，强化实体感；全部交互在 `html.reduce-motion` 下关闭（过渡置 none、悬停不位移）。
 
 ### 10 汉堡变叉 · `HamburgerIcon`
 三道横杠单一元件形变（旋转 45° + 中杠淡出），形变过程保持居中，**用户不丢失视觉锚点**。
