@@ -207,6 +207,16 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 > `/api` 按 token 隔离、`/hub` 直通、`/uploads` cache-first、`/assets` SWR），`main.ts` 仅在生产构建注册。
 > 配合 `public/manifest.webmanifest` 与图标，可「添加到主屏」离线使用。
 
+## 8. 手感调优（令牌与组件微调）
+
+动效手感集中由 `finesse.css` 的 `:root` 令牌驱动，统一调校、互不牵连：
+
+- `--fx-dur-flip: 340ms`（新增）：卡片翻面专属时长，比共享的 `--fx-dur-settle(420ms)` 更利落；翻面用专属令牌，避免改一处牵动骨架落位/同步入场。
+- `SwipeCard` 触觉增强（非破坏性生活逻辑）：
+  - 越过阈值（`threshold`，默认 80px）后施加**橡皮筋阻尼**（`limit = threshold*1.6`，超出部分仅 25% 位移），像真实卡片"拽不动"的回弹上限。
+  - 拖拽时随位移**轻微倾斜 + 缩小**（`rotate ≤ ±6°`、`scale ≥ 0.96`），制造"被拎起"的实体感；松手未过阈值则回弹归位。
+  - 飞出过渡统一用 `--fx-dur-pop`；`reduce-motion` 下仅保留透明度淡出、关闭位移动画。
+
 ---
 
 ## 6. 文件索引

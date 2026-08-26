@@ -14,6 +14,7 @@
   --fx-dur-micro: 140ms;   /* 按压回弹下压 */
   --fx-dur-pop:   320ms;   /* 通用弹出/回弹 */
   --fx-dur-settle: 420ms;  /* 数字滚动收尾、骨架落位 */
+  --fx-dur-flip:  340ms;   /* 卡片翻面（比 settle 更利落，专属不牵连其它） */
   --fx-dur-drawer: 380ms;  /* 抽屉 */
   /* 缓动：带轻微回弹但克制（重量感）；减速收尾（数字/抽屉） */
   --fx-ease-back:  cubic-bezier(0.34, 1.56, 0.64, 1);

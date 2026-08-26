@@ -26,7 +26,7 @@ function onClick() {
 .fx-flip__inner {
   display: grid; /* 正反面同格堆叠：容器高度随内容自适应，兼容变高卡片 */
   transform-style: preserve-3d;
-  transition: transform var(--fx-dur-settle, 420ms) var(--fx-ease-out, ease);
+  transition: transform var(--fx-dur-flip, 340ms) var(--fx-ease-out, ease);
 }
 .fx-flip.flipped .fx-flip__inner { transform: rotateY(180deg); }
 .fx-flip__face {
