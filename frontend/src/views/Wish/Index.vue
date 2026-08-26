@@ -39,7 +39,7 @@
       <div v-else class="cards" ref="listEl">
         <template v-for="w in displayList" :key="w.id">
           <!-- 已完成：外层 SwipeCard 向左滑「抽走」= 归档（可逆，非删除） -->
-          <SwipeCard v-if="w.status === 3" class="wish-card" :threshold="90" @dismiss="archiveWish(w)">
+          <SwipeCard v-if="w.status === 3" class="wish-card" :threshold="90" hint="归档" hint-color="#E8A87C" @dismiss="archiveWish(w)">
             <FlipCard
               :model-value="!!flips[w.id]"
               @update:model-value="(v) => setFlip(w.id, v)"

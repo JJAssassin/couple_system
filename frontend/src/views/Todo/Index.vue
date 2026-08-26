@@ -37,6 +37,8 @@
         v-for="t in activeList"
         :key="t.id"
         :threshold="90"
+        hint="完成"
+        hint-color="#7BC47F"
         @dismiss="onSwipeDone(t)"
       >
         <div class="love-card todo">

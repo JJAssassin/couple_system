@@ -156,7 +156,8 @@ SVG 对勾用 `stroke-dasharray/dashoffset` 描边动画，**逐笔绘制**；`a
 ```html
 <SwipeCard @dismiss="remove(item)"><!-- 卡片内容 --></SwipeCard>
 ```
-> **已接入**：愿望页——已完成的愿望卡片外层包 `SwipeCard`，向左滑「抽走」即归档（`status→4 已归档`，可逆、非删除）；默认列表过滤掉已归档项，抽走后下层卡片自然补位，符合"堆叠"语义。
+> **已接入**：愿望页——已完成的愿望卡片外层包 `SwipeCard`，向左滑「抽走」即归档（`status→4 已归档`，可逆、非删除）；默认列表过滤掉已归档项，抽走后下层卡片自然补位，符合"堆叠"语义。待办页——未完成项左滑「抽走」即标记完成（`toggleTodo`，可逆）。
+> **滑动意图提示（增强）**：`SwipeCard` 支持 `hint`（文字，如「归档」「完成」）与 `hint-color` 两个 prop——拖动时卡片背后随进度淡入对应底色 + 文字（左滑在左、右滑在右），过阈值后底层锁定满色「armed」态，用户途中即知滑过去会发生什么。位移只作用在 `.fx-swipe__surface`，底层 `.fx-swipe__behind` 固定露出（正确 swipe-to-reveal 语义）。`reduce-motion` 下降级为纯透明度。愿望页 `hint="归档" hint-color="#E8A87C"`、待办页 `hint="完成" hint-color="#7BC47F"`、`/finesse` 演示页 `hint="抽走"`。
 
 ### 12 底部抽屉 · `BottomDrawer`
 面板用 `fx-drawer-up` 关键帧：上滑到位（72%）→ 轻微过冲（82%，-6px）→ 落定（100%），

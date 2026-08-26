@@ -107,7 +107,7 @@
         <p class="desc">上层移开时下层可见，体现堆叠关系。</p>
         <div class="stack">
           <div class="stack-base">下层卡片（可见）</div>
-          <SwipeCard v-if="cardThere" class="stack-top" @dismiss="cardThere = false">
+          <SwipeCard v-if="cardThere" class="stack-top" hint="抽走" hint-color="#FF6F7D" @dismiss="cardThere = false">
             <div class="face front">上层 · 横滑抽走我</div>
           </SwipeCard>
           <button v-else class="demo-btn ghost sm" @click="cardThere = true">恢复上层</button>
