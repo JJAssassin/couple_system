@@ -10,6 +10,12 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.IO;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.Formats.Webp;
+using SixLabors.ImageSharp.Processing;
 
 namespace CoupleLoveSystem.Api.Controllers;
 
@@ -40,26 +46,11 @@ public class ImageController : BaseController
     {
         if (file == null || file.Length == 0)
             throw new ConflictException("请选择要上传的图片");
-        if (file.Length > MaxFileSize)
-            throw new ConflictException("文件大小不能超过 5MB");
-
         var ext = Path.GetExtension(file.FileName);
         if (string.IsNullOrEmpty(ext) || !AllowedExt.Contains(ext))
             throw new ConflictException("不支持的文件类型，仅支持 jpg/jpeg/png/gif/webp");
 
-        // 生成新文件名，防止路径穿越或覆盖已有文件
-        var newName = $"{DateTime.UtcNow:yyyyMMdd}_{Guid.NewGuid()}{ext.ToLowerInvariant()}";
-        var root = _env.WebRootPath ?? _env.ContentRootPath;
-        var dir = Path.Combine(root, "uploads");
-        Directory.CreateDirectory(dir); // 目录不存在时自动创建
-        var fullPath = Path.Combine(dir, newName);
-
-        await using (var fs = new FileStream(fullPath, FileMode.Create))
-        {
-            await file.CopyToAsync(fs, ct);
-        }
-
-        // P2-15：写入前校验 albumId 归属当前情侣，防止图片被挂到他人相册造成归属错乱。
+        // P2-15：先校验 albumId 归属当前情侣，避免写入后才拒绝造成的孤儿文件。
         // _db.Albums 受全局情侣过滤器约束，查不到即代表该相册不属于当前情侣（或不存在）。
         if (albumId > 0)
         {
@@ -68,10 +59,13 @@ public class ImageController : BaseController
                 throw new ForbiddenException("相册不存在或无权访问");
         }
 
+        // P2-5：校验内容 Magic bytes + 重编码剥离 EXIF/GPS，落盘并返回相对路径
+        var relative = await SaveValidatedImageAsync(file, ct);
+
         var img = new CoupleImage
         {
             AlbumId = albumId,
-            ImagePath = "/uploads/" + newName,
+            ImagePath = relative,
             CreateUserId = CurrentUserId,
             CreateTime = DateTime.UtcNow
         };
@@ -88,25 +82,12 @@ public class ImageController : BaseController
     {
         if (file == null || file.Length == 0)
             throw new ConflictException("请选择要上传的图片");
-        if (file.Length > MaxFileSize)
-            throw new ConflictException("文件大小不能超过 5MB");
-
         var ext = Path.GetExtension(file.FileName);
         if (string.IsNullOrEmpty(ext) || !AllowedExt.Contains(ext))
             throw new ConflictException("不支持的文件类型，仅支持 jpg/jpeg/png/gif/webp");
 
-        var newName = $"{DateTime.UtcNow:yyyyMMdd}_{Guid.NewGuid()}{ext.ToLowerInvariant()}";
-        var root = _env.WebRootPath ?? _env.ContentRootPath;
-        var dir = Path.Combine(root, "uploads");
-        Directory.CreateDirectory(dir);
-        var fullPath = Path.Combine(dir, newName);
-
-        await using (var fs = new FileStream(fullPath, FileMode.Create))
-        {
-            await file.CopyToAsync(fs, ct);
-        }
-
-        var relative = "/uploads/" + newName;
+        // P2-5：校验内容 Magic bytes + 重编码剥离 EXIF/GPS
+        var relative = await SaveValidatedImageAsync(file, ct);
         return Ok(ApiResult<object>.Ok(new { path = relative }, "上传成功"));
     }
 
@@ -141,5 +122,88 @@ public class ImageController : BaseController
         }
 
         return Ok(ApiResults.Ok(new { }, "已删除"));
+    }
+
+    /// <summary>
+    /// P2-5 上传纵深防御：读取文件内容校验 Magic bytes（杜绝扩展名伪装），再用 ImageSharp 解码 +
+    /// AutoOrient + 清空 EXIF/GPS/IPTC/XMP 等隐私元数据后重编码落盘（同时完成「内容校验」与「剥离位置信息」）。
+    /// GIF 仅做 Magic bytes 校验后原样落盘（重编码会丢失动画帧）。返回可访问的相对路径。
+    /// </summary>
+    private async Task<string> SaveValidatedImageAsync(IFormFile file, CancellationToken ct)
+    {
+        if (file.Length > MaxFileSize)
+            throw new ConflictException("文件大小不能超过 5MB");
+
+        byte[] bytes;
+        await using (var ms = new MemoryStream())
+        {
+            await file.CopyToAsync(ms, ct);
+            bytes = ms.ToArray();
+        }
+
+        var fmt = DetectFormat(bytes);
+        if (fmt == null)
+            throw new ConflictException("文件内容不是有效的图片（扩展名与实际格式不符）");
+
+        byte[] outBytes;
+        string finalExt;
+        if (fmt == DetectedFormat.Gif)
+        {
+            outBytes = bytes; // GIF 保留原字节，避免丢失动画帧
+            finalExt = ".gif";
+        }
+        else
+        {
+            try
+            {
+                using var image = Image.Load(bytes.AsSpan());
+                image.Mutate(x => x.AutoOrient());
+                // 剥离 EXIF/GPS/IPTC/XMP 等隐私元数据（情侣私密照片常见含 GPS 定位）
+                image.Metadata.ExifProfile = null;
+                image.Metadata.IptcProfile = null;
+                image.Metadata.XmpProfile = null;
+                IImageEncoder encoder = fmt switch
+                {
+                    DetectedFormat.Jpeg => new JpegEncoder { Quality = 85 },
+                    DetectedFormat.Png => new PngEncoder(),
+                    DetectedFormat.Webp => new WebpEncoder { Quality = 85 },
+                    _ => throw new InvalidOperationException()
+                };
+                await using var outMs = new MemoryStream();
+                image.Save(outMs, encoder);
+                outBytes = outMs.ToArray();
+            }
+            catch (Exception)
+            {
+                throw new ConflictException("文件内容无法解析为有效图片");
+            }
+
+            finalExt = fmt switch
+            {
+                DetectedFormat.Jpeg => ".jpg",
+                DetectedFormat.Png => ".png",
+                DetectedFormat.Webp => ".webp",
+                _ => ".bin"
+            };
+        }
+
+        var dir = Path.Combine(_env.WebRootPath ?? _env.ContentRootPath, "uploads");
+        Directory.CreateDirectory(dir);
+        var newName = $"{DateTime.UtcNow:yyyyMMdd}_{Guid.NewGuid()}{finalExt}";
+        var fullPath = Path.Combine(dir, newName);
+        await System.IO.File.WriteAllBytesAsync(fullPath, outBytes, ct);
+        return "/uploads/" + newName;
+    }
+
+    private enum DetectedFormat { Jpeg, Png, Gif, Webp }
+
+    /// <summary>按文件头 Magic bytes 识别真实图片格式（与实际扩展名无关）。</summary>
+    private static DetectedFormat? DetectFormat(ReadOnlySpan<byte> b)
+    {
+        if (b.Length >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) return DetectedFormat.Jpeg;
+        if (b.Length >= 8 && b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47 && b[4] == 0x0D && b[5] == 0x0A && b[6] == 0x1A && b[7] == 0x0A) return DetectedFormat.Png;
+        if (b.Length >= 6 && b[0] == 0x47 && b[1] == 0x49 && b[2] == 0x46 && b[3] == 0x38) return DetectedFormat.Gif; // GIF8
+        if (b.Length >= 12 && b[0] == 0x52 && b[1] == 0x49 && b[2] == 0x46 && b[3] == 0x46 && b[8] == 0x57 && b[9] == 0x45 && b[10] == 0x42 && b[11] == 0x50) return DetectedFormat.Webp; // RIFF....WEBP
+        return null;
     }
 }
