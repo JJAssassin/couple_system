@@ -60,50 +60,42 @@
       @load-more="loadMore"
     />
 
-    <!-- 写日记：NModal（移动端全屏） -->
-    <n-modal
-      v-model:show="showWrite"
-      class="diary-modal"
-      preset="card"
-      title="写日记"
-      :style="{ width: modalWidth }"
-      :mask-closable="false"
-    >
-      <n-form ref="formRef" :model="form" label-placement="top" class="diary-form">
-        <n-form-item label="标题" :rule="requiredRule('给日记起个标题吧～')" class="diary-form-item">
-          <n-input v-model:value="form.title" placeholder="今天发生了什么…" maxlength="80" show-count class="diary-input" />
-        </n-form-item>
-        <n-form-item label="内容" class="diary-form-item">
-          <n-input
-            v-model:value="form.content"
-            type="textarea"
-            placeholder="写下你的心情与故事"
-            :autosize="{ minRows: 4, maxRows: 10 }"
-            class="diary-textarea"
-          />
-        </n-form-item>
-        <div class="grid2 diary-grid">
-          <n-form-item label="心情分数 (1-10)" class="diary-form-item">
-            <n-input-number v-model:value="form.moodScore" :min="1" :max="10" class="diary-input" />
-          </n-form-item>
-          <n-form-item label="天气" class="diary-form-item">
-            <n-input v-model:value="form.weather" placeholder="晴 / 雨 / 多云" class="diary-input" />
-          </n-form-item>
-        </div>
-        <n-form-item label="权限" class="diary-form-item">
-          <n-select v-model:value="form.permissionType" :options="permOptions" class="diary-select" />
-        </n-form-item>
-        <n-form-item label="日期" class="diary-form-item">
-          <n-date-picker v-model:value="form.dateTs" type="date" clearable style="width: 100%" class="diary-picker" />
-        </n-form-item>
-      </n-form>
+    <!-- 写日记：iOS 风表单（移动端底部抽屉 / 桌面居中卡片） -->
+    <LoveSheet v-model="showWrite" title="写日记" subtitle="记录此刻的心情与故事">
+      <div class="diary-form">
+        <LoveInput
+          v-model="form.title"
+          label="标题"
+          placeholder="今天发生了什么…"
+          :maxlength="80"
+          counter
+          clearable
+          :invalid="titleInvalid"
+          @update:modelValue="titleInvalid = false"
+        />
+        <LoveTextarea
+          v-model="form.content"
+          label="内容"
+          placeholder="写下你的心情与故事"
+          :rows="4"
+          :maxlength="2000"
+        />
+        <LoveMoodPicker v-model="form.moodScore" label="心情" />
+        <LoveChips v-model="form.weather" label="天气" :options="weatherOptions" />
+        <LoveSegmented v-model="form.permissionType" label="权限" :options="permOptions" />
+        <LoveDateField v-model="form.dateTs" label="日期" />
+      </div>
       <template #footer>
-        <div class="diary-foot">
-          <n-button class="diary-btn-cancel" @click="showWrite = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" v-press-bounce @click="submit" class="diary-btn-primary">保存</n-button>
-        </div>
+        <LoveSaveBar
+          :loading="saving"
+          :success="saved"
+          cancel-text="取消"
+          save-text="保存"
+          @cancel="closeWrite"
+          @save="submit"
+        />
       </template>
-    </n-modal>
+    </LoveSheet>
 
     <!-- 详情：NDrawer（移动端全屏） -->
     <n-drawer v-model:show="showDetail" :width="drawerWidth" placement="right">
@@ -150,8 +142,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import {
-  NButton, NModal, NDrawer, NDrawerContent, NForm, NFormItem,
-  NInput, NInputNumber, NSelect, NDatePicker, NTag, NDivider,
+  NButton, NDrawer, NDrawerContent, NTag, NDivider, NInput,
 } from 'naive-ui';
 import type { DiaryDto, DiaryReq, DiaryCommentDto, PermissionType } from '@/types';
 import { Calendar, CloudSun, Heart, PenLine } from 'lucide-vue-next';
@@ -166,10 +157,12 @@ import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
+import {
+  LoveSheet, LoveInput, LoveTextarea, LoveMoodPicker,
+  LoveChips, LoveSegmented, LoveDateField, LoveSaveBar,
+} from '@/components/loveform';
 import { feedback } from '@/utils/feedback';
-import { requiredRule } from '@/utils/formRules';
 
-const formRef = ref();
 const auth = useAuthStore();
 const partner = usePartnerStore();
 const { useModuleSync } = useRealtime();
@@ -225,7 +218,9 @@ onMounted(async () => {
 
 // ---------- 写日记 ----------
 const showWrite = ref(false);
-const submitting = ref(false);
+const saving = ref(false);
+const saved = ref(false);
+const titleInvalid = ref(false);
 const form = reactive({
   title: '',
   content: '',
@@ -236,13 +231,16 @@ const form = reactive({
   dateTs: null as number | null,
 });
 
+// 天气快捷选项（单选 chips）
+const weatherOptions = ['晴', '多云', '阴', '小雨', '大雨', '雪', '风', '雾'];
+// 权限用分段控件呈现，更贴近 iOS 原生选择
 const permOptions = [
-  { label: '公开（双方可读写）', value: 1 },
-  { label: '仅自己可见', value: 2 },
-  { label: '对方可读不可写', value: 3 },
+  { label: '公开', value: 1 },
+  { label: '仅自己', value: 2 },
+  { label: '对方可读', value: 3 },
 ];
 
-function openWrite() {
+function resetWrite() {
   form.title = '';
   form.content = '';
   form.moodTag = undefined;
@@ -250,16 +248,27 @@ function openWrite() {
   form.permissionType = 1;
   form.weather = '';
   form.dateTs = null;
+  titleInvalid.value = false;
+  saving.value = false;
+  saved.value = false;
+}
+
+function openWrite() {
+  resetWrite();
   showWrite.value = true;
 }
 
+function closeWrite() {
+  showWrite.value = false;
+}
+
 async function submit() {
-  try {
-    await formRef.value?.validate();
-  } catch {
+  if (!form.title.trim()) {
+    titleInvalid.value = true;
+    feedback.warn('给日记起个标题吧～');
     return;
   }
-  submitting.value = true;
+  saving.value = true;
   try {
     const req: DiaryReq = {
       title: form.title,
@@ -271,11 +280,15 @@ async function submit() {
       diaryDate: form.dateTs ? new Date(form.dateTs).toISOString() : undefined,
     };
     await createDiary(req);
-    showWrite.value = false;
-    feedback.saved('日记');
-    await load();
+    saved.value = true;
+    // 让「保存」按钮先完成对勾动画，再收起表单
+    window.setTimeout(async () => {
+      showWrite.value = false;
+      feedback.saved('日记');
+      await load();
+    }, 720);
   } finally {
-    submitting.value = false;
+    saving.value = false;
   }
 }
 
@@ -319,7 +332,6 @@ function fmtDateTime(s?: string) {
 }
 
 // 响应式宽度
-const modalWidth = computed(() => (isMobile() ? '100%' : '520px'));
 const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 </script>
 
@@ -345,9 +357,6 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .meta :deep(svg) { color: var(--color-rose); flex: 0 0 auto; }
 .mood-tag { color: var(--color-rose); font-size: 12px; margin-top: 6px; }
 
-.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.foot { display: flex; justify-content: flex-end; gap: 8px; }
-
 .detail-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
 .diary-content { line-height: 1.8; word-break: break-word; }
 .diary-content :deep(img) { max-width: 100%; border-radius: 8px; }
@@ -364,89 +373,5 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 }
 .comment-box .n-button { align-self: flex-end; min-width: 92px; }
 
-/* 美化日记模态框 */
-:global(.diary-modal) {
-  border-radius: 16px !important;
-  overflow: hidden;
-}
-:global(.diary-modal .n-modal-header) {
-  background: linear-gradient(135deg, var(--color-rose-soft), var(--color-surface));
-  padding: 18px 24px !important;
-  border-bottom: 1px solid var(--color-border);
-}
-:global(.diary-modal .n-modal-header .n-modal-header__close) {
-  top: 16px;
-  right: 16px;
-}
-:global(.diary-modal .n-modal-body) {
-  padding: 20px 24px !important;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-:global(.diary-modal .n-modal-footer) {
-  padding: 14px 24px !important;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-.diary-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.diary-form-item {
-  margin-bottom: 0 !important;
-}
-.diary-input,
-.diary-textarea,
-.diary-select,
-.diary-picker {
-  border-radius: 10px !important;
-}
-.diary-textarea :deep(.n-input__textarea),
-.diary-textarea :deep(textarea) {
-  font-size: 15px;
-  line-height: 1.7;
-  padding: 12px 14px;
-  border-radius: 10px;
-}
-.diary-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.diary-btn-cancel {
-  border-radius: 10px;
-  padding: 8px 20px;
-  font-weight: 500;
-}
-.diary-btn-primary {
-  border-radius: 10px;
-  padding: 8px 24px;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
-  border: none;
-  box-shadow: 0 4px 12px rgba(255, 111, 125, 0.25);
-  transition: all var(--dur-micro) var(--ease-love);
-}
-.diary-btn-primary:hover {
-  box-shadow: 0 6px 16px rgba(255, 111, 125, 0.35);
-  transform: translateY(-1px);
-}
-.diary-btn-primary:active {
-  transform: translateY(0);
-}
-
-@media (max-width: 767px) {
-  .grid2 { grid-template-columns: 1fr; }
-  :global(.diary-modal) {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100dvh;
-    margin: 0;
-    border-radius: 0 !important;
-  }
-  :global(.diary-modal .n-modal-body) {
-    max-height: calc(100dvh - 140px);
-  }
-}
+.diary-form { display: flex; flex-direction: column; gap: 18px; }
 </style>

@@ -148,18 +148,12 @@
     </section>
 
     <!-- 题库管理 -->
-    <n-modal
-      v-model:show="showBank"
-      class="quiz-modal"
-      preset="card"
-      title="题库管理"
-      style="width: 92%; max-width: 560px;"
-    >
+    <LoveSheet v-model="showBank" title="题库管理">
       <div class="bank-add">
-        <n-input v-model:value="newText" placeholder="题目，例如：TA 最想去的城市是？" />
+        <LoveInput v-model="newText" placeholder="题目，例如：TA 最想去的城市是？" />
         <div v-for="(_, i) in newOptions" :key="i" class="opt-row">
           <span class="opt-idx small">{{ letters[i] }}</span>
-          <n-input v-model:value="newOptions[i]" :placeholder="`选项 ${letters[i]}`" />
+          <LoveInput v-model="newOptions[i]" :placeholder="`选项 ${letters[i]}`" class="opt-input" />
           <n-button
             v-if="newOptions.length > 2"
             size="small"
@@ -175,7 +169,7 @@
             <template #icon><Plus :size="14" /></template>
             加选项
           </n-button>
-          <n-input v-model:value="newCategory" size="small" placeholder="分类（可选）" class="cat-input" />
+          <LoveInput v-model="newCategory" placeholder="分类（可选）" class="cat-input" />
           <n-button type="primary" size="small" :loading="savingQ" :disabled="!canAddQuestion" v-press-bounce @click="onAddQuestion">
             添加题目
           </n-button>
@@ -197,13 +191,14 @@
           </n-popconfirm>
         </div>
       </div>
-    </n-modal>
+    </LoveSheet>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { NButton, NModal, NInput, NPopconfirm, NPopselect } from 'naive-ui';
+import { NButton, NPopconfirm, NPopselect } from 'naive-ui';
+import { LoveSheet, LoveInput } from '@/components/loveform';
 import { Sparkles, Dices, Check, X, Plus, Trash2 } from 'lucide-vue-next';
 import type { QuizQuestionDto, QuizRoundDto, QuizStatsDto } from '@/types';
 import {
@@ -456,8 +451,7 @@ onMounted(async () => {
   .starter-actions { flex-direction: column; }
   .round-del { position: static; align-self: flex-end; margin-top: 8px; }
 }
-:global(.quiz-modal) { padding: 0 !important; }
-@media (max-width: 767px) {
-  :global(.quiz-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
-}
+.bank-add .lf-field { width: 100%; }
+.opt-input { flex: 1; min-width: 0; }
+.cat-input { flex: 1; min-width: 100px; max-width: 220px; }
 </style>

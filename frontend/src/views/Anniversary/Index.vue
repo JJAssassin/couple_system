@@ -134,43 +134,40 @@
     </section>
 
     <!-- 新增 / 编辑 弹窗 -->
-    <n-modal
-      v-model:show="showForm"
-      class="anniv-modal"
-      preset="card"
-      :title="editingId ? '编辑纪念日' : '新增纪念日'"
-      style="width: 92%; max-width: 480px;"
-    >
-      <n-form ref="formRef" :model="form" label-placement="top">
-        <n-form-item label="名称" :rule="requiredRule('给纪念日起个名字吧～')">
-          <n-input v-model:value="form.name" placeholder="例如：恋爱纪念日 / 我的生日 / 初次相遇" maxlength="30" show-count />
-        </n-form-item>
-        <n-form-item label="类型">
-          <n-select v-model:value="form.anniversaryType" :options="typeOptions" />
-        </n-form-item>
-        <n-form-item label="目标日期" :rule="dateRule('选个目标日期吧～')">
-          <n-date-picker v-model:value="form.dateTs" type="date" clearable style="width: 100%" />
-        </n-form-item>
-        <n-form-item label="提前提醒（天）">
-          <n-select v-model:value="form.remindDays" :options="remindOptions" />
-        </n-form-item>
-        <n-form-item label="是否每年重复">
-          <div class="yearly-row">
-            <n-switch v-model:value="form.isYearly" />
-            <span class="yearly-hint">{{ form.isYearly ? '每年同一天自动提醒' : '仅此一次，过期不再提醒' }}</span>
-          </div>
-        </n-form-item>
-        <n-form-item label="封面图（可选）">
-          <ImageField v-model="form.coverImage" />
-        </n-form-item>
-      </n-form>
-      <template #footer>
-        <div class="modal-foot">
-          <n-button @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" v-press-bounce @click="submit">保存</n-button>
+    <LoveSheet v-model="showForm" :title="editingId ? '编辑纪念日' : '新增纪念日'">
+      <LoveInput
+        v-model="form.name"
+        label="名称"
+        placeholder="例如：恋爱纪念日 / 我的生日 / 初次相遇"
+        :maxlength="30"
+        :counter="true"
+        :invalid="nameInvalid"
+      />
+      <LoveSegmented v-model="form.anniversaryType" label="类型" :options="typeOptions" />
+      <LoveDateField v-model="form.dateTs" label="目标日期" />
+      <LoveSegmented v-model="form.remindDays" label="提前提醒" :options="remindOptions" />
+      <div class="yearly-row">
+        <div class="yearly-text">
+          <div class="yearly-title">是否每年重复</div>
+          <div class="yearly-hint">{{ form.isYearly ? '每年同一天自动提醒' : '仅此一次，过期不再提醒' }}</div>
         </div>
+        <n-switch v-model:value="form.isYearly" />
+      </div>
+      <div class="lf-field">
+        <span class="lf-label">封面图（可选）</span>
+        <ImageField v-model="form.coverImage" />
+      </div>
+      <template #footer>
+        <LoveSaveBar
+          :loading="submitting"
+          :success="saved"
+          cancel-text="取消"
+          save-text="保存"
+          @cancel="showForm = false"
+          @save="submit"
+        />
       </template>
-    </n-modal>
+    </LoveSheet>
 
     <!-- 纪念日分享海报 -->
     <AnniversaryPoster :anniversary="selectedAnniversary" />
@@ -180,7 +177,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, type Component } from 'vue';
 import { Heart, Cake, Handshake, Sparkles } from 'lucide-vue-next';
-import { NButton, NModal, NForm, NFormItem, NInput, NSelect, NDatePicker, NSwitch, NTag, NPopconfirm } from 'naive-ui';
+import { NSwitch, NTag, NPopconfirm } from 'naive-ui';
+import { LoveSheet, LoveInput, LoveSegmented, LoveDateField, LoveSaveBar } from '@/components/loveform';
 import type { AnniversaryDto, AnniversaryReq } from '@/types';
 import {
   listAnniversaries, createAnniversary, updateAnniversary, deleteAnniversary,
@@ -197,15 +195,15 @@ import ImageField from '@/components/Common/ImageField.vue';
 import GradientText from '@/components/Common/GradientText.vue';
 import AnniversaryPoster from '@/components/Common/AnniversaryPoster.vue';
 import { feedback } from '@/utils/feedback';
-import { requiredRule, dateRule } from '@/utils/formRules';
 
 const { useModuleSync } = useRealtime();
 const loading = ref(true);
 const items = ref<AnniversaryDto[]>([]);
 const container = ref<HTMLElement>();
-const formRef = ref();
 const showForm = ref(false);
 const submitting = ref(false);
+const saved = ref(false);
+const nameInvalid = ref(false);
 const editingId = ref<number | null>(null);
 const poppingId = ref<number | null>(null);
 const selectedAnniversary = ref<AnniversaryDto | null>(null);
@@ -340,6 +338,8 @@ function fmtDate(s?: string | null) {
 function openCreate() {
   editingId.value = null;
   form.value = emptyForm();
+  saved.value = false;
+  nameInvalid.value = false;
   showForm.value = true;
 }
 function openEdit(a: AnniversaryDto) {
@@ -352,6 +352,8 @@ function openEdit(a: AnniversaryDto) {
     isYearly: a.isYearly,
     coverImage: a.coverImage ?? '',
   };
+  saved.value = false;
+  nameInvalid.value = false;
   showForm.value = true;
 }
 
@@ -367,10 +369,17 @@ function toReq(): AnniversaryReq {
 }
 
 async function submit() {
-  try {
-    await formRef.value?.validate();
-  } catch { return; }
+  if (!form.value.name.trim()) {
+    nameInvalid.value = true;
+    feedback.warn('给纪念日起个名字吧～');
+    return;
+  }
+  if (!form.value.dateTs) {
+    feedback.warn('选个目标日期吧～');
+    return;
+  }
   submitting.value = true;
+  saved.value = false;
   try {
     if (editingId.value) {
       const updated = await updateAnniversary(editingId.value, toReq());
@@ -382,7 +391,8 @@ async function submit() {
       items.value.unshift(created);
       feedback.created('纪念日');
     }
-    showForm.value = false;
+    saved.value = true;
+    window.setTimeout(() => { showForm.value = false; }, 680);
   } finally { submitting.value = false; }
 }
 
@@ -525,12 +535,11 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 .hist-stat b { display: block; font-size: 26px; font-weight: 900; color: var(--color-rose); font-family: var(--font-mono); }
 .hist-stat span { font-size: 12px; color: var(--color-ink-3); }
 
-.yearly-row { display: flex; align-items: center; gap: 12px; }
-.yearly-hint { font-size: 12px; color: var(--color-ink-3); }
-.modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
-:global(.anniv-modal) { padding: 0 !important; }
+.yearly-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 2px; }
+.yearly-text { min-width: 0; }
+.yearly-title { font-size: 14px; font-weight: 500; color: var(--color-ink); }
+.yearly-hint { font-size: 12px; color: var(--color-ink-3); margin-top: 2px; }
 @media (max-width: 767px) {
-  :global(.anniv-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
   .brand { padding: 10px 14px; }
   .brand .ind-label { font-size: 12px; }
   .brand-status { padding: 3px 9px; font-size: 11px; }

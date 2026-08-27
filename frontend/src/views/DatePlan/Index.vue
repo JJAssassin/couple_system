@@ -69,57 +69,38 @@
     <IndPager v-if="list.length" mode="more" :page="page" :page-size="pageSize" :loading="listLoading" :has-more="hasMore" :total="total" @load-more="nextPage" />
 
     <!-- 新建 -->
-    <NModal v-model:show="showCreate" title="加约会" preset="card" style="max-width: 440px" class="dateplan-modal create-modal">
-      <NForm ref="formRef" :model="cform" :rules="cRules" class="dateplan-form">
-        <NFormItem label="计划时间" path="planTime" class="dateplan-form-item">
-          <NDatePicker v-model:value="cform.planTime" type="datetime" style="width: 100%" class="dateplan-picker" />
-        </NFormItem>
-        <NFormItem label="地点" class="dateplan-form-item">
-          <NInput v-model:value="cform.location" placeholder="如：海边餐厅" class="dateplan-input" />
-        </NFormItem>
-        <NFormItem label="预算" class="dateplan-form-item">
-          <NInputNumber v-model:value="cform.budget" :min="0" :precision="2" style="width: 100%" class="dateplan-input" />
-        </NFormItem>
-        <NFormItem label="备注" class="dateplan-form-item">
-          <NInput v-model:value="cform.remark" type="textarea" placeholder="可选" class="dateplan-textarea" />
-        </NFormItem>
-      </NForm>
+    <LoveSheet v-model="showCreate" title="加约会">
+      <LoveDateField v-model="cform.planTime" label="计划时间" mode="datetime" />
+      <LoveInput v-model="cform.location" label="地点" placeholder="如：海边餐厅" />
+      <LoveInput v-model="cform.budget" label="预算（¥）" type="number" inputmode="decimal" placeholder="可选" />
+      <LoveTextarea v-model="cform.remark" label="备注" placeholder="可选" />
       <template #footer>
-        <div class="dateplan-foot">
-          <NButton class="dateplan-btn-cancel" v-press-bounce @click="showCreate = false">取消</NButton>
-          <NButton type="primary" :loading="saving" v-press-bounce @click="saveCreate" class="dateplan-btn-primary">保存</NButton>
-        </div>
+        <LoveSaveBar :loading="saving" :success="created" cancel-text="取消" save-text="保存" @cancel="showCreate = false" @save="saveCreate" />
       </template>
-    </NModal>
+    </LoveSheet>
 
     <!-- 完成 -->
-    <NModal v-model:show="showComplete" title="完成约会" preset="card" style="max-width: 440px" class="dateplan-modal complete-modal">
-      <NForm :model="completeForm" v-if="active" class="dateplan-form">
-        <NFormItem label="实际花费" class="dateplan-form-item">
-          <NInputNumber v-model:value="completeForm.realCost" :min="0" :precision="2" style="width: 100%" class="dateplan-input" />
-        </NFormItem>
-        <NFormItem label="体验评分" class="dateplan-form-item">
-          <NRate v-model:value="completeForm.score" class="dateplan-rate" />
-        </NFormItem>
-      </NForm>
+    <LoveSheet v-model="showComplete" title="完成约会">
+      <LoveInput v-model="completeForm.realCost" label="实际花费（¥）" type="number" inputmode="decimal" placeholder="可选" />
+      <div class="dp-field">
+        <span class="dp-label">体验评分</span>
+        <n-rate v-model:value="completeForm.score" />
+      </div>
       <template #footer>
-        <div class="dateplan-foot">
-          <NButton class="dateplan-btn-cancel" @click="showComplete = false">取消</NButton>
-          <NButton type="success" :loading="saving" v-click-burst @click="saveComplete" class="dateplan-btn-success">完成啦</NButton>
-        </div>
+        <LoveSaveBar :loading="saving" :success="completed" cancel-text="取消" save-text="完成啦" @cancel="showComplete = false" @save="saveComplete" />
       </template>
-    </NModal>
+    </LoveSheet>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import {
-  NButton, NModal, NForm, NFormItem, NInput, NInputNumber, NDatePicker, NRate, NTag, NPopconfirm, useMessage,
+  NButton, NRate, NTag, NPopconfirm, useMessage,
 } from 'naive-ui';
-import type { FormItemRule } from 'naive-ui';
 import type { DateRecordDto } from '@/types';
 import * as dp from '@/api/dateplan';
+import { LoveSheet, LoveInput, LoveTextarea, LoveDateField, LoveSaveBar } from '@/components/loveform';
 import LoveCount from '@/components/Common/LoveCount.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
@@ -127,13 +108,14 @@ import IndPager from '@/components/industrial/IndPager.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { usePagedList } from '@/composables/usePagedList';
 import { feedback } from '@/utils/feedback';
-import { dateRule } from '@/utils/formRules';
 
 const loading = ref(true);
 const stats = ref<dp.DateStats>({ totalDates: 0, avgScore: 0 });
 const container = ref<HTMLElement>();
 const message = useMessage();
 const saving = ref(false);
+const created = ref(false);
+const completed = ref(false);
 useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 
 const { list, page, pageSize, total, loading: listLoading, hasMore, refresh: refreshList, nextPage } = usePagedList<DateRecordDto>(
@@ -145,9 +127,6 @@ const { list, page, pageSize, total, loading: listLoading, hasMore, refresh: ref
 );
 const pending = computed(() => list.value.filter((d) => !d.isCompleted));
 const history = computed(() => list.value.filter((d) => d.isCompleted));
-
-const formRef = ref<InstanceType<typeof NForm>>();
-const cRules = { planTime: [dateRule('请选择计划时间')] };
 
 const fmtTime = (iso?: string) => (iso ? new Date(iso).toLocaleString('zh-CN') : '时间待定');
 
@@ -161,31 +140,35 @@ async function refresh() {
 function toIso(ts: number | null) { return ts ? new Date(ts).toISOString() : undefined; }
 
 const showCreate = ref(false);
-const cform = ref<{ planTime: number | null; location: string; budget: number | null; remark?: string }>({
-  planTime: Date.now(), location: '', budget: null, remark: '',
+const cform = ref<{ planTime: number | null; location: string; budget: string; remark?: string }>({
+  planTime: Date.now(), location: '', budget: '', remark: '',
 });
 function openCreate() {
-  cform.value = { planTime: Date.now(), location: '', budget: null, remark: '' };
+  cform.value = { planTime: Date.now(), location: '', budget: '', remark: '' };
+  created.value = false;
   showCreate.value = true;
 }
 async function saveCreate() {
-  try {
-    await formRef.value?.validate();
-  } catch {
+  if (!cform.value.planTime) {
+    feedback.warn('请选择计划时间');
     return;
   }
   saving.value = true;
+  created.value = false;
   try {
     await dp.createDate({
       isCompleted: false,
       planTime: toIso(cform.value.planTime),
       location: cform.value.location,
-      budget: cform.value.budget ?? undefined,
+      budget: cform.value.budget ? Number(cform.value.budget) : undefined,
       remark: cform.value.remark,
     });
-    showCreate.value = false;
+    created.value = true;
     feedback.created('约会');
-    await refresh();
+    window.setTimeout(async () => {
+      showCreate.value = false;
+      await refresh();
+    }, 680);
   } finally {
     saving.value = false;
   }
@@ -193,15 +176,17 @@ async function saveCreate() {
 
 const showComplete = ref(false);
 const active = ref<DateRecordDto | null>(null);
-const completeForm = ref<{ realCost: number | null; score: number }>({ realCost: null, score: 5 });
+const completeForm = ref<{ realCost: string; score: number }>({ realCost: '', score: 5 });
 function openComplete(d: DateRecordDto) {
   active.value = d;
-  completeForm.value = { realCost: d.realCost ?? null, score: d.experienceScore ?? 5 };
+  completeForm.value = { realCost: d.realCost != null ? String(d.realCost) : '', score: d.experienceScore ?? 5 };
+  completed.value = false;
   showComplete.value = true;
 }
 async function saveComplete() {
   if (!active.value) return;
   saving.value = true;
+  completed.value = false;
   try {
     await dp.updateDate(active.value.id, {
       isCompleted: true,
@@ -209,13 +194,16 @@ async function saveComplete() {
       location: active.value.location,
       budget: active.value.budget,
       realTime: new Date().toISOString(),
-      realCost: completeForm.value.realCost ?? undefined,
+      realCost: completeForm.value.realCost ? Number(completeForm.value.realCost) : undefined,
       experienceScore: completeForm.value.score,
       remark: active.value.remark,
     });
-    showComplete.value = false;
+    completed.value = true;
     message.success('约会完成');
-    await refresh();
+    window.setTimeout(async () => {
+      showComplete.value = false;
+      await refresh();
+    }, 680);
   } finally {
     saving.value = false;
   }
@@ -249,98 +237,10 @@ onMounted(async () => {
 .card-loc { color: var(--color-cocoa); }
 .card-btn { margin-top: 6px; }
 .score { display: flex; align-items: center; gap: 8px; }
-.modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 @media (max-width: 767px) {
   .cards { grid-template-columns: 1fr; }
 }
 
-/* 美化约会模态框 */
-:global(.dateplan-modal) {
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-}
-:global(.dateplan-modal .n-modal-header) {
-  background: linear-gradient(135deg, #fdf2f8, var(--color-surface)) !important;
-  padding: 18px 24px !important;
-  border-bottom: 1px solid var(--color-border);
-}
-:global(.dateplan-modal .n-modal-header .n-modal-header__close) {
-  top: 16px;
-  right: 16px;
-}
-:global(.dateplan-modal .n-modal-body) {
-  padding: 24px !important;
-}
-:global(.dateplan-modal .n-modal-footer) {
-  padding: 16px 24px !important;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-.dateplan-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.dateplan-form-item {
-  margin-bottom: 0 !important;
-}
-.dateplan-input,
-.dateplan-textarea,
-.dateplan-picker {
-  border-radius: 10px !important;
-}
-.dateplan-textarea :deep(.n-input__textarea),
-.dateplan-textarea :deep(textarea) {
-  font-size: 15px;
-  line-height: 1.7;
-  padding: 12px 14px;
-  border-radius: 10px;
-}
-.dateplan-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.dateplan-btn-cancel {
-  border-radius: 10px;
-  padding: 8px 20px;
-  font-weight: 500;
-}
-.dateplan-btn-primary {
-  border-radius: 10px;
-  padding: 8px 24px;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
-  border: none;
-  box-shadow: 0 4px 12px rgba(255, 111, 125, 0.25);
-  transition: all var(--dur-micro) var(--ease-love);
-}
-.dateplan-btn-primary:hover {
-  box-shadow: 0 6px 16px rgba(255, 111, 125, 0.35);
-  transform: translateY(-1px);
-}
-.dateplan-btn-success {
-  border-radius: 10px;
-  padding: 8px 24px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #52c41a, #389e0d);
-  border: none;
-  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.25);
-  transition: all var(--dur-micro) var(--ease-love);
-}
-.dateplan-btn-success:hover {
-  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.35);
-  transform: translateY(-1px);
-}
-
-@media (max-width: 767px) {
-  :global(.dateplan-modal) {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100dvh;
-    margin: 0;
-    border-radius: 0 !important;
-  }
-}
+.dp-field { display: flex; flex-direction: column; gap: 8px; }
+.dp-label { font-size: 13px; font-weight: 500; color: var(--color-ink-2); padding-left: 2px; }
 </style>

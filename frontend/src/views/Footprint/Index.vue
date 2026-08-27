@@ -9,7 +9,7 @@
 
     <section class="block head-row">
       <IndSectionTitle label="我们的小确幸" :led="true" />
-      <button class="add-btn" v-press-bounce @click="showForm = true">＋ 新增足迹</button>
+      <button class="add-btn" v-press-bounce @click="openAdd">＋ 新增足迹</button>
     </section>
 
     <section class="block">
@@ -54,49 +54,60 @@
     </section>
 
     <!-- 新增 / 编辑弹窗 -->
-    <n-modal
-      v-model:show="showForm"
-      class="fp-modal"
-      preset="card"
-      :title="editingId == null ? '新增足迹' : '修改足迹'"
-      style="width: 92%; max-width: 460px;"
-    >
-      <n-form ref="formRef" :model="form" label-placement="top">
-        <n-form-item label="名称" :rule="requiredRule('给足迹起个名字吧～')">
-          <n-input v-model:value="form.title" placeholder="例如：抱抱 / 亲亲 / 一起看的电影" maxlength="30" show-count />
-        </n-form-item>
-        <n-form-item label="图标 Emoji">
-          <div class="emoji-pick">
-            <button
-              v-for="e in emojiPresets"
-              :key="e"
-              class="emoji-chip"
-              :class="{ on: form.emoji === e }"
-              @click="form.emoji = e"
-            >{{ e }}</button>
-            <n-input v-model:value="form.emoji" placeholder="✨" maxlength="4" class="emoji-input" />
-          </div>
-        </n-form-item>
-        <n-form-item label="目标次数（可选）">
-          <n-input-number v-model:value="form.targetCount" :min="1" :max="9999" placeholder="留空表示不设目标" style="width: 100%" />
-        </n-form-item>
-        <n-form-item label="说明（可选）">
-          <n-input v-model:value="form.description" type="textarea" placeholder="比如：这个月要一起看 10 部电影" maxlength="200" show-count />
-        </n-form-item>
-      </n-form>
-      <template #footer>
-        <div class="modal-foot">
-          <n-button @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" v-press-bounce @click="submit">{{ editingId == null ? '创建' : '保存' }}</n-button>
+    <LoveSheet v-model="showForm" :title="editingId == null ? '新增足迹' : '修改足迹'">
+      <LoveInput
+        v-model="form.title"
+        label="名称"
+        placeholder="例如：抱抱 / 亲亲 / 一起看的电影"
+        :maxlength="30"
+        :counter="true"
+        :invalid="titleInvalid"
+      />
+      <div class="lf-field">
+        <span class="lf-label">图标 Emoji</span>
+        <div class="emoji-pick">
+          <button
+            v-for="e in emojiPresets"
+            :key="e"
+            class="emoji-chip"
+            :class="{ on: form.emoji === e }"
+            @click="form.emoji = e"
+          >{{ e }}</button>
+          <input v-model="form.emoji" placeholder="✨" maxlength="4" class="emoji-input" />
         </div>
+      </div>
+      <LoveInput
+        v-model="form.targetCount"
+        label="目标次数（可选）"
+        type="number"
+        inputmode="numeric"
+        placeholder="留空表示不设目标"
+      />
+      <LoveTextarea
+        v-model="form.description"
+        label="说明（可选）"
+        placeholder="比如：这个月要一起看 10 部电影"
+        :maxlength="200"
+        :counter="true"
+      />
+      <template #footer>
+        <LoveSaveBar
+          :loading="submitting"
+          :success="saved"
+          cancel-text="取消"
+          :save-text="editingId == null ? '创建' : '保存'"
+          @cancel="showForm = false"
+          @save="submit"
+        />
       </template>
-    </n-modal>
+    </LoveSheet>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { NButton, NModal, NForm, NFormItem, NInput, NInputNumber, NPopconfirm } from 'naive-ui';
+import { NPopconfirm } from 'naive-ui';
+import { LoveSheet, LoveInput, LoveTextarea, LoveSaveBar } from '@/components/loveform';
 import type { FootprintDto } from '@/types';
 import { listFootprints, createFootprint, deleteFootprint, incrementFootprint, updateFootprint } from '@/api/footprint';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
@@ -107,23 +118,30 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import { feedback } from '@/utils/feedback';
-import { requiredRule } from '@/utils/formRules';
 
 const { useModuleSync } = useRealtime();
 const loading = ref(true);
 const items = ref<FootprintDto[]>([]);
 const container = ref<HTMLElement>();
-const formRef = ref();
 const showForm = ref(false);
 const submitting = ref(false);
+const saved = ref(false);
+const titleInvalid = ref(false);
 const poppingId = ref<number | null>(null);
 const editingId = ref<number | null>(null);
-const form = ref({ title: '', emoji: '✨', targetCount: null as number | null, description: '' });
+const form = ref({ title: '', emoji: '✨', targetCount: '' as string, description: '' });
 const emojiPresets = ['✨', '🤗', '💋', '💍', '🎬', '🍜', '🌟', '📷', '☕', '🌙'];
 
 function resetForm() {
-  form.value = { title: '', emoji: '✨', targetCount: null, description: '' };
+  form.value = { title: '', emoji: '✨', targetCount: '', description: '' };
   editingId.value = null;
+}
+
+function openAdd() {
+  resetForm();
+  saved.value = false;
+  titleInvalid.value = false;
+  showForm.value = true;
 }
 
 function openEdit(f: FootprintDto) {
@@ -131,9 +149,11 @@ function openEdit(f: FootprintDto) {
   form.value = {
     title: f.title,
     emoji: f.emoji,
-    targetCount: f.targetCount ?? null,
+    targetCount: f.targetCount != null ? String(f.targetCount) : '',
     description: f.description ?? '',
   };
+  saved.value = false;
+  titleInvalid.value = false;
   showForm.value = true;
 }
 
@@ -174,14 +194,17 @@ async function onDelete(f: FootprintDto) {
 }
 
 async function submit() {
-  try {
-    await formRef.value?.validate();
-  } catch { return; }
+  if (!form.value.title.trim()) {
+    titleInvalid.value = true;
+    feedback.warn('给足迹起个名字吧～');
+    return;
+  }
   submitting.value = true;
+  saved.value = false;
   const payload = {
     title: form.value.title.trim(),
     emoji: form.value.emoji || '✨',
-    targetCount: form.value.targetCount,
+    targetCount: form.value.targetCount ? Number(form.value.targetCount) : null,
     description: form.value.description.trim() || null,
   };
   try {
@@ -195,8 +218,8 @@ async function submit() {
       if (i >= 0) items.value[i] = updated;
       feedback.updated('足迹');
     }
-    showForm.value = false;
-    resetForm();
+    saved.value = true;
+    window.setTimeout(() => { showForm.value = false; resetForm(); }, 680);
   } finally { submitting.value = false; }
 }
 
@@ -294,6 +317,11 @@ onMounted(async () => {
 }
 .emoji-chip:hover { border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
 .emoji-chip.on { border-color: var(--color-rose); color: var(--color-rose); background: var(--color-rose-soft); }
-.emoji-input { width: 80px; }
-.modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
+.emoji-input {
+  width: 84px; height: 40px; padding: 0 10px; font-size: 16px; text-align: center;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md);
+  background: var(--color-surface-2); color: var(--color-ink);
+  transition: border-color var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love);
+}
+.emoji-input:focus { outline: none; border-color: var(--color-rose); box-shadow: 0 0 0 3px var(--color-rose-soft); }
 </style>

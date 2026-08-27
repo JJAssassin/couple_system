@@ -100,39 +100,34 @@
     />
 
     <!-- 编辑 模态 -->
-    <n-modal
-      v-model:show="showEdit"
-      class="board-modal"
-      preset="card"
-      title="编辑留言"
-      style="width: 92%; max-width: 520px;"
-    >
-      <n-input v-model:value="editDraft" type="textarea" :autosize="{ minRows: 2, maxRows: 5 }" class="board-textarea" />
-      <div class="colors edit-colors">
-        <button
-          v-for="c in colorPresets"
-          :key="c"
-          class="swatch"
-          :class="{ on: editColor === c }"
-          :style="{ background: c }"
-          @click="hapticForAction('tap'); editColor = editColor === c ? '' : c"
-        />
-        <button class="swatch none" :class="{ on: !editColor }" @click="hapticForAction('tap'); editColor = ''">无</button>
+    <LoveSheet v-model="showEdit" title="编辑留言">
+      <LoveTextarea v-model="editDraft" label="内容" placeholder="写下你的心里话" :rows="3" />
+      <div class="edit-color-block">
+        <span class="edit-color-label">颜色标记</span>
+        <div class="colors edit-colors">
+          <button
+            v-for="c in colorPresets"
+            :key="c"
+            class="swatch"
+            :class="{ on: editColor === c }"
+            :style="{ background: c }"
+            @click="hapticForAction('tap'); editColor = editColor === c ? '' : c"
+          />
+          <button class="swatch none" :class="{ on: !editColor }" @click="hapticForAction('tap'); editColor = ''">无</button>
+        </div>
       </div>
       <template #footer>
-        <div class="board-foot">
-          <n-button class="board-btn-cancel" @click="showEdit = false">取消</n-button>
-          <n-button type="primary" :loading="sending" v-press-bounce @click="submitEdit" class="board-btn-primary">保存</n-button>
-        </div>
+        <LoveSaveBar :loading="sending" :success="saved" cancel-text="取消" save-text="保存" @cancel="showEdit = false" @save="submitEdit" />
       </template>
-    </n-modal>
+    </LoveSheet>
   </div>
   </PullRefresh>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { NButton, NModal, NInput, NPopconfirm, NTabs, NTabPane } from 'naive-ui';
+import { NButton, NInput, NPopconfirm, NTabs, NTabPane } from 'naive-ui';
+import { LoveSheet, LoveTextarea, LoveSaveBar } from '@/components/loveform';
 import { Pin } from 'lucide-vue-next';
 import type { BoardMessageDto, BoardMessageReq } from '@/types';
 import {
@@ -160,6 +155,7 @@ const partnerId = computed(() => partner.status?.partner?.id ?? null);
 
 const loading = ref(true);
 const sending = ref(false);
+const saved = ref(false);
 const container = ref<HTMLElement>();
 const messages = ref<BoardMessageDto[]>([]);
 const activeTab = ref<'public' | 'private'>('public');
@@ -220,16 +216,21 @@ function openEdit(m: BoardMessageDto) {
   editId.value = m.id;
   editDraft.value = m.content;
   editColor.value = m.color ?? '';
+  saved.value = false;
   showEdit.value = true;
 }
 async function submitEdit() {
-  if (!editDraft.value.trim()) return;
+  if (!editDraft.value.trim()) { feedback.warn('留言内容不能为空'); return; }
   sending.value = true;
+  saved.value = false;
   try {
     await updateBoard(editId.value, { content: editDraft.value.trim(), color: editColor.value || undefined });
     feedback.updated('留言');
-    showEdit.value = false;
-    await load();
+    saved.value = true;
+    window.setTimeout(async () => {
+      showEdit.value = false;
+      await load();
+    }, 680);
   } finally { sending.value = false; }
 }
 
@@ -295,72 +296,8 @@ onMounted(async () => {
 .msg-body { margin: 8px 0 0; white-space: pre-wrap; line-height: 1.6; color: var(--color-ink); }
 .msg-img { width: 100%; border-radius: 12px; object-fit: cover; max-height: 260px; margin-top: 8px; }
 .msg-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.edit-colors { margin-top: 12px; }
-.modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
+.edit-color-block { display: flex; flex-direction: column; gap: 8px; }
+.edit-color-label { font-size: 13px; font-weight: 500; color: var(--color-ink-2); padding-left: 2px; }
 
 @media (max-width: 767px) { .composer-bar { flex-direction: column; align-items: stretch; } }
-
-/* 美化留言板模态框 */
-:global(.board-modal) {
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-}
-:global(.board-modal .n-modal-header) {
-  background: linear-gradient(135deg, #fdf2f8, var(--color-surface)) !important;
-  padding: 18px 24px !important;
-  border-bottom: 1px solid var(--color-border);
-}
-:global(.board-modal .n-modal-header .n-modal-header__close) {
-  top: 16px;
-  right: 16px;
-}
-:global(.board-modal .n-modal-body) {
-  padding: 24px !important;
-}
-:global(.board-modal .n-modal-footer) {
-  padding: 16px 24px !important;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-.board-textarea :deep(.n-input__textarea),
-.board-textarea :deep(textarea) {
-  font-size: 15px;
-  line-height: 1.7;
-  padding: 12px 14px;
-  border-radius: 10px;
-}
-.board-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.board-btn-cancel {
-  border-radius: 10px;
-  padding: 8px 20px;
-  font-weight: 500;
-}
-.board-btn-primary {
-  border-radius: 10px;
-  padding: 8px 24px;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
-  border: none;
-  box-shadow: 0 4px 12px rgba(255, 111, 125, 0.25);
-  transition: all var(--dur-micro) var(--ease-love);
-}
-.board-btn-primary:hover {
-  box-shadow: 0 6px 16px rgba(255, 111, 125, 0.35);
-  transform: translateY(-1px);
-}
-
-@media (max-width: 767px) {
-  :global(.board-modal) {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100dvh;
-    margin: 0;
-    border-radius: 0 !important;
-  }
-}
 </style>

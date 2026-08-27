@@ -138,67 +138,77 @@
       @load-more="loadMore"
     />
 
-    <!-- 新增 / 编辑 抽屉（底部抽屉） -->
-    <BottomDrawer v-model="showForm" :title="editing ? '编辑愿望' : '加个愿望'">
-      <n-form ref="formRef" :model="form" label-placement="top" class="wish-form">
-        <n-form-item label="类型" class="wish-form-item">
-          <n-select v-model:value="form.wishType" :options="typeOptions" class="wish-input" />
-        </n-form-item>
-        <n-form-item label="标题" :rule="requiredRule('给愿望起个标题吧～')" class="wish-form-item">
-          <n-input v-model:value="form.title" placeholder="想一起做的事 / 想要的礼物 / 想达成的目标" class="wish-input" />
-        </n-form-item>
-        <n-form-item label="描述" class="wish-form-item">
-          <n-input v-model:value="form.description" type="textarea" placeholder="补充说明（可选）" class="wish-textarea" />
-        </n-form-item>
-        <n-form-item label="预期时间" class="wish-form-item">
-          <n-date-picker v-model:value="expectTs" type="datetime" clearable style="width: 100%" class="wish-picker" />
-        </n-form-item>
-        <n-form-item label="优先级" class="wish-form-item">
-          <n-input-number v-model:value="form.priority" :min="1" :max="3" class="wish-input" />
-        </n-form-item>
-        <n-form-item label="状态" class="wish-form-item">
-          <n-select v-model:value="form.status" :options="statusOptions" class="wish-input" />
-        </n-form-item>
-      </n-form>
-      <div class="wish-foot">
-        <n-button class="wish-btn-cancel" @click="showForm = false">取消</n-button>
-        <n-button type="primary" :loading="submitting" v-press-bounce @click="submitForm" class="wish-btn-primary">保存</n-button>
+    <!-- 新增 / 编辑 愿望：iOS 风表单 -->
+    <LoveSheet v-model="showForm" :title="editing ? '编辑愿望' : '加个愿望'" subtitle="一起想做的事、想要的礼物或目标">
+      <div class="wish-form">
+        <LoveSegmented v-model="form.wishType" label="类型" :options="typeOptions" />
+        <LoveInput
+          v-model="form.title"
+          label="标题"
+          placeholder="想一起做的事 / 想要的礼物 / 想达成的目标"
+          :maxlength="120"
+          counter
+          clearable
+          :invalid="titleInvalid"
+          @update:modelValue="titleInvalid = false"
+        />
+        <LoveTextarea
+          v-model="form.description"
+          label="描述"
+          placeholder="补充说明（可选）"
+          :rows="3"
+          :maxlength="1000"
+        />
+        <LoveDateField v-model="expectTs" label="期望时间" />
+        <LoveSegmented v-model="form.priority" label="优先级" :options="priorityOptions" />
+        <LoveSegmented v-model="form.status" label="状态" :options="statusOptions" />
       </div>
-    </BottomDrawer>
-
-    <!-- 标记完成 模态 -->
-    <n-modal
-      v-model:show="showComplete"
-      class="wish-modal wish-complete-modal"
-      preset="card"
-      title="完成感悟"
-      style="width: 92%; max-width: 480px;"
-    >
-      <n-form label-placement="top" class="wish-form">
-        <n-form-item label="完成感悟" class="wish-form-item">
-          <n-input v-model:value="completeForm.completeRemark" type="textarea" placeholder="写下这一刻的心情～" class="wish-textarea" />
-        </n-form-item>
-        <n-form-item label="完成照片（可选）" class="wish-form-item">
-          <ImageField v-model="completeForm.completeImage" />
-        </n-form-item>
-      </n-form>
       <template #footer>
-        <div class="wish-foot">
-          <n-button class="wish-btn-cancel" @click="showComplete = false">取消</n-button>
-          <n-button type="success" :loading="submitting" v-click-burst @click="submitComplete" class="wish-btn-success">完成啦</n-button>
-        </div>
+        <LoveSaveBar
+          :loading="saving"
+          :success="saved"
+          cancel-text="取消"
+          :save-text="editing ? '保存' : '添加'"
+          @cancel="showForm = false"
+          @save="submitForm"
+        />
       </template>
-    </n-modal>
+    </LoveSheet>
+
+    <!-- 标记完成：iOS 风表单 -->
+    <LoveSheet v-model="showComplete" title="完成感悟" subtitle="记下这一刻的心情">
+      <div class="wish-form">
+        <LoveTextarea
+          v-model="completeForm.completeRemark"
+          label="完成感悟"
+          placeholder="写下这一刻的心情～"
+          :rows="3"
+          :maxlength="1000"
+        />
+        <div class="lf-field">
+          <label class="lf-label">完成照片（可选）</label>
+          <ImageField v-model="completeForm.completeImage" />
+        </div>
+      </div>
+      <template #footer>
+        <LoveSaveBar
+          :loading="savingComplete"
+          :success="savedComplete"
+          cancel-text="取消"
+          save-text="完成啦"
+          @cancel="showComplete = false"
+          @save="submitComplete"
+        />
+      </template>
+    </LoveSheet>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import {
-  NButton, NModal, NForm, NFormItem, NInput, NInputNumber,
-  NSelect, NDatePicker, NTag, NPopconfirm, NTabs, NTabPane,
+  NButton, NTag, NPopconfirm, NTabs, NTabPane,
 } from 'naive-ui';
-import type { FormInst } from 'naive-ui';
 import type { WishDto, WishReq } from '@/types';
 import {
   listWish, createWish, updateWish, deleteWish, claimWish, completeWish,
@@ -211,16 +221,16 @@ import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import ImageField from '@/components/Common/ImageField.vue';
-import { BottomDrawer, SkeletonSettle, FlipCard, SwipeCard } from '@/interactions';
+import { SkeletonSettle, FlipCard, SwipeCard } from '@/interactions';
+import {
+  LoveSheet, LoveInput, LoveTextarea, LoveSegmented, LoveDateField, LoveSaveBar,
+} from '@/components/loveform';
 import { feedback } from '@/utils/feedback';
-import { requiredRule } from '@/utils/formRules';
 
 const notify = useNotifyStore();
 const loading = ref(true);
-const submitting = ref(false);
 const container = ref<HTMLElement>();
 const listEl = ref<HTMLElement>();
-const formRef = ref<FormInst | null>(null);
 
 const activeTab = ref<number>(1);
 const statusFilter = ref<string>('all');
@@ -290,13 +300,22 @@ function fmt(s: string) {
   return `${d.getMonth() + 1}月${d.getDate()}日`;
 }
 
-// ---- 表单 ----
+// ---- 表单（新增 / 编辑）----
 const showForm = ref(false);
 const editing = ref<WishDto | null>(null);
 const expectTs = ref<number | null>(null);
+const saving = ref(false);
+const saved = ref(false);
+const titleInvalid = ref(false);
 const form = reactive<WishReq>({
   wishType: 1, title: '', description: undefined, expectTime: undefined, priority: 2, status: 1,
 });
+
+const priorityOptions = [
+  { label: '低', value: 1 },
+  { label: '中', value: 2 },
+  { label: '高', value: 3 },
+];
 
 function resetForm() {
   Object.assign(form, {
@@ -304,6 +323,9 @@ function resetForm() {
     expectTime: undefined, priority: 2, status: 1,
   });
   expectTs.value = null;
+  titleInvalid.value = false;
+  saving.value = false;
+  saved.value = false;
 }
 
 function openAdd() {
@@ -318,46 +340,63 @@ function openEdit(w: WishDto) {
     priority: w.priority, status: w.status,
   });
   expectTs.value = w.expectTime ? new Date(w.expectTime).getTime() : null;
+  titleInvalid.value = false;
+  saving.value = false;
+  saved.value = false;
   showForm.value = true;
 }
 async function submitForm() {
-  try {
-    await formRef.value?.validate();
-  } catch {
+  if (!form.title.trim()) {
+    titleInvalid.value = true;
+    feedback.warn('给愿望起个标题吧～');
     return;
   }
-  submitting.value = true;
+  saving.value = true;
   try {
     form.expectTime = expectTs.value ? new Date(expectTs.value).toISOString() : undefined;
     if (editing.value) {
       await updateWish(editing.value.id, { ...form });
-      feedback.updated('愿望');
     } else {
       await createWish({ ...form });
-      feedback.created('愿望');
     }
-    showForm.value = false;
-    await load();
-  } finally { submitting.value = false; }
+    saved.value = true;
+    window.setTimeout(async () => {
+      showForm.value = false;
+      if (editing.value) feedback.updated('愿望');
+      else feedback.created('愿望');
+      await load();
+    }, 720);
+  } finally {
+    saving.value = false;
+  }
 }
 
 // ---- 完成 ----
 const showComplete = ref(false);
+const savingComplete = ref(false);
+const savedComplete = ref(false);
 const completeForm = reactive<{ id: number; completeRemark?: string; completeImage?: string }>({
   id: 0, completeRemark: undefined, completeImage: undefined,
 });
 function openComplete(w: WishDto) {
   Object.assign(completeForm, { id: w.id, completeRemark: w.completeRemark, completeImage: w.completeImage });
+  savingComplete.value = false;
+  savedComplete.value = false;
   showComplete.value = true;
 }
 async function submitComplete() {
-  submitting.value = true;
+  savingComplete.value = true;
   try {
     await completeWish({ ...completeForm });
-    feedback.saved('愿望');
-    showComplete.value = false;
-    await load();
-  } finally { submitting.value = false; }
+    savedComplete.value = true;
+    window.setTimeout(async () => {
+      showComplete.value = false;
+      feedback.saved('愿望');
+      await load();
+    }, 720);
+  } finally {
+    savingComplete.value = false;
+  }
 }
 
 async function onClaim(w: WishDto) {
@@ -456,98 +495,4 @@ html:not(.reduce-motion) .wish-face:hover {
   .cards { grid-template-columns: 1fr; }
 }
 
-/* 美化愿望模态框 */
-:global(.wish-modal) {
-  border-radius: 16px !important;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
-}
-:global(.wish-modal .n-modal-header) {
-  background: linear-gradient(135deg, #fff5f6, var(--color-surface)) !important;
-  padding: 18px 24px !important;
-  border-bottom: 1px solid var(--color-border);
-}
-:global(.wish-modal .n-modal-header .n-modal-header__close) {
-  top: 16px;
-  right: 16px;
-}
-:global(.wish-modal .n-modal-body) {
-  padding: 24px !important;
-}
-:global(.wish-modal .n-modal-footer) {
-  padding: 16px 24px !important;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface);
-}
-.wish-form {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-.wish-form-item {
-  margin-bottom: 0 !important;
-}
-.wish-input,
-.wish-textarea,
-.wish-select,
-.wish-picker {
-  border-radius: 10px !important;
-}
-.wish-textarea :deep(.n-input__textarea),
-.wish-textarea :deep(textarea) {
-  font-size: 15px;
-  line-height: 1.7;
-  padding: 12px 14px;
-  border-radius: 10px;
-}
-.wish-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-.wish-btn-cancel {
-  border-radius: 10px;
-  padding: 8px 20px;
-  font-weight: 500;
-}
-.wish-btn-primary {
-  border-radius: 10px;
-  padding: 8px 24px;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
-  border: none;
-  box-shadow: 0 4px 12px rgba(255, 111, 125, 0.25);
-  transition: all var(--dur-micro) var(--ease-love);
-}
-.wish-btn-primary:hover {
-  box-shadow: 0 6px 16px rgba(255, 111, 125, 0.35);
-  transform: translateY(-1px);
-}
-.wish-btn-primary:active {
-  transform: translateY(0);
-}
-.wish-btn-success {
-  border-radius: 10px;
-  padding: 8px 24px;
-  font-weight: 600;
-  background: linear-gradient(135deg, #52c41a, #389e0d);
-  border: none;
-  box-shadow: 0 4px 12px rgba(82, 196, 26, 0.25);
-  transition: all var(--dur-micro) var(--ease-love);
-}
-.wish-btn-success:hover {
-  box-shadow: 0 6px 16px rgba(82, 196, 26, 0.35);
-  transform: translateY(-1px);
-}
-
-@media (max-width: 767px) {
-  :global(.wish-modal),
-  :global(.wish-complete-modal) {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    height: 100dvh;
-    margin: 0;
-    border-radius: 0 !important;
-  }
-}
 </style>

@@ -128,7 +128,7 @@ html:not(.reduce-motion) .love-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22);
 }
-.love-card:active { transform: scale(0.99); }
+.love-card:active { transform: scale(0.985); background: var(--color-rose-soft); }
 
 /* 工程标签：等宽 + 大写 + 宽字距（保留作小标签样式，弱化工业感） */
 .ind-label {

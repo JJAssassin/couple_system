@@ -123,51 +123,44 @@
       @load-more="loadMore"
     />
 
-    <!-- 新增 / 编辑 模态 -->
-    <n-modal
-      v-model:show="showForm"
-      class="todo-modal"
-      preset="card"
-      :title="editing ? '编辑待办' : '加个待办'"
-      style="width: 92%; max-width: 520px;"
-    >
-      <n-form ref="formRef" :model="form" label-placement="top">
-        <n-form-item label="标题" :rule="requiredRule('给待办起个标题吧～')">
-          <n-input v-model:value="form.title" placeholder="要一起做的事 / 要买的东西 / 要完成的任务" />
-        </n-form-item>
-        <n-form-item label="描述">
-          <n-input v-model:value="form.description" type="textarea" placeholder="补充说明（可选）" />
-        </n-form-item>
-        <n-form-item label="分类">
-          <n-input v-model:value="form.category" placeholder="购物 / 家务 / 出行 …（可选）" />
-        </n-form-item>
-        <n-form-item label="期限">
-          <n-date-picker v-model:value="dueTs" type="datetime" clearable style="width: 100%" />
-        </n-form-item>
-        <n-form-item label="优先级">
-          <n-input-number v-model:value="form.priority" :min="1" :max="3" />
-        </n-form-item>
-        <n-form-item label="责任人">
-          <n-select v-model:value="formAssignee" :options="assignOptions" />
-        </n-form-item>
-      </n-form>
+    <!-- 新增 / 编辑 待办：iOS 风表单 -->
+    <LoveSheet v-model="showForm" :title="editing ? '编辑待办' : '加个待办'" subtitle="要一起做的事、要买的东西或任务">
+      <div class="todo-form">
+        <LoveInput
+          v-model="form.title"
+          label="标题"
+          placeholder="要一起做的事 / 要买的东西 / 要完成的任务"
+          :maxlength="120"
+          counter
+          clearable
+          :invalid="titleInvalid"
+          @update:modelValue="titleInvalid = false"
+        />
+        <LoveTextarea v-model="form.description" label="描述" placeholder="补充说明（可选）" :rows="3" :maxlength="1000" />
+        <LoveInput v-model="form.category" label="分类" placeholder="购物 / 家务 / 出行 …（可选）" clearable />
+        <LoveDateField v-model="dueTs" label="期限" />
+        <LoveSegmented v-model="form.priority" label="优先级" :options="priorityOptions" />
+        <LoveSegmented v-model="formAssignee" label="责任人" :options="assignOptions" />
+      </div>
       <template #footer>
-        <div class="modal-foot">
-          <n-button @click="showForm = false">取消</n-button>
-          <n-button type="primary" :loading="submitting" v-press-bounce @click="submitForm">保存</n-button>
-        </div>
+        <LoveSaveBar
+          :loading="saving"
+          :success="saved"
+          cancel-text="取消"
+          :save-text="editing ? '保存' : '添加'"
+          @cancel="showForm = false"
+          @save="submitForm"
+        />
       </template>
-    </n-modal>
+    </LoveSheet>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from 'vue';
 import {
-  NButton, NModal, NForm, NFormItem, NInput, NInputNumber,
-  NSelect, NDatePicker, NTag, NPopconfirm, NTabs, NTabPane, NPopselect,
+  NButton, NTag, NPopconfirm, NTabs, NTabPane, NPopselect,
 } from 'naive-ui';
-import type { FormInst } from 'naive-ui';
 import { SuccessCheck, SwipeCard } from '@/interactions';
 import type { TodoDto, TodoReq } from '@/types';
 import {
@@ -184,16 +177,16 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import { feedback } from '@/utils/feedback';
-import { requiredRule } from '@/utils/formRules';
+import {
+  LoveSheet, LoveInput, LoveTextarea, LoveSegmented, LoveDateField, LoveSaveBar,
+} from '@/components/loveform';
 
 const auth = useAuthStore();
 const partner = usePartnerStore();
 const notify = useNotifyStore();
 const loading = ref(true);
-const submitting = ref(false);
 const container = ref<HTMLElement>();
 const listEl = ref<HTMLElement>();
-const formRef = ref<FormInst | null>(null);
 
 const meId = computed(() => auth.profile?.id ?? 0);
 const mateId = computed(() => partner.status?.partner?.id ?? null);
@@ -263,15 +256,27 @@ function fmt(s: string) {
 const showForm = ref(false);
 const editing = ref<TodoDto | null>(null);
 const dueTs = ref<number | null>(null);
+const saving = ref(false);
+const saved = ref(false);
+const titleInvalid = ref(false);
 const formAssignee = ref<number>(-1);
 const form = reactive<TodoReq>({
   title: '', description: undefined, priority: 2, dueTime: undefined, category: undefined, assigneeUserId: null,
 });
 
+const priorityOptions = [
+  { label: '低', value: 1 },
+  { label: '中', value: 2 },
+  { label: '高', value: 3 },
+];
+
 function resetForm() {
   Object.assign(form, { title: '', description: undefined, priority: 2, dueTime: undefined, category: undefined, assigneeUserId: null });
   formAssignee.value = -1;
   dueTs.value = null;
+  titleInvalid.value = false;
+  saving.value = false;
+  saved.value = false;
 }
 function openAdd() {
   editing.value = null;
@@ -286,15 +291,18 @@ function openEdit(t: TodoDto) {
   });
   formAssignee.value = t.assigneeUserId ?? -1;
   dueTs.value = t.dueTime ? new Date(t.dueTime).getTime() : null;
+  titleInvalid.value = false;
+  saving.value = false;
+  saved.value = false;
   showForm.value = true;
 }
 async function submitForm() {
-  try {
-    await formRef.value?.validate();
-  } catch {
+  if (!form.title.trim()) {
+    titleInvalid.value = true;
+    feedback.warn('给待办起个标题吧～');
     return;
   }
-  submitting.value = true;
+  saving.value = true;
   try {
     form.dueTime = dueTs.value ? new Date(dueTs.value).toISOString() : undefined;
     form.assigneeUserId = formAssignee.value === -1 ? null : formAssignee.value;
@@ -305,9 +313,12 @@ async function submitForm() {
       await createTodo({ ...form });
       feedback.created('待办');
     }
-    showForm.value = false;
-    await load();
-  } finally { submitting.value = false; }
+    saved.value = true;
+    window.setTimeout(async () => {
+      showForm.value = false;
+      await load();
+    }, 720);
+  } finally { saving.value = false; }
 }
 
 async function onToggle(t: TodoDto) {
@@ -378,6 +389,7 @@ onMounted(async () => {
 .todo-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
 .todo-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
+.todo-form { display: flex; flex-direction: column; gap: 18px; }
 
 @media (max-width: 767px) { .cards { grid-template-columns: 1fr; } }
 :global(.todo-modal) { padding: 0 !important; }
