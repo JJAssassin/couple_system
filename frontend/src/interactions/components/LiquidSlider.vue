@@ -2,11 +2,11 @@
   <div
     ref="root"
     class="fx-slider"
-    :class="{ disabled }"
+    :class="{ disabled, dragging }"
     @pointerdown="onDown"
   >
     <div class="fx-slider__track">
-      <div class="fx-slider__fill" :style="{ width: pct + '%' }" />
+      <div class="fx-slider__fill" :style="{ transform: `scaleX(${pct / 100})` }" />
       <div class="fx-slider__knob" :style="{ left: pct + '%' }" />
     </div>
     <div class="fx-slider__value" :class="{ pop }">{{ display }}</div>
@@ -88,9 +88,10 @@ function onDown(e: PointerEvent) {
 }
 /* 液态：填充与旋钮使用同一时长/缓动，三组动画同频同步 */
 .fx-slider__fill {
-  position: absolute; left: 0; top: 0; bottom: 0; border-radius: 999px;
+  position: absolute; left: 0; top: 0; bottom: 0; width: 100%; border-radius: 999px;
   background: linear-gradient(90deg, var(--color-rose-deep, #d88593), var(--color-rose, #ff6f7d));
-  transition: width var(--fx-dur-pop, 320ms) var(--fx-ease-out, ease);
+  transform: scaleX(0); transform-origin: left center;
+  transition: transform var(--fx-dur-pop, 320ms) var(--fx-ease-out, ease);
 }
 .fx-slider__knob {
   position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%;
@@ -99,6 +100,8 @@ function onDown(e: PointerEvent) {
   transform: translate(-50%, -50%);
   transition: left var(--fx-dur-pop, 320ms) var(--fx-ease-out, ease);
 }
+/* 拖拽中关掉 left 过渡：旋钮 1:1 跟手，消除逐帧缓动滞后（frame-smith 反 left 动效） */
+.fx-slider.dragging .fx-slider__knob { transition: none; }
 .fx-slider__value {
   min-width: 42px; text-align: right; font-variant-numeric: tabular-nums;
   font-weight: 600; color: var(--color-ink); font-size: 14px;
