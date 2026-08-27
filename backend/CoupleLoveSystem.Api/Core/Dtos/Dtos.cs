@@ -1,7 +1,23 @@
+using System.ComponentModel.DataAnnotations;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Enums;
 
 namespace CoupleLoveSystem.Core.Dtos;
+
+/// <summary>集中存放字段长度上限，与下方请求 DTO 的 [StringLength] 对齐，便于统一调整。</summary>
+internal static class FieldLimits
+{
+    public const int ShortName = 100;     // 昵称 / 纪念日名 / 足迹标题 / 相册名 / 愿望标题 / 日记标题
+    public const int ShortText = 200;     // 备注 / 地点 / 分类 等中等长度
+    public const int LongText = 2000;     // 描述 / 留言 / 记账备注
+    public const int RichText = 50000;    // 日记正文（富文本）
+    public const int BoardText = 10000;   // 留言板内容
+    public const int ConflictText = 10000;// 矛盾梳理各字段
+    public const int Url = 500;           // 头像 / 封面 / 配图 等路径或 URL
+    public const int Token = 512;         // 刷新令牌等
+    public const int Color = 32;          // 装饰色 / 标签
+    public const int Emoji = 16;          // 单 emoji
+}
 
 public class PagedResult<T>
 {
@@ -14,11 +30,18 @@ public class PagedResult<T>
 // ---------- 认证 ----------
 public class LoginReq
 {
+    [Required(ErrorMessage = "用户名不能为空")]
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "用户名过长")]
     public string UserName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "密码不能为空")]
+    [StringLength(FieldLimits.ShortText, ErrorMessage = "密码过长")]
     public string Password { get; set; } = string.Empty;
 }
 public class RefreshReq
 {
+    [Required(ErrorMessage = "刷新令牌不能为空")]
+    [StringLength(FieldLimits.Token, ErrorMessage = "刷新令牌过长")]
     public string RefreshToken { get; set; } = string.Empty;
 }
 public class LoginResp
@@ -85,11 +108,19 @@ public class AnniversaryDto
 }
 public class AnniversaryReq
 {
+    [Required(ErrorMessage = "纪念日的名称不能为空")]
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "名称过长")]
     public string Name { get; set; } = string.Empty;
+
     public AnniversaryType AnniversaryType { get; set; }
     public DateTime TargetDate { get; set; }
+
+    [StringLength(FieldLimits.Url, ErrorMessage = "封面图路径过长")]
     public string? CoverImage { get; set; }
+
+    [Range(0, 365, ErrorMessage = "提醒天数须在 0-365 之间")]
     public int RemindDays { get; set; }
+
     public bool IsYearly { get; set; } // 是否每年重复
 }
 
@@ -108,7 +139,11 @@ public class UpdateCoupleSettingReq
 {
     // 相恋纪念日可由任一方设置 / 修改（修改后会同步双方首页的恋爱时长计算）。
     public DateTime? LoveStartTime { get; set; }
+
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "情侣名过长")]
     public string? CoupleName { get; set; }
+
+    [StringLength(FieldLimits.Url, ErrorMessage = "情侣头像路径过长")]
     public string? CoupleAvatar { get; set; }
 }
 
@@ -155,9 +190,18 @@ public class FootprintDto
 }
 public class FootprintReq
 {
+    [Required(ErrorMessage = "足迹标题不能为空")]
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "标题过长")]
     public string Title { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "足迹图标不能为空")]
+    [StringLength(FieldLimits.Emoji, ErrorMessage = "图标过长")]
     public string Emoji { get; set; } = "✨";
+
+    [Range(1, 1_000_000, ErrorMessage = "目标次数不合法")]
     public int? TargetCount { get; set; }
+
+    [StringLength(FieldLimits.LongText, ErrorMessage = "说明过长")]
     public string? Description { get; set; }
 }
 

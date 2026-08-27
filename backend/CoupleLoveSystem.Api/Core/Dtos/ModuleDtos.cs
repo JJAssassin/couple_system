@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Enums;
 
@@ -19,12 +20,25 @@ public class DiaryDto
 }
 public class DiaryReq
 {
+    [Required(ErrorMessage = "日记标题不能为空")]
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "标题过长")]
     public string Title { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "日记内容不能为空")]
+    [StringLength(FieldLimits.RichText, ErrorMessage = "内容过长")]
     public string Content { get; set; } = string.Empty;
+
+    [StringLength(FieldLimits.Color, ErrorMessage = "心情标签过长")]
     public string? MoodTag { get; set; }
+
+    [Range(1, 10, ErrorMessage = "心情评分须在 1-10 之间")]
     public int MoodScore { get; set; } = 5;
+
     public PermissionType PermissionType { get; set; } = PermissionType.Public;
+
+    [StringLength(FieldLimits.Color, ErrorMessage = "天气信息过长")]
     public string? Weather { get; set; }
+
     public DateTime? DiaryDate { get; set; }
 }
 public class DiaryCommentDto
@@ -38,6 +52,9 @@ public class DiaryCommentDto
 public class DiaryCommentReq
 {
     public long DiaryId { get; set; }
+
+    [Required(ErrorMessage = "评论内容不能为空")]
+    [StringLength(FieldLimits.LongText, ErrorMessage = "评论过长")]
     public string Content { get; set; } = string.Empty;
 }
 #endregion
@@ -63,17 +80,30 @@ public class WishDto
 public class WishReq
 {
     public WishType WishType { get; set; }
+
+    [Required(ErrorMessage = "愿望标题不能为空")]
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "标题过长")]
     public string Title { get; set; } = string.Empty;
+
+    [StringLength(FieldLimits.LongText, ErrorMessage = "描述过长")]
     public string? Description { get; set; }
+
     public DateTime? ExpectTime { get; set; }
+
+    [Range(1, 5, ErrorMessage = "优先级须在 1-5 之间")]
     public int Priority { get; set; } = 2;
+
     public WishStatus Status { get; set; } = WishStatus.NotStart;
 }
 public class WishClaimReq { public long Id { get; set; } }
 public class WishCompleteReq
 {
     public long Id { get; set; }
+
+    [StringLength(FieldLimits.LongText, ErrorMessage = "完成备注过长")]
     public string? CompleteRemark { get; set; }
+
+    [StringLength(FieldLimits.Url, ErrorMessage = "完成图片路径过长")]
     public string? CompleteImage { get; set; }
 }
 #endregion
@@ -98,11 +128,21 @@ public class TodoDto
 }
 public class TodoReq
 {
+    [Required(ErrorMessage = "待办标题不能为空")]
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "标题过长")]
     public string Title { get; set; } = string.Empty;
+
+    [StringLength(FieldLimits.LongText, ErrorMessage = "描述过长")]
     public string? Description { get; set; }
+
+    [Range(1, 3, ErrorMessage = "优先级须在 1-3 之间")]
     public int Priority { get; set; } = 2;
+
     public DateTime? DueTime { get; set; }
+
+    [StringLength(FieldLimits.Color, ErrorMessage = "分类标签过长")]
     public string? Category { get; set; }
+
     public long? AssigneeUserId { get; set; }
 }
 public class TodoIdReq { public long Id { get; set; } }
@@ -127,9 +167,16 @@ public class BoardMessageDto
 }
 public class BoardMessageReq
 {
+    [Required(ErrorMessage = "留言内容不能为空")]
+    [StringLength(FieldLimits.BoardText, ErrorMessage = "留言过长")]
     public string Content { get; set; } = string.Empty;
+
+    [StringLength(FieldLimits.Color, ErrorMessage = "装饰色过长")]
     public string? Color { get; set; }
+
+    [StringLength(FieldLimits.Url, ErrorMessage = "配图路径过长")]
     public string? ImageUrl { get; set; }
+
     public bool IsPrivate { get; set; }
     public long? ReceiverUserId { get; set; }
     public DateTime? ScheduledAt { get; set; }
@@ -148,8 +195,15 @@ public class QuizQuestionDto
 }
 public class QuizQuestionReq
 {
+    [Required(ErrorMessage = "题面不能为空")]
+    [StringLength(FieldLimits.ShortText, ErrorMessage = "题面过长")]
     public string Text { get; set; } = string.Empty;
+
+    [MinLength(2, ErrorMessage = "至少需要 2 个选项")]
+    [MaxLength(20, ErrorMessage = "选项过多")]
     public List<string> Options { get; set; } = new();
+
+    [StringLength(FieldLimits.Color, ErrorMessage = "分类过长")]
     public string? Category { get; set; }
 }
 public class QuizRoundDto
@@ -182,7 +236,7 @@ public class QuizRoundDto
 }
 /// <summary>发起一局：QuestionId 为空则从题库随机抽一题（优先抽没玩过的）。</summary>
 public class QuizStartReq { public long? QuestionId { get; set; } }
-public class QuizAnswerReq { public long RoundId { get; set; } public int Answer { get; set; } }
+public class QuizAnswerReq { public long RoundId { get; set; } [Range(0, 100, ErrorMessage = "选项索引不合法")] public int Answer { get; set; } }
 public class QuizIdReq { public long Id { get; set; } }
 public class QuizStatsDto
 {
@@ -208,8 +262,14 @@ public class AlbumDto
 }
 public class AlbumReq
 {
+    [Required(ErrorMessage = "相册名称不能为空")]
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "相册名称过长")]
     public string AlbumName { get; set; } = string.Empty;
+
+    [StringLength(FieldLimits.Url, ErrorMessage = "封面路径过长")]
     public string? Cover { get; set; }
+
+    [StringLength(FieldLimits.ShortText, ErrorMessage = "相册备注过长")]
     public string? Remark { get; set; }
 }
 public class ImageDto
@@ -246,14 +306,31 @@ public class ConflictDto
 public class ConflictReq
 {
     public DateTime OccurTime { get; set; }
+
+    [Required(ErrorMessage = "矛盾摘要不能为空")]
+    [StringLength(FieldLimits.ShortText, ErrorMessage = "摘要过长")]
     public string Summary { get; set; } = string.Empty;
+
     public ConflictLevel ConflictLevel { get; set; } = ConflictLevel.Small;
+
+    [StringLength(FieldLimits.ConflictText, ErrorMessage = "想法记录过长")]
     public string? MyThoughtA { get; set; }
+
+    [StringLength(FieldLimits.ConflictText, ErrorMessage = "想法记录过长")]
     public string? MyThoughtB { get; set; }
+
     public DateTime? ReconcileTime { get; set; }
+
+    [StringLength(FieldLimits.ConflictText, ErrorMessage = "和解方式过长")]
     public string? ReconcileWay { get; set; }
+
+    [StringLength(FieldLimits.ConflictText, ErrorMessage = "反思过长")]
     public string? ReflectA { get; set; }
+
+    [StringLength(FieldLimits.ConflictText, ErrorMessage = "反思过长")]
     public string? ReflectB { get; set; }
+
+    [StringLength(FieldLimits.ConflictText, ErrorMessage = "结论过长")]
     public string? RuleConclusion { get; set; }
 }
 #endregion
@@ -273,9 +350,15 @@ public class AccountRecordDto
 public class AccountRecordReq
 {
     public AccountRecordType RecordType { get; set; }
+
+    [Required(ErrorMessage = "记账分类不能为空")]
+    [StringLength(FieldLimits.Color, ErrorMessage = "分类过长")]
     public string Category { get; set; } = string.Empty;
+
     public decimal Amount { get; set; }
     public DateTime RecordTime { get; set; }
+
+    [StringLength(FieldLimits.ShortText, ErrorMessage = "备注过长")]
     public string? Remark { get; set; }
 }
 
@@ -291,9 +374,15 @@ public class BudgetDto
 
 public class BudgetSetReq
 {
+    [Range(2000, 2999, ErrorMessage = "年份不合法")]
     public int Year { get; set; }
+
+    [Range(1, 12, ErrorMessage = "月份须在 1-12 之间")]
     public int Month { get; set; }
+
+    [StringLength(FieldLimits.Color, ErrorMessage = "分类过长")]
     public string? Category { get; set; }
+
     public decimal LimitAmount { get; set; }
 }
 
@@ -358,10 +447,17 @@ public class DateRecordReq
     public bool IsCompleted { get; set; }
     public DateTime? PlanTime { get; set; }
     public DateTime? RealTime { get; set; }
+
+    [StringLength(FieldLimits.ShortText, ErrorMessage = "地点过长")]
     public string? Location { get; set; }
+
     public decimal? Budget { get; set; }
     public decimal? RealCost { get; set; }
+
+    [Range(1, 5, ErrorMessage = "体验评分须在 1-5 之间")]
     public int? ExperienceScore { get; set; }
+
+    [StringLength(FieldLimits.LongText, ErrorMessage = "备注过长")]
     public string? Remark { get; set; }
 }
 public class DateStatsDto
@@ -403,9 +499,16 @@ public class TimelineItemDto
 #region 用户 / 导出
 public class UpdateProfileReq
 {
+    [StringLength(FieldLimits.ShortName, ErrorMessage = "昵称过长")]
     public string? NickName { get; set; }
+
+    [StringLength(FieldLimits.Url, ErrorMessage = "头像路径过长")]
     public string? Avatar { get; set; }
+
+    [StringLength(FieldLimits.ShortText, ErrorMessage = "原密码过长")]
     public string? OldPassword { get; set; }
+
+    [StringLength(FieldLimits.ShortText, ErrorMessage = "新密码过长")]
     public string? NewPassword { get; set; }
 }
 public class ExportResp

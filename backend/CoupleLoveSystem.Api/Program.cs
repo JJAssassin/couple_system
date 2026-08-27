@@ -8,6 +8,8 @@ using CoupleLoveSystem.Infrastructure.Redis;
 using CoupleLoveSystem.Infrastructure.Cache;
 using CoupleLoveSystem.Infrastructure.Realtime;
 using CoupleLoveSystem.Infrastructure.Repositories;
+using CoupleLoveSystem.Core.Result;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.FileProviders;
@@ -170,7 +172,22 @@ builder.Services.AddAuthorization();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ApiRateLimiter>(); // 速率限制（P2-1/2/3），基于 ICacheService 固定窗口计数
 builder.Services.AddControllers()
-    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
+    .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase)
+    // P2-6：模型绑定校验失败时，返回与全站一致的 ApiResult 信封（code=400 / success=false），
+    // 而非默认的 ValidationProblemDetails，保证前端拦截器（依赖 body.success / body.msg）能正确提示。
+    .ConfigureApiBehaviorOptions(o =>
+    {
+        o.InvalidModelStateResponseFactory = context =>
+        {
+            var fieldErrors = context.ModelState
+                .Where(kv => kv.Value is not null && kv.Value.Errors.Count > 0)
+                .ToDictionary(kv => kv.Key, kv => kv.Value!.Errors.Select(e => e.ErrorMessage).ToArray());
+            var firstMsg = fieldErrors.Values.SelectMany(v => v).FirstOrDefault() ?? "请求参数校验失败";
+            var result = ApiResult<object>.Fail(ErrorCode.ParamInvalid, firstMsg);
+            result.Data = fieldErrors;
+            return new BadRequestObjectResult(result);
+        };
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<DbSeeder>();
