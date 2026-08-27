@@ -1,8 +1,10 @@
 node_modules/
 dist/
+dist-ssr/
 dist.del.*
-dist.trash
-*.tsbuildinfo
-vitest.config.ts.timestamp-*.mjs
+.env
+.env.*
+!.env.example
+.vscode/
 .git/
-.gitignore
+*.log

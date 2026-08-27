@@ -1,6 +1,18 @@
-**/bin/
-**/obj/
-**/TestResults/
-**/*.user
+# 评审 #1：把含明文的配置与密钥挡在镜像层之外，绝不打进容器
+CoupleLoveSystem.Api/appsettings.json
+CoupleLoveSystem.Api/appsettings.Development.json
+*.pem
+*.key
+keys/
+secrets/
+MySQL账号密码.txt
+
+# 构建产物与版本控制
+bin/
+obj/
+.vs/
 .git/
-.gitignore
+logs/
+*.log
+TestResults/
+coverage/

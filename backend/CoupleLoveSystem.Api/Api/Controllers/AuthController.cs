@@ -28,17 +28,24 @@ public class AuthController : BaseController
 
     [HttpPost("refresh")]
     [AllowAnonymous]
-    public async Task<ActionResult<ApiResult<LoginResp>>> Refresh([FromBody] RefreshReq req, CancellationToken ct)
+    public async Task<ActionResult<ApiResult<LoginResp>>> Refresh(CancellationToken ct)
     {
-        var resp = await _auth.RefreshAsync(req.RefreshToken, ct);
+        // refresh 仅经 HttpOnly Cookie cl_rt 传递（前端 JS 不可读、不可写），不再接受 body 传入，
+        // 杜绝 XSS 凭 body 调用刷新（评审 #2）。缺失 Cookie 即 401。
+        var rt = Request.Cookies["cl_rt"];
+        if (string.IsNullOrEmpty(rt))
+            return Unauthorized(ApiResult<LoginResp>.Fail(ErrorCode.ParamInvalid, "缺少刷新令牌"));
+        var resp = await _auth.RefreshAsync(rt, ct);
         return Ok(ApiResult<LoginResp>.Ok(resp));
     }
 
     [HttpPost("logout")]
     [Authorize]
-    public async Task<ActionResult<ApiResult<object>>> Logout([FromBody] RefreshReq req, CancellationToken ct)
+    public async Task<ActionResult<ApiResult<object>>> Logout(CancellationToken ct)
     {
-        await _auth.LogoutAsync(req.RefreshToken, ct);
-        return Ok(ApiResults.Ok(new { } , "已退出"));
+        var rt = Request.Cookies["cl_rt"];
+        if (!string.IsNullOrEmpty(rt))
+            await _auth.LogoutAsync(rt, ct);
+        return Ok(ApiResults.Ok(new { }, "已退出"));
     }
 }

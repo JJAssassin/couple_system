@@ -96,6 +96,9 @@ public class AuthService
 
         // 媒体访问 Cookie（HttpOnly）：供 /uploads 静态资源鉴权网关读取（P2-4）。
         // <img src> 无法在请求头带 Bearer，故用 HttpOnly Cookie 在同源下自动携带；仅当处于真实 HTTP 请求上下文时写入。
+        // 刷新令牌 Cookie（HttpOnly，禁止 JS 读取）：前端不再持久化 refreshToken，杜绝 XSS 窃取长生命周期凭据（评审 #2）。
+        // 浏览器在 /auth/refresh、/auth/logout 同源请求时自动携带。Secure=false 兼容本机 http 与 https 隧道两种访问；
+        // 若全站统一 https，可改为 Secure = app.Environment.IsProduction()。
         var httpCtx = _http?.HttpContext;
         if (httpCtx?.Response.HasStarted == false)
         {
@@ -107,12 +110,20 @@ public class AuthService
                 MaxAge = TimeSpan.FromMinutes(_jwt.AccessExpireMinutes),
                 Path = "/"
             });
+            httpCtx.Response.Cookies.Append("cl_rt", refresh, new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                Secure = false,
+                MaxAge = ttl,
+                Path = "/"
+            });
         }
 
         return new LoginResp
         {
             AccessToken = access,
-            RefreshToken = refresh,
+            RefreshToken = string.Empty, // 不再经 JSON 返回；refresh 仅存于 HttpOnly Cookie cl_rt
             ExpiresIn = _jwt.AccessExpireMinutes * 60,
             UserProfile = ToProfile(user)
         };
@@ -124,10 +135,13 @@ public class AuthService
         if (userId == null) return;
         await _tokens.RemoveAsync($"rt:{userId}", ct);
         await _tokens.RemoveAsync($"rti:{refreshToken}", ct);
-        // 注销时清除媒体访问 Cookie，避免令牌失效后 Cookie 仍可用于下载（P2-4）
+        // 注销时清除媒体访问 Cookie 与刷新 Cookie，避免令牌失效后 Cookie 仍可用（P2-4 / 评审 #2）
         var httpCtx = _http?.HttpContext;
         if (httpCtx?.Response.HasStarted == false)
+        {
             httpCtx.Response.Cookies.Delete("cl_at");
+            httpCtx.Response.Cookies.Delete("cl_rt");
+        }
     }
 
     // 反向索引 rti:{token}→userId，O(1) 反查，消除原全表扫描

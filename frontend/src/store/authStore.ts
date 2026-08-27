@@ -4,132 +4,77 @@ import axios from 'axios';
 import api from '@/utils/request';
 import type { ApiResult, LoginResp, UserProfile } from '@/types';
 
-const LS_AT = 'cl_at';
-const LS_RT = 'cl_rt';
+// 安全说明（评审 #2）：
+// - accessToken 仅存于内存（ref），不落 localStorage/sessionStorage/cookie，降低 XSS 持久化窃取面；
+//   内存令牌仅在页面存活期内有效，刷新页面后由 /auth/refresh（HttpOnly Cookie cl_rt 自动携带）重建。
+// - refreshToken 完全由后端写入 HttpOnly Cookie cl_rt，前端 JS 不可读、不可写，杜绝 XSS 窃取长生命周期凭据。
+// - 仅把非敏感的用户资料缓存到 localStorage，便于刷新后即时渲染头像/昵称，不触及任何令牌。
+const LS_PROFILE = 'cl_profile';
 
-// 存储读写统一容错 + 三层持久化兜底（localStorage → sessionStorage → cookie）：
-// vivo 等国产浏览器会清理 localStorage（省电/清理/无痕），页面重载后 token 读不到
-// 就会被路由守卫无提示踢回登录页。这里把 token 同时镜像到 sessionStorage 与 cookie
-// （浏览器最基础的持久化机制），初始化时按 本地 → 会话 → cookie 顺序回退读取。
-function cookieSet(key: string, value: string) {
+function safeProfileGet(): UserProfile | null {
   try {
-    if (typeof document === 'undefined') return;
-    document.cookie = `${key}=${encodeURIComponent(value)}; path=/; max-age=${7 * 24 * 3600}; SameSite=Lax`;
+    const v = localStorage.getItem(LS_PROFILE);
+    return v ? (JSON.parse(v) as UserProfile) : null;
   } catch {
-    /* 忽略 */
+    return null;
   }
 }
-function cookieGet(key: string): string {
+function safeProfileSet(p: UserProfile | null) {
   try {
-    if (typeof document === 'undefined') return '';
-    const m = document.cookie.match(new RegExp('(?:^|; )' + key + '=([^;]*)'));
-    return m ? decodeURIComponent(m[1]) : '';
-  } catch {
-    return '';
-  }
-}
-function cookieRemove(key: string) {
-  try {
-    if (typeof document === 'undefined') return;
-    document.cookie = `${key}=; path=/; max-age=0`;
+    if (p) localStorage.setItem(LS_PROFILE, JSON.stringify(p));
+    else localStorage.removeItem(LS_PROFILE);
   } catch {
     /* 忽略 */
   }
-}
-function safeSet(key: string, value: string) {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    /* 存储被禁时忽略 */
-  }
-  try {
-    sessionStorage.setItem('m_' + key, value);
-  } catch {
-    /* 忽略 */
-  }
-  cookieSet(key, value);
-}
-function safeGet(key: string): string {
-  try {
-    const v = localStorage.getItem(key);
-    if (v != null) return v;
-  } catch {
-    /* 忽略 */
-  }
-  try {
-    const s = sessionStorage.getItem('m_' + key);
-    if (s != null) return s;
-  } catch {
-    /* 忽略 */
-  }
-  return cookieGet(key);
-}
-function safeRemove(key: string) {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    /* 忽略 */
-  }
-  try {
-    sessionStorage.removeItem('m_' + key);
-  } catch {
-    /* 忽略 */
-  }
-  cookieRemove(key);
 }
 
 export const useAuthStore = defineStore('auth', () => {
-  const accessToken = ref(safeGet(LS_AT));
-  const refreshToken = ref(safeGet(LS_RT));
-  const profile = ref<UserProfile | null>(null);
+  const accessToken = ref<string>('');
+  const profile = ref<UserProfile | null>(safeProfileGet());
 
-  function setTokens(at: string, rt: string) {
-    accessToken.value = at;
-    refreshToken.value = rt;
-    safeSet(LS_AT, at);
-    safeSet(LS_RT, rt);
-  }
   function setAccessToken(at: string) {
     accessToken.value = at;
-    safeSet(LS_AT, at);
+  }
+  function setSession(at: string, p: UserProfile) {
+    accessToken.value = at;
+    profile.value = p;
+    safeProfileSet(p);
   }
 
   async function login(userName: string, password: string) {
     const { data } = await api.post('/auth/login', { userName, password });
     const r = (data as { data: LoginResp }).data;
-    setTokens(r.accessToken, r.refreshToken);
-    profile.value = r.userProfile;
+    setSession(r.accessToken, r.userProfile);
   }
 
   async function logout() {
     try {
-      await api.post('/auth/logout', { refreshToken: refreshToken.value });
+      // 后端据 HttpOnly Cookie cl_rt 清除刷新令牌，前端无需传递任何令牌
+      await api.post('/auth/logout');
     } catch {
       /* 忽略错误，强制本地登出 */
     }
     accessToken.value = '';
-    refreshToken.value = '';
     profile.value = null;
-    safeRemove(LS_AT);
-    safeRemove(LS_RT);
+    safeProfileSet(null);
   }
 
   /**
-   * 静默续期：用持久化的 refreshToken 重建 accessToken。
-   * 用于「内存令牌在 WebView 重载后丢失、但 refreshToken 仍在」的场景（iOS 原生 App 偶发），
-   * 避免路由守卫把已登录用户误踢回登录框。用裸 axios 直连 /auth/refresh，绕过请求拦截器，
-   * 以免与拦截器内的刷新逻辑互相递归。
+   * 静默续期：浏览器自动携带 HttpOnly Cookie cl_rt 调 /auth/refresh，
+   * 后端轮换并返回新 accessToken（refresh 仍只在 Cookie 中，前端不接触）。
    */
   async function restoreSession() {
-    const rt = refreshToken.value;
-    if (!rt) return;
     const { data } = await axios.post(
       `${import.meta.env.VITE_API_BASE || '/api'}/auth/refresh`,
-      { refreshToken: rt },
+      {},
     );
     const r = (data as ApiResult<LoginResp>).data;
-    setTokens(r.accessToken, r.refreshToken);
+    setAccessToken(r.accessToken);
+    if (r.userProfile) {
+      profile.value = r.userProfile;
+      safeProfileSet(r.userProfile);
+    }
   }
 
-  return { accessToken, refreshToken, profile, setTokens, setAccessToken, login, logout, restoreSession };
+  return { accessToken, profile, setAccessToken, setSession, login, logout, restoreSession };
 });

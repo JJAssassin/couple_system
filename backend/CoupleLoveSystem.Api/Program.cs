@@ -256,7 +256,10 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
-app.UseSwagger(); app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger(); app.UseSwaggerUI();
+}
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseMiddleware<AccessTokenScrubMiddleware>(); // 防御性脱敏：摘除任何 ?access_token=，防令牌写入日志
 app.UseMiddleware<SecurityHeadersMiddleware>(); // 安全响应头：HSTS / CSP / X-Frame-Options / nosniff 等

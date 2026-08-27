@@ -36,10 +36,10 @@ pwa.setupNotifications();
 // 移动端：左边缘右滑返回上一页
 useSwipeBack();
 
-// 原生 WebView 兜底：重载后内存令牌丢失但 refreshToken 仍在（cookie/localStorage）时，
-// 启动即静默用 refreshToken 续期，避免路由守卫把已登录用户误踢回登录框（iOS App「点一下退回登录」）。
+// 原生 WebView / 普通刷新兜底：重载后内存 accessToken 丢失，但 HttpOnly Cookie cl_rt 仍在，
+// 启动即静默调 /auth/refresh 续期，避免路由守卫把已登录用户误踢回登录框（评审 #2）。
 const auth = useAuthStore();
-if (auth.refreshToken && !auth.accessToken) {
+if (!auth.accessToken) {
   auth.restoreSession().catch(() => {});
 }
 </script>

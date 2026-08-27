@@ -15,9 +15,10 @@ namespace CoupleLoveSystem.Infrastructure.Persistence;
 public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<CoupleDbContext>
 {
     // 设计期不连库即可建模（migrations add 不会打开连接）；显式 ServerVersion 避免 AutoDetect 触发连接。
-    // 默认指向本机开发库；可用环境变量 DESIGN_MYSQL_CONN 覆盖（如 CI / 其他环境）。
+    // 默认指向本机开发库；真实连接串（含密码）请勿硬编码在此，改用环境变量 DESIGN_MYSQL_CONN 注入
+    // （如 CI / 本地连库做 migrations script / database update 时）。默认占位串不含任何真实凭据。
     private const string DefaultConn =
-        "Server=127.0.0.1;Port=3306;Database=couple_love;User=app;Password=HmI63f2QE8Y2yvGmQjtb;CharSet=utf8mb4;";
+        "Server=127.0.0.1;Port=3306;Database=couple_love;User=app;Password=DEV_PLACEHOLDER;CharSet=utf8mb4;";
 
     public CoupleDbContext CreateDbContext(string[] args)
     {

@@ -15,7 +15,7 @@ export async function joinPartner(code: string): Promise<JoinResult> {
   const { data } = await api.post('/partner/join', { code });
   const r = (data as ApiResult<JoinResult>).data;
   const auth = useAuthStore();
-  auth.setTokens(r.tokens.accessToken, r.tokens.refreshToken);
+  auth.setAccessToken(r.tokens.accessToken);
   return r;
 }
 
@@ -24,7 +24,7 @@ export async function unbindPartner(): Promise<LoginResp> {
   const { data } = await api.post('/partner/unbind');
   const r = (data as ApiResult<LoginResp>).data;
   const auth = useAuthStore();
-  auth.setTokens(r.accessToken, r.refreshToken);
+  auth.setAccessToken(r.accessToken);
   return r;
 }
 

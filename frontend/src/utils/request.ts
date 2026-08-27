@@ -73,11 +73,10 @@ api.interceptors.response.use(
 );
 
 async function doRefresh(): Promise<string> {
-  const rt = useAuthStore().refreshToken;
-  const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken: rt });
+  // refresh 走 HttpOnly Cookie cl_rt，浏览器自动携带，前端不持有（评审 #2）
+  const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {});
   const payload = (data as ApiResult<LoginResp>).data;
-  // 保存轮换后的新 refreshToken，否则后端轮换后旧 token 失效会反复 401 登出
-  useAuthStore().setTokens(payload.accessToken, payload.refreshToken);
+  useAuthStore().setSession(payload.accessToken, payload.userProfile);
   return payload.accessToken;
 }
 

@@ -2,6 +2,7 @@ using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Enums;
 using BCrypt.Net;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace CoupleLoveSystem.Infrastructure.Persistence;
 
@@ -13,7 +14,12 @@ namespace CoupleLoveSystem.Infrastructure.Persistence;
 public class DbSeeder
 {
     private readonly CoupleDbContext _db;
-    public DbSeeder(CoupleDbContext db) => _db = db;
+    private readonly bool _createDemoAccounts;
+    public DbSeeder(CoupleDbContext db, IConfiguration config)
+    {
+        _db = db;
+        _createDemoAccounts = config.GetValue("Seed:CreateDemoAccounts", true);
+    }
 
     public async Task SeedAsync()
     {
@@ -37,8 +43,9 @@ public class DbSeeder
             await _db.SaveChangesAsync();
         }
 
-        // 已存在任意账号则跳过创建（demo 双账号已就绪）
-        if (await _db.Users.AnyAsync()) return;
+        // 已存在任意账号、或显式关闭默认账号种子，则跳过创建
+        // （评审 #5：生产可在 compose .env 设 Seed__CreateDemoAccounts=false 禁用弱密码账号）
+        if (!_createDemoAccounts || await _db.Users.AnyAsync()) return;
 
         var start = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
         var hash = BCrypt.Net.BCrypt.HashPassword("123456");
