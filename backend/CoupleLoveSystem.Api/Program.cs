@@ -168,6 +168,7 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
 
 builder.Services.AddAuthorization();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<ApiRateLimiter>(); // 速率限制（P2-1/2/3），基于 ICacheService 固定窗口计数
 builder.Services.AddControllers()
     .AddJsonOptions(o => o.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase);
 builder.Services.AddEndpointsApiExplorer();
@@ -265,6 +266,7 @@ app.UseMiddleware<AccessTokenScrubMiddleware>(); // 防御性脱敏：摘除任�
 app.UseMiddleware<SecurityHeadersMiddleware>(); // 安全响应头：HSTS / CSP / X-Frame-Options / nosniff 等
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<RateLimitMiddleware>(); // 三档限速（P2-1/2/3）：刷新/绑定按IP、导出按用户，超限429
 app.UseCoupleScope(); // 在每个请求中写入当前情侣空间（CoupleContext.Current），供隔离过滤与盖章使用
 app.MapControllers();
 app.MapHub<SyncHub>("/hub/sync");
