@@ -23,6 +23,10 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// P2-13：从 User Secrets（开发/本机）或环境变量（Docker/生产，ConnectionStrings__MySql）读取数据库连接串，
+// 避免在 appsettings.json 落地明文密码。User Secrets 存储在 %APPDATA%/Microsoft/UserSecrets 下，不随仓库提交。
+builder.Configuration.AddUserSecrets<Program>(optional: true);
+
 // ---- Serilog ----
 builder.Host.UseSerilog((ctx, cfg) =>
     cfg.ReadFrom.Configuration(ctx.Configuration)
