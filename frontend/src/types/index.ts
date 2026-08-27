@@ -42,6 +42,7 @@ export interface CoupleSetting {
   loveStartTime?: string | null;
   coupleName?: string | null;
   coupleAvatar?: string | null;
+  lunarLoveStart?: string | null; // 相恋日的农历表示（审计 #14）
 }
 
 // ---------- 绑定对方 ----------
@@ -82,6 +83,7 @@ export interface AnniversaryDto {
   daysLeft: number;
   isYearly: boolean;
   nextOccurrence?: string | null;
+  lunarDate?: string | null; // 目标日的农历表示（审计 #14）
   createUserId: number;
   createTime: string;
 }

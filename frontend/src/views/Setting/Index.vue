@@ -31,7 +31,7 @@
           <input type="date" v-model="loveStartInput" class="native-date" :max="todayStr" />
           <p class="lock-note">
             {{ coupleSetting?.loveStartTime
-              ? `已设为 ${coupleSetting.loveStartTime.slice(0, 10)} · 修改后首页「在一起多少天」会同步更新`
+              ? `已设为 ${coupleSetting.loveStartTime.slice(0, 10)}${coupleSetting.lunarLoveStart ? '（' + coupleSetting.lunarLoveStart + '）' : ''} · 修改后首页「在一起多少天」会同步更新`
               : '设置后首页会显示「在一起多少天」，双方实时同步' }}
           </p>
         </NFormItem>

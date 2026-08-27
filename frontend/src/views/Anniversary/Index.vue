@@ -26,6 +26,7 @@
 
         <div class="hero-sub">
           下次 <b>{{ fmtDate(hero.nextOccurrence) }}</b>
+          <span v-if="hero.lunarDate" class="ac-lunar">{{ hero.lunarDate }}</span>
           <span class="dot-sep">·</span>提前 {{ hero.remindDays }} 天提醒
           <span v-if="isReminderNear(hero)" class="hero-remind">提醒临近</span>
         </div>
@@ -48,7 +49,7 @@
           <GradientText tag="span" class="hero-days">{{ daysSince(pastHero) }}</GradientText>
           <span class="hero-unit">天</span>
         </div>
-        <div class="hero-sub">目标日 {{ fmtDate(pastHero.targetDate) }} · 今年已无更多纪念日</div>
+        <div class="hero-sub">目标日 {{ fmtDate(pastHero.targetDate) }}<span v-if="pastHero.lunarDate" class="ac-lunar">{{ pastHero.lunarDate }}</span> · 今年已无更多纪念日</div>
       </div>
     </section>
 
@@ -76,6 +77,7 @@
 
           <div class="ac-meta">
             <span>目标日 {{ fmtDate(a.targetDate) }}</span>
+            <span v-if="a.lunarDate" class="ac-lunar">· {{ a.lunarDate }}</span>
             <span class="dot-sep">·</span>
             <span>提前 {{ a.remindDays }} 天提醒</span>
           </div>
@@ -90,7 +92,7 @@
                 <span v-if="(cd(a.nextOccurrence)?.d ?? 99) <= 2" class="ac-hms">
                   {{ pad(cd(a.nextOccurrence)?.h) }}:{{ pad(cd(a.nextOccurrence)?.m) }}:{{ pad(cd(a.nextOccurrence)?.s) }}
                 </span>
-                <div class="ac-next-date">下次 {{ fmtDate(a.nextOccurrence) }}</div>
+                <div class="ac-next-date">下次 {{ fmtDate(a.nextOccurrence) }}<span v-if="a.lunarDate" class="ac-lunar">· {{ a.lunarDate }}</span></div>
               </template>
             </template>
             <template v-else>
@@ -505,6 +507,7 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 .ac-days { font-weight: 800; font-size: 16px; }
 .ac-hms { margin-left: 6px; font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--color-accent); }
 .ac-next-date { font-size: 12px; color: var(--color-ink-3); margin-top: 2px; }
+.ac-lunar { color: var(--color-rose); font-weight: 600; margin-left: 6px; white-space: nowrap; }
 .ac-today { color: var(--color-rose); font-weight: 800; font-size: 15px; }
 .ac-expired { color: var(--color-ink-3); }
 

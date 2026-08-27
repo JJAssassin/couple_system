@@ -1,4 +1,5 @@
 using CoupleLoveSystem.Api;
+using CoupleLoveSystem.Core;
 using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Result;
@@ -96,6 +97,7 @@ public class CoupleService
     {
         LoveStartTime = s.LoveStartTime,
         CoupleName = s.CoupleName,
-        CoupleAvatar = s.CoupleAvatar
+        CoupleAvatar = s.CoupleAvatar,
+        LunarLoveStart = s.LoveStartTime.HasValue ? LunarHelper.ToLunarString(s.LoveStartTime.Value) : null
     };
 }

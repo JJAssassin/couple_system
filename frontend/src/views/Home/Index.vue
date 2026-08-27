@@ -108,7 +108,7 @@
             <span v-if="a.isYearly" class="yr-badge">每年</span>
           </div>
           <div class="days">还有 <b>{{ a.daysLeft }}</b> 天</div>
-          <div class="next" v-if="a.nextOccurrence">下次 {{ fmtMD(a.nextOccurrence) }}</div>
+          <div class="next" v-if="a.nextOccurrence">下次 {{ fmtMD(a.nextOccurrence) }}<span v-if="a.lunarDate" class="hm-lunar">{{ a.lunarDate }}</span></div>
           <div class="next expired" v-else>已过去</div>
         </IndCard>
       </div>
@@ -565,6 +565,7 @@ onMounted(async () => {
 }
 .mini .next { font-size: 11px; color: var(--color-ink-3); margin-top: 4px; font-family: var(--font-mono); }
 .mini .next.expired { color: var(--color-ink-3); }
+.hm-lunar { color: var(--color-rose); font-weight: 600; margin-left: 4px; }
 .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .stat-link { cursor: pointer; transition: transform var(--dur-pop) var(--ease-love); }
 .stat-link:hover { transform: translateY(-3px); }

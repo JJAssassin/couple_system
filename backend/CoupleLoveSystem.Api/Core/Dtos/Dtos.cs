@@ -103,6 +103,7 @@ public class AnniversaryDto
     public int DaysLeft { get; set; } // 前端展示用，后端按下一次发生日期推算
     public bool IsYearly { get; set; } // 是否每年重复
     public DateTime? NextOccurrence { get; set; } // 下一次实际发生日期（每年重复则滚动到下一年）
+    public string? LunarDate { get; set; } // 目标日的农历表示（农历X年X月X），前端展示用（审计 #14）
     public long CreateUserId { get; set; }
     public DateTime CreateTime { get; set; }
 }
@@ -130,6 +131,7 @@ public class CoupleSettingDto
     public DateTime? LoveStartTime { get; set; }
     public string? CoupleName { get; set; }
     public string? CoupleAvatar { get; set; }
+    public string? LunarLoveStart { get; set; } // 相恋日的农历表示，前端展示用（审计 #14）
 }
 public class SetLoveStartReq
 {

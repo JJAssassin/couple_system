@@ -1,3 +1,4 @@
+using CoupleLoveSystem.Core;
 using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Infrastructure.Cache;
@@ -170,7 +171,8 @@ public class HomeService
             Id = a.Id, Name = a.Name, AnniversaryType = a.AnniversaryType,
             TargetDate = a.TargetDate, CoverImage = a.CoverImage, RemindDays = a.RemindDays,
             IsYearly = a.IsYearly, NextOccurrence = next,
-            DaysLeft = days, CreateUserId = a.CreateUserId, CreateTime = a.CreateTime
+            DaysLeft = days, CreateUserId = a.CreateUserId, CreateTime = a.CreateTime,
+            LunarDate = LunarHelper.ToLunarString(a.TargetDate)
         };
     }
 
