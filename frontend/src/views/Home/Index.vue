@@ -115,23 +115,23 @@
       <IndEmpty v-else title="还没有纪念日" desc="在「设置 / 时间轴」里记下一个重要的日子吧" />
     </section>
 
-    <!-- 统计看板 -->
+    <!-- 趋势数据带：双图并列，缩短纵向、制造节奏层次 -->
     <section class="block">
-      <IndSectionTitle label="心情趋势 · 近 30 天" :led="true" />
-      <IndCard>
-        <div class="screen">
-          <ChartWrap :option="moodOption" />
-        </div>
-      </IndCard>
-    </section>
-
-    <section class="block">
-      <IndSectionTitle label="矛盾趋势 · 近 6 月" :led="true" />
-      <IndCard>
-        <div class="screen">
-          <ChartWrap :option="conflictOption" />
-        </div>
-      </IndCard>
+      <IndSectionTitle label="数据趋势" :led="true" />
+      <div class="trend-grid">
+        <IndCard class="trend-cell">
+          <div class="viz-title">心情趋势 · 近 30 天</div>
+          <div class="screen">
+            <ChartWrap :option="moodOption" />
+          </div>
+        </IndCard>
+        <IndCard class="trend-cell">
+          <div class="viz-title">矛盾趋势 · 近 6 月</div>
+          <div class="screen">
+            <ChartWrap :option="conflictOption" />
+          </div>
+        </IndCard>
+      </div>
     </section>
 
     <!-- 关键指标 -->
@@ -480,7 +480,7 @@ onMounted(async () => {
   display: inline-block;
 }
 .hero-days {
-  font-size: 52px; font-weight: 600; color: var(--color-rose);
+  font-size: 52px; font-weight: 800; color: var(--color-rose);
   display: flex; align-items: baseline; justify-content: center; gap: 8px;
   margin-top: 6px;
   animation: heartbeat 2.6s var(--ease-love) infinite;
@@ -575,6 +575,10 @@ onMounted(async () => {
 .viz-card:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.3), 0 10px 28px -10px rgba(122, 100, 98, 0.18); }
 .viz-title { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 2px; }
 .viz-hint { margin-top: 10px; font-size: 12px; color: var(--color-ink-3); text-align: center; }
+
+/* 趋势数据带：与「关系数据」区对齐，2 列并列、窄屏回落单列 */
+.trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.trend-cell { padding: 12px 12px 6px; }
 
 /* feed */
 .feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
