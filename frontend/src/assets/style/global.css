@@ -12,6 +12,9 @@
   --color-rose-pressed: #e25a68;  /* pressed */
   --color-rose-soft: #ffe9ec;     /* 浅玫瑰底（active 态 / 浅填充） */
   --color-rose-deep: #D88593;     /* 玫瑰粉（图表 / 装饰次色） */
+  --color-income: #5BB98C;        /* 收入 / 正向（绿） */
+  --color-income-soft: #e7f6ee;   /* 收入浅底（ok 标签 / 渐变起色） */
+  --color-income-deep: #2f9e6b;   /* 收入深（文字） */
 
   /* —— 中性 / 背景 —— */
   --color-cream: #F9F6F4;         /* 全局底：暖白奶油 */
@@ -24,7 +27,7 @@
   /* —— 文字（炭灰，分级满足 AA） —— */
   --color-ink: #1F2937;           /* 主文字 */
   --color-ink-2: #4B5563;         /* 次级 / 标签 */
-  --color-ink-3: #9CA3AF;         /* 弱文字 / 元信息 */
+  --color-ink-3: #6B7280;         /* 弱文字 / 元信息（加深以满足 WCAG AA 4.5:1） */
   --color-ink-soft: #F3F4F6;      /* 极浅底 / 细边框 */
 
   /* —— 圆角（注塑柔润，非锐角） —— */
@@ -43,6 +46,9 @@
   --dur-micro: 180ms;
   --dur-pop: 300ms;
   --dur-page: 380ms;
+  /* 柔和阴影令牌：供组件 inline box-shadow 复用，统一取代各页面自写值 */
+  --shadow-card: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  --shadow-float: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.20);
 }
 
 :root {
@@ -94,9 +100,12 @@ html.dark {
   --color-surface-2: #322a30;
   --color-ink: #f3ecee;
   --color-ink-2: #cabdc1;
-  --color-ink-3: #968a8f;
+  --color-ink-3: #a89ba0;
   --color-ink-soft: #2e262b;
   --color-rose-deep: #e3a3ad;
+  --color-income: #6ec79a;          /* 收入绿（暗色） */
+  --color-income-soft: rgba(94, 185, 140, 0.16);
+  --color-income-deep: #7fd0a8;
   --color-cocoa: #b89a9e;
   --color-border: rgba(255, 255, 255, 0.09);
   --color-rose-soft: rgba(255, 111, 125, 0.16);

@@ -465,7 +465,7 @@ onMounted(async () => {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-card);
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -474,7 +474,7 @@ onMounted(async () => {
 }
 html:not(.reduce-motion) .wish-face:hover {
   transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-float);
 }
 .wish-back-label { font-weight: 600; color: var(--color-ink); }
 .wish-desc-full { margin: 0; color: var(--color-ink-2); line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
