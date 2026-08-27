@@ -16,7 +16,7 @@ public class MessageController : BaseController
     [HttpGet("list")]
     public async Task<ActionResult<ApiResult<PagedResult<SystemMessageDto>>>> List(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default) =>
-        Ok(ApiResult<PagedResult<SystemMessageDto>>.Ok(await _svc.ListAsync(CurrentUserId, page, pageSize, ct)));
+        Ok(ApiResult<PagedResult<SystemMessageDto>>.Ok(await _svc.ListAsync(CurrentUserId, page, Math.Clamp(pageSize, 1, 100), ct)));
 
     [HttpGet("unread/count")]
     public async Task<ActionResult<ApiResult<int>>> UnreadCount(CancellationToken ct = default) =>

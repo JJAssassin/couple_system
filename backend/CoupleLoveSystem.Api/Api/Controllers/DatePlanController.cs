@@ -16,7 +16,7 @@ public class DatePlanController : BaseController
     [HttpGet("list")]
     public async Task<ActionResult<ApiResult<PagedResult<DateRecordDto>>>> List(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default) =>
-        Ok(ApiResult<PagedResult<DateRecordDto>>.Ok(await _svc.ListAsync(page, pageSize, ct)));
+        Ok(ApiResult<PagedResult<DateRecordDto>>.Ok(await _svc.ListAsync(page, Math.Clamp(pageSize, 1, 100), ct)));
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResult<DateRecordDto>>> Get(long id, CancellationToken ct = default) =>

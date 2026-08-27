@@ -59,6 +59,15 @@ public class ImageController : BaseController
             await file.CopyToAsync(fs, ct);
         }
 
+        // P2-15：写入前校验 albumId 归属当前情侣，防止图片被挂到他人相册造成归属错乱。
+        // _db.Albums 受全局情侣过滤器约束，查不到即代表该相册不属于当前情侣（或不存在）。
+        if (albumId > 0)
+        {
+            var album = await _db.Albums.FirstOrDefaultAsync(a => a.Id == albumId, ct);
+            if (album == null)
+                throw new ForbiddenException("相册不存在或无权访问");
+        }
+
         var img = new CoupleImage
         {
             AlbumId = albumId,

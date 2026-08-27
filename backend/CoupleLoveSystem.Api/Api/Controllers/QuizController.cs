@@ -35,7 +35,7 @@ public class QuizController : BaseController
     [HttpGet("rounds")]
     public async Task<ActionResult<ApiResult<PagedResult<QuizRoundDto>>>> Rounds(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 100, CancellationToken ct = default) =>
-        Ok(ApiResult<PagedResult<QuizRoundDto>>.Ok(await _svc.ListRoundsAsync(page, pageSize, CurrentUserId, ct)));
+        Ok(ApiResult<PagedResult<QuizRoundDto>>.Ok(await _svc.ListRoundsAsync(page, Math.Clamp(pageSize, 1, 100), CurrentUserId, ct)));
 
     [HttpGet("round/{id:long}")]
     public async Task<ActionResult<ApiResult<QuizRoundDto>>> Round(long id, CancellationToken ct) =>

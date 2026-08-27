@@ -16,7 +16,7 @@ public class ConflictController : BaseController
     [HttpGet("list")]
     public async Task<ActionResult<ApiResult<PagedResult<ConflictDto>>>> List(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default) =>
-        Ok(ApiResult<PagedResult<ConflictDto>>.Ok(await _svc.ListAsync(page, pageSize, ct)));
+        Ok(ApiResult<PagedResult<ConflictDto>>.Ok(await _svc.ListAsync(page, Math.Clamp(pageSize, 1, 100), ct)));
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResult<ConflictDto>>> Get(long id, CancellationToken ct) =>

@@ -16,7 +16,7 @@ public class BoardMessageController : BaseController
     [HttpGet("list")]
     public async Task<ActionResult<ApiResult<PagedResult<BoardMessageDto>>>> List(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 200, CancellationToken ct = default) =>
-        Ok(ApiResult<PagedResult<BoardMessageDto>>.Ok(await _svc.ListAsync(page, pageSize, CurrentUserId, ct)));
+        Ok(ApiResult<PagedResult<BoardMessageDto>>.Ok(await _svc.ListAsync(page, Math.Clamp(pageSize, 1, 100), CurrentUserId, ct)));
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResult<BoardMessageDto>>> Get(long id, CancellationToken ct) =>
