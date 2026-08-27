@@ -22,14 +22,14 @@
           @click="onIncrement(f)"
         >
           <div class="fp-actions">
-            <button class="edit-float" @click.stop="openEdit(f)" title="修改"><Pencil :size="14" /></button>
+            <button class="edit-float" @click.stop="openEdit(f)" title="修改" aria-label="修改"><Pencil :size="14" /></button>
             <n-popconfirm
               positive-text="删除"
               negative-text="取消"
               @positive-click="onDelete(f)"
             >
               <template #trigger>
-                <button class="del-float" @click.stop title="删除"><X :size="16" /></button>
+                <button class="del-float" @click.stop title="删除" aria-label="删除"><X :size="16" /></button>
               </template>
               确定删除「{{ f.title }}」吗？计数记录会一并清除。
             </n-popconfirm>

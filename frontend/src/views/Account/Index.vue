@@ -156,7 +156,7 @@
           <NDatePicker v-model:value="bForm.monthTs" type="month" style="width: 100%" class="budget-picker" />
         </NFormItem>
         <NFormItem label="当月总预算（拖动滑块快速设定）" class="budget-form-item">
-          <LiquidSlider v-model="budgetTotal" :min="0" :max="20000" :step="100" suffix="元" />
+          <LiquidSlider v-model="budgetTotal" :min="0" :max="20000" :step="100" suffix="元" label="当月总预算" />
         </NFormItem>
         <NButton type="primary" block v-press-bounce :disabled="bForm.total == null" @click="saveTotal" class="budget-btn-primary">保存总预算</NButton>
       </NForm>

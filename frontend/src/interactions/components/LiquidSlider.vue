@@ -3,7 +3,15 @@
     ref="root"
     class="fx-slider"
     :class="{ disabled, dragging }"
+    role="slider"
+    :aria-valuemin="min"
+    :aria-valuemax="max"
+    :aria-valuenow="modelValue"
+    :aria-valuetext="String(display)"
+    :aria-label="label"
+    :tabindex="disabled ? -1 : 0"
     @pointerdown="onDown"
+    @keydown="onKey"
   >
     <div class="fx-slider__track">
       <div class="fx-slider__fill" :style="{ transform: `scaleX(${pct / 100})` }" />
@@ -26,6 +34,7 @@ const props = withDefaults(
     disabled?: boolean;
     decimals?: number;
     suffix?: string;
+    label?: string;
   }>(),
   { min: 0, max: 100, step: 1, disabled: false, decimals: 0, suffix: '' }
 );
@@ -73,6 +82,24 @@ function onDown(e: PointerEvent) {
   };
   window.addEventListener('pointermove', move);
   window.addEventListener('pointerup', up);
+}
+function onKey(e: KeyboardEvent) {
+  if (props.disabled) return;
+  const big = props.step * 10;
+  let v: number | null = null;
+  switch (e.key) {
+    case 'ArrowRight':
+    case 'ArrowUp': v = props.modelValue + props.step; break;
+    case 'ArrowLeft':
+    case 'ArrowDown': v = props.modelValue - props.step; break;
+    case 'PageUp': v = props.modelValue + big; break;
+    case 'PageDown': v = props.modelValue - big; break;
+    case 'Home': v = props.min; break;
+    case 'End': v = props.max; break;
+    default: return;
+  }
+  e.preventDefault();
+  set(snap(v), true);
 }
 </script>
 

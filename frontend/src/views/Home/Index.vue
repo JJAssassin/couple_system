@@ -23,7 +23,7 @@
         <div class="hero-lovedate">
           <Heart :size="14" />
           <span>{{ fmtDate(loveInfo.loveStartTime) }}</span>
-          <span class="hero-edit" @click="openLoveEditor">修改</span>
+          <span class="hero-edit" role="button" tabindex="0" @click="openLoveEditor" @keydown.enter.prevent="openLoveEditor" @keydown.space.prevent="openLoveEditor">修改</span>
         </div>
         <div v-if="showLoveEditor" class="hero-set-form">
           <input type="date" v-model="loveStartInput" class="love-input" :max="todayStr" />
@@ -136,13 +136,13 @@
 
     <!-- 关键指标 -->
     <section class="block stat-row">
-      <div class="stat-link" @click="go('wish')">
+      <div class="stat-link" role="button" tabindex="0" aria-label="查看愿望完成率" @click="go('wish')" @keydown.enter.prevent="go('wish')" @keydown.space.prevent="go('wish')">
         <IndStatCard label="愿望完成率" :value="dashboard.wishCompleteRate + '%'" />
       </div>
-      <div class="stat-link" @click="go('account')">
+      <div class="stat-link" role="button" tabindex="0" aria-label="查看共同余额" @click="go('account')" @keydown.enter.prevent="go('account')" @keydown.space.prevent="go('account')">
         <IndStatCard label="共同余额" :value="'¥' + dashboard.accountSummary.balance.toFixed(2)" />
       </div>
-      <div class="stat-link" @click="go('diary')">
+      <div class="stat-link" role="button" tabindex="0" aria-label="查看连续互动" @click="go('diary')" @keydown.enter.prevent="go('diary')" @keydown.space.prevent="go('diary')">
         <IndStatCard label="连续互动" :value="dashboard.activeStreakDays + ' 天'" />
       </div>
     </section>
@@ -151,11 +151,11 @@
     <section class="block">
       <IndSectionTitle label="关系数据 · 一目了然" :led="true" />
       <div class="viz-grid">
-        <IndCard class="viz-card" @click="go('wish')">
+        <IndCard class="viz-card" role="button" tabindex="0" aria-label="查看愿望完成率" @click="go('wish')" @keydown.enter.prevent="go('wish')" @keydown.space.prevent="go('wish')">
           <div class="viz-title">愿望完成率</div>
           <ChartWrap :option="wishGaugeOption" height="210px" />
         </IndCard>
-        <IndCard class="viz-card" @click="go('account')">
+        <IndCard class="viz-card" role="button" tabindex="0" aria-label="查看共同收支" @click="go('account')" @keydown.enter.prevent="go('account')" @keydown.space.prevent="go('account')">
           <div class="viz-title">共同收支</div>
           <ChartWrap :option="accountDonutOption" height="210px" />
         </IndCard>

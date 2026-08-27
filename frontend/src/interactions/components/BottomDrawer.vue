@@ -1,7 +1,7 @@
 <template>
   <teleport to="body">
     <div v-if="visible" class="fx-drawer-root">
-      <div class="fx-drawer-mask" :class="{ closing }" @click="close" />
+      <div class="fx-drawer-mask" :class="{ closing }" role="button" tabindex="0" aria-label="关闭" @click="close" @keydown.enter.prevent="close" @keydown.space.prevent="close" />
       <div class="fx-drawer-panel" :class="{ closing, reduced }" role="dialog" aria-modal="true">
         <div class="fx-drawer-grab" />
         <div v-if="title || $slots.head" class="fx-drawer-head">

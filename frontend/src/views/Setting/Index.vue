@@ -28,7 +28,7 @@
       <p class="sub-text">相恋纪念日 / 情侣昵称由任一方设置，双方首页与设置同步生效。</p>
       <NForm label-placement="top">
         <NFormItem label="相恋纪念日">
-          <input type="date" v-model="loveStartInput" class="native-date" :max="todayStr" />
+          <input type="date" v-model="loveStartInput" class="native-date" :max="todayStr" aria-label="相恋纪念日" />
           <p class="lock-note">
             {{ coupleSetting?.loveStartTime
               ? `已设为 ${coupleSetting.loveStartTime.slice(0, 10)}${coupleSetting.lunarLoveStart ? '（' + coupleSetting.lunarLoveStart + '）' : ''} · 修改后首页「在一起多少天」会同步更新`
@@ -112,7 +112,7 @@
       </p>
       <div class="set-row">
         <span>减少动效</span>
-        <FinesseSwitch :model-value="setting.reduceMotion" @update:model-value="(v: boolean) => setting.setReduceMotion(v)" />
+        <FinesseSwitch :model-value="setting.reduceMotion" label="减少动效" @update:model-value="(v: boolean) => setting.setReduceMotion(v)" />
       </div>
       <div class="set-row">
         <span>主题色</span>
@@ -140,7 +140,7 @@
       <p class="sub-text">开启后，App 在后台时收到 TA 的新消息或动态，会以系统通知提醒你（需先授权通知权限）。</p>
       <div class="set-row">
         <span>系统通知</span>
-        <FinesseSwitch :model-value="setting.notifications" :disabled="!notifySupported" @update:model-value="onToggleNotify" />
+        <FinesseSwitch :model-value="setting.notifications" :disabled="!notifySupported" label="系统通知" @update:model-value="onToggleNotify" />
       </div>
       <p v-if="!notifySupported" class="theme-hint">
         当前浏览器不支持系统通知；可在手机浏览器「添加到主屏」获得类 App 体验。

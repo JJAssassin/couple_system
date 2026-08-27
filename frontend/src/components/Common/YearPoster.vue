@@ -1,7 +1,7 @@
 <template>
   <teleport to="body">
     <transition name="poster-fade">
-      <div v-if="visible" class="poster-mask" @click.self="visible = false">
+      <div v-if="visible" class="poster-mask" role="button" tabindex="0" aria-label="关闭" @click.self="visible = false" @keydown.enter.prevent="visible = false" @keydown.space.prevent="visible = false">
         <div class="poster-wrap">
           <canvas ref="cv" width="1080" height="1440" class="poster-canvas" />
           <div class="poster-actions">

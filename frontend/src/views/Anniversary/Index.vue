@@ -153,7 +153,7 @@
           <div class="yearly-title">是否每年重复</div>
           <div class="yearly-hint">{{ form.isYearly ? '每年同一天自动提醒' : '仅此一次，过期不再提醒' }}</div>
         </div>
-        <n-switch v-model:value="form.isYearly" />
+        <n-switch v-model:value="form.isYearly" aria-label="是否每年重复" />
       </div>
       <div class="lf-field">
         <span class="lf-label">封面图（可选）</span>

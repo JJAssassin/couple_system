@@ -29,6 +29,7 @@
         type="textarea"
         :autosize="{ minRows: 2, maxRows: 5 }"
         placeholder="写点什么给对方吧～"
+        aria-label="留言内容"
         @keydown.ctrl.enter="send"
       />
       <div class="composer-bar">

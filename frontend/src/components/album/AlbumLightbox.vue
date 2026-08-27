@@ -9,19 +9,19 @@
       <div class="lb-bar">
         <span class="lb-count">{{ current + 1 }} / {{ images.length }}</span>
         <div class="lb-actions">
-          <button class="lb-btn" :class="{ on: isFav }" :title="isFav ? '取消收藏' : '收藏'" @click.stop="cur && emit('toggleFav', cur.id)">
+          <button class="lb-btn" :class="{ on: isFav }" :title="isFav ? '取消收藏' : '收藏'" :aria-label="isFav ? '取消收藏' : '收藏'" @click.stop="cur && emit('toggleFav', cur.id)">
             <Heart :size="17" :fill="isFav ? 'currentColor' : 'none'" />
           </button>
-          <button class="lb-btn" title="缩小" @click.stop="zoomBy(-0.5)">－</button>
-          <button class="lb-btn" title="放大" @click.stop="zoomBy(0.5)">＋</button>
-          <button class="lb-btn" title="适应 / 1:1" @click.stop="resetView">⤢</button>
-          <button class="lb-btn close" title="关闭 (Esc)" @click.stop="close">✕</button>
+          <button class="lb-btn" title="缩小" aria-label="缩小" @click.stop="zoomBy(-0.5)">－</button>
+          <button class="lb-btn" title="放大" aria-label="放大" @click.stop="zoomBy(0.5)">＋</button>
+          <button class="lb-btn" title="适应 / 1:1" aria-label="适应屏幕" @click.stop="resetView">⤢</button>
+          <button class="lb-btn close" title="关闭 (Esc)" aria-label="关闭" @click.stop="close">✕</button>
         </div>
       </div>
 
       <!-- 上一张 / 下一张 -->
-      <button class="lb-nav prev" title="上一张 (←)" @click.stop="prev">‹</button>
-      <button class="lb-nav next" title="下一张 (→)" @click.stop="next">›</button>
+      <button class="lb-nav prev" title="上一张 (←)" aria-label="上一张" @click.stop="prev">‹</button>
+      <button class="lb-nav next" title="下一张 (→)" aria-label="下一张" @click.stop="next">›</button>
 
       <!-- 图片舞台 -->
       <div

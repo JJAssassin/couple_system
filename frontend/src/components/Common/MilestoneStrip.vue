@@ -2,7 +2,7 @@
   <section class="block">
     <IndSectionTitle label="恋爱里程碑" :led="true" />
     <div class="ms-strip">
-      <div v-for="m in list" :key="m.days" class="ms" :class="{ reached: m.reached }" @click="go">
+      <div v-for="m in list" :key="m.days" class="ms" :class="{ reached: m.reached }" role="button" tabindex="0" :aria-label="m.title" @click="go" @keydown.enter.prevent="go" @keydown.space.prevent="go">
         <span class="ms-ico"><component :is="m.icon" :size="20" :stroke-width="1.8" /></span>
         <div class="ms-title">{{ m.title }}</div>
         <div class="ms-days">{{ m.days }} 天</div>

@@ -1,7 +1,7 @@
 <template>
   <teleport to="body">
     <transition name="upd-fade">
-      <div v-if="info" class="upd-mask" @click.self="later">
+      <div v-if="info" class="upd-mask" role="button" tabindex="0" aria-label="关闭" @click.self="later" @keydown.enter.prevent="later" @keydown.space.prevent="later">
         <div class="upd-card">
           <div class="upd-ico">💗</div>
           <div class="upd-title">发现新版本 v{{ info.versionName }}</div>

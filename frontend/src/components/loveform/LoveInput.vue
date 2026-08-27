@@ -1,9 +1,10 @@
 <template>
   <div class="lf-field">
-    <label v-if="label" class="lf-label">{{ label }}</label>
+    <label v-if="label" class="lf-label" :for="uid">{{ label }}</label>
     <div class="lf-input-wrap" :class="{ 'is-focused': focused, 'is-invalid': invalid }">
       <span v-if="$slots.leading" class="lf-leading"><slot name="leading" /></span>
       <input
+        :id="uid"
         class="lf-input"
         :type="type"
         :value="modelValue"
@@ -11,6 +12,7 @@
         :maxlength="maxlength"
         :inputmode="inputmode"
         :enterkeyhint="enterkeyhint"
+        :aria-label="label || placeholder"
         @input="onInput"
         @focus="focused = true"
         @blur="focused = false"
@@ -44,6 +46,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 const focused = ref(false);
+const uid = 'lfi-' + Math.random().toString(36).slice(2, 9);
 
 function onInput(e: Event) {
   emit('update:modelValue', (e.target as HTMLInputElement).value);

@@ -1,7 +1,7 @@
 <template>
   <teleport to="body">
     <transition name="rem-fade">
-      <div v-if="tip" class="rem-tip" @click="open">
+      <div v-if="tip" class="rem-tip" role="button" tabindex="0" aria-label="查看纪念日提醒" @click="open" @keydown.enter.prevent="open" @keydown.space.prevent="open">
         <span class="rem-ico">💝</span>
         <div class="rem-body">
           <div class="rem-title">{{ tip.title }}</div>

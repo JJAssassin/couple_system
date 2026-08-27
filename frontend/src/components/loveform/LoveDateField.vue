@@ -12,6 +12,7 @@
         class="lf-date-native"
         :type="mode === 'datetime' ? 'datetime-local' : 'date'"
         :value="nativeValue"
+        :aria-label="label || placeholder"
         @change="onChange"
       />
     </button>

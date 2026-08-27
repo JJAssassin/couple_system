@@ -3,7 +3,7 @@
     <div class="brand">
       <span class="brand-mark"><Heart :size="18" :stroke-width="1.8" /></span>
       <GradientText v-if="!collapsed" tag="span" class="brand-name">我们的小世界</GradientText>
-      <button v-if="!collapsed" class="bell" v-ripple @click="togglePanel" title="消息">
+      <button v-if="!collapsed" class="bell" v-ripple @click="togglePanel" title="消息" aria-label="消息">
         <Mail :size="18" :stroke-width="1.8" />
         <span v-if="unread > 0" class="badge">{{ unread > 99 ? '99+' : unread }}</span>
       </button>
@@ -20,7 +20,7 @@
           <button class="ph-title" @click="goMessage">消息通知</button>
           <div class="ph-right">
             <button v-if="unread > 0" class="ph-all" @click="markAllRead">全部已读</button>
-            <button class="close" @click="panelOpen = false">×</button>
+            <button class="close" @click="panelOpen = false" aria-label="关闭消息面板">×</button>
           </div>
         </div>
         <div v-if="loading" class="skeleton">加载中…</div>
@@ -50,6 +50,7 @@
         :to="item.to"
         class="nav-item"
         v-ripple
+        :aria-label="item.label"
         @click="hapticForAction('tap'); onClickNav"
       >
         <span class="ico"><component :is="item.icon" :size="18" :stroke-width="1.8" /></span>

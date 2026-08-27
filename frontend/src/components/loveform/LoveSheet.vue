@@ -2,7 +2,7 @@
   <Teleport to="body">
     <Transition :name="isBottom ? 'lsheet-bottom' : 'lsheet-center'" @after-leave="onAfterLeave">
       <div v-if="show" class="lsheet-root" :class="{ 'is-bottom': isBottom }">
-        <div class="lsheet-mask" :class="{ 'is-closable': maskClosable }" @click="onMaskClick" />
+        <div class="lsheet-mask" :class="{ 'is-closable': maskClosable }" role="button" tabindex="0" aria-label="关闭" @click="onMaskClick" @keydown.enter.prevent="onMaskClick" @keydown.space.prevent="onMaskClick" />
         <div
           ref="panel"
           class="lsheet-panel"

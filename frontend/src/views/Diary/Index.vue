@@ -127,6 +127,7 @@
               type="textarea"
               placeholder="说点什么…"
               class="comment-input"
+              aria-label="评论内容"
               :autosize="{ minRows: 3, maxRows: 8 }"
             />
             <n-button type="primary" :loading="sending" :disabled="!commentText.trim()" v-click-burst @click="sendComment">

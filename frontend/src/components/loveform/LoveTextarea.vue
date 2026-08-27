@@ -1,17 +1,19 @@
 <template>
   <div class="lf-field">
-    <label v-if="label" class="lf-label">
+    <label v-if="label" class="lf-label" :for="uid">
       <span>{{ label }}</span>
       <span v-if="counter && maxlength" class="lf-count">{{ String(modelValue ?? '').length }}/{{ maxlength }}</span>
     </label>
     <div class="lf-textarea-wrap" :class="{ 'is-focused': focused, 'is-invalid': invalid }">
       <textarea
+        :id="uid"
         ref="ta"
         class="lf-textarea"
         :value="modelValue"
         :placeholder="placeholder"
         :maxlength="maxlength"
         :rows="rows"
+        :aria-label="label || placeholder"
         @input="onInput"
         @focus="focused = true"
         @blur="focused = false"
@@ -40,6 +42,7 @@ const props = withDefaults(
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 const ta = ref<HTMLTextAreaElement>();
 const focused = ref(false);
+const uid = 'lft-' + Math.random().toString(36).slice(2, 9);
 
 function onInput(e: Event) {
   emit('update:modelValue', (e.target as HTMLTextAreaElement).value);

@@ -88,7 +88,7 @@
       <LoveInput v-model="completeForm.realCost" label="实际花费（¥）" type="number" inputmode="decimal" placeholder="可选" />
       <div class="dp-field">
         <span class="dp-label">体验评分</span>
-        <n-rate v-model:value="completeForm.score" />
+        <n-rate v-model:value="completeForm.score" aria-label="体验评分" />
       </div>
       <template #footer>
         <LoveSaveBar :loading="saving" :success="completed" cancel-text="取消" save-text="完成啦" @cancel="showComplete = false" @save="saveComplete" />

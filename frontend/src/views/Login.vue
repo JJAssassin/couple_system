@@ -7,10 +7,10 @@
       <h1>我们的小世界</h1>
       <p class="sub-text">登录，开启专属回忆</p>
       <form @submit.prevent="onSubmit">
-        <label>账号</label>
-        <input v-model="userName" placeholder="partner_a / partner_b" autocomplete="username" />
-        <label>密码</label>
-        <input v-model="password" type="password" placeholder="默认 123456" autocomplete="current-password" />
+        <label for="login-user">账号</label>
+        <input id="login-user" v-model="userName" placeholder="partner_a / partner_b" autocomplete="username" />
+        <label for="login-pass">密码</label>
+        <input id="login-pass" v-model="password" type="password" placeholder="默认 123456" autocomplete="current-password" />
         <button type="submit" :disabled="loading">{{ loading ? '登录中…' : '登 录' }}</button>
       </form>
       <p class="hint">初始账号 partner_a / partner_b，密码 123456</p>

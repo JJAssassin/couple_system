@@ -1,5 +1,15 @@
 <template>
-  <div class="fx-flip" :class="{ flipped: modelValue }" @click="onClick">
+  <div
+    class="fx-flip"
+    :class="{ flipped: modelValue }"
+    :role="interactive ? 'button' : undefined"
+    :tabindex="interactive ? 0 : -1"
+    :aria-pressed="interactive ? modelValue : undefined"
+    :aria-label="label"
+    @click="onClick"
+    @keydown.enter.prevent="onClick"
+    @keydown.space.prevent="onClick"
+  >
     <div class="fx-flip__inner">
       <div class="fx-flip__face fx-flip__front"><slot name="front" /></div>
       <div class="fx-flip__face fx-flip__back"><slot name="back" /></div>
@@ -9,7 +19,7 @@
 
 <script setup lang="ts">
 const props = withDefaults(
-  defineProps<{ modelValue: boolean; interactive?: boolean }>(),
+  defineProps<{ modelValue: boolean; interactive?: boolean; label?: string }>(),
   { interactive: false }
 );
 const emit = defineEmits<{ (e: 'update:modelValue', v: boolean): void }>();

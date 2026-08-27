@@ -4,6 +4,7 @@
     class="fx-switch"
     role="switch"
     :aria-checked="modelValue"
+    :aria-label="label"
     :disabled="disabled"
     :class="{ on: modelValue, anim: stretch }"
     @click="toggle"
@@ -17,7 +18,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-const props = withDefaults(defineProps<{ modelValue: boolean; disabled?: boolean }>(), {
+const props = withDefaults(defineProps<{ modelValue: boolean; disabled?: boolean; label?: string }>(), {
   disabled: false,
 });
 const emit = defineEmits<{ (e: 'update:modelValue', v: boolean): void }>();

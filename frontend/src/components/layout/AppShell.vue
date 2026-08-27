@@ -16,7 +16,7 @@
     <!-- 移动端：汉堡抽屉 -->
     <teleport to="body">
       <transition name="drawer-fade">
-        <div v-if="isMobile() && drawerOpen" class="drawer-mask" @click="drawerOpen = false" />
+        <div v-if="isMobile() && drawerOpen" class="drawer-mask" role="button" tabindex="0" aria-label="关闭菜单" @click="drawerOpen = false" @keydown.enter.prevent="drawerOpen = false" @keydown.space.prevent="drawerOpen = false" />
       </transition>
       <transition name="drawer-slide">
         <aside v-if="isMobile() && drawerOpen" class="drawer">

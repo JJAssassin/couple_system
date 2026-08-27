@@ -64,7 +64,7 @@ onMounted(check)
 
 <template>
   <transition name="egg-fade">
-    <div v-if="visible" class="egg-mask" :class="{ 'no-anim': setting.reduceMotion }" @click.self="dismiss">
+    <div v-if="visible" class="egg-mask" :class="{ 'no-anim': setting.reduceMotion }" role="button" tabindex="0" aria-label="关闭" @click.self="dismiss" @keydown.enter.prevent="dismiss" @keydown.space.prevent="dismiss">
       <div class="egg-card">
         <div class="egg-hearts" aria-hidden="true">
           <span
