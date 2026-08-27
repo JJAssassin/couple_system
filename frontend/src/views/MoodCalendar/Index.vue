@@ -79,6 +79,8 @@
           <div class="mc-stat-label">最低心情</div>
         </div>
       </section>
+      <IndEmpty v-else-if="calendar" class="mc-section" title="今年还没记录过心情"
+        desc="在日记里给每天打个分，这里就会画出你们的色彩～" />
     </template>
   </div>
 </template>
@@ -86,6 +88,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { fetchMoodCalendar, type MoodDay } from '@/api/stats';
 
 const currentYear = ref(new Date().getFullYear());

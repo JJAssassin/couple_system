@@ -3,7 +3,7 @@
   <div v-else class="anniv-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
-      <span class="ind-label">ANNIVERSARY · 纪念日</span>
+      <h1 class="ind-label">ANNIVERSARY · 纪念日</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
 
@@ -433,7 +433,7 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
   padding: 4px 12px; border-radius: 999px;
   background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
-.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); }
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 
 .block { margin: 22px 0; }
 

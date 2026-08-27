@@ -37,6 +37,10 @@
 
     <!-- 右侧时间轴 -->
     <section class="tl-wrap">
+      <header class="page-head">
+        <h1>我们的时间轴</h1>
+      </header>
+
       <!-- 统计条 -->
       <div v-if="items.length" class="tl-stats love-card">
         <div class="tl-stat tl-stat-total">
@@ -325,6 +329,8 @@ html.reduce-motion .tl-item { animation: none; }
 @media (max-width: 767px) {
   .tl-page { flex-direction: column; width: 100%; max-width: 100%; }
   .tl-wrap { width: 100%; max-width: 100%; }
+.page-head { display: flex; align-items: center; margin-bottom: 16px; }
+.page-head h1 { font-size: 22px; margin: 0; }
   .tl-filter { width: 100%; position: static; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .tl-filter-title { margin-bottom: 0; }
   .tl-filter-sub { margin-top: 0; width: 100%; }

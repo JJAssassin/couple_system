@@ -5,9 +5,9 @@
     <!-- 圆整节点庆祝横幅 -->
     <transition name="cele">
       <div v-if="celebrate" class="cele-banner">
-        <PartyPopper :size="18" :stroke-width="1.8" class="cele-ico" />
+        <PartyPopper :size="18" class="cele-ico" />
         <span class="cele-txt">{{ celebrate }}</span>
-        <button class="cele-close" aria-label="关闭" @click="celebrate = ''">×</button>
+        <button class="cele-close" aria-label="关闭" @click="celebrate = ''"><X :size="16" /></button>
       </div>
     </transition>
 
@@ -21,7 +21,7 @@
         <div class="hero-days"><LoveCount :value="loveInfo.totalDays" /> <span>天</span></div>
         <div class="hero-sub">你们已经相恋 {{ loveInfo.totalDays }} 天 · 精确 {{ loveInfo.totalHours }} 小时</div>
         <div class="hero-lovedate">
-          <Heart :size="14" :stroke-width="2" />
+          <Heart :size="14" />
           <span>{{ fmtDate(loveInfo.loveStartTime) }}</span>
           <span class="hero-edit" @click="openLoveEditor">修改</span>
         </div>
@@ -56,12 +56,12 @@
       <IndSectionTitle label="每日一句" :led="true" />
       <IndCard class="quote-card">
         <button class="quote-shuffle" :class="{ beat: quoteBeat }" @click="shuffleQuote" title="换一句情话" aria-label="换一句情话">
-          <Heart :size="15" :stroke-width="2" />
+          <Heart :size="15" />
         </button>
         <span class="quote-mark">“</span>
         <p class="quote-text">{{ quote.content }}</p>
         <span class="quote-author" v-if="quote.author">—— {{ quote.author }}</span>
-        <span class="quote-hint" v-else>—— 点 ♥ 换一句</span>
+        <span class="quote-hint" v-else>—— <Heart :size="12" class="q-heart" /> 换一句</span>
       </IndCard>
     </section>
 
@@ -70,7 +70,7 @@
       <IndSectionTitle label="今日与你" :led="true" />
       <div class="today-grid">
         <div class="today-card" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" @click="go('anniversary')">
-          <span class="tc-ico"><component :is="icAnniversary" :size="22" :stroke-width="1.8" /></span>
+          <span class="tc-ico"><component :is="icAnniversary" :size="22" /></span>
           <div class="tc-label">最近纪念日</div>
           <div v-if="nearest.length" class="tc-val" :class="{ 'tc-big': nearest[0].daysLeft <= 7 }">
             <template v-if="nearest[0].daysLeft === 0">就是今天！{{ nearest[0].name }}</template>
@@ -79,7 +79,7 @@
           <div v-else class="tc-val">未设置</div>
         </div>
         <div class="today-card" :class="{ ok: unread > 0 }" @click="go('message')">
-          <span class="tc-ico"><component :is="icMessage" :size="22" :stroke-width="1.8" /></span>
+          <span class="tc-ico"><component :is="icMessage" :size="22" /></span>
           <div class="tc-label">未读消息</div>
           <div class="tc-val">{{ unread > 0 ? unread + ' 条' : '暂无' }}</div>
         </div>
@@ -169,7 +169,7 @@
       <IndCard>
         <ul class="feed">
           <li v-for="f in feed" :key="f.id" class="feed-item">
-            <span class="feed-ico"><component :is="feedIcon(f.type)" :size="18" :stroke-width="1.8" /></span>
+            <span class="feed-ico"><component :is="feedIcon(f.type)" :size="18" /></span>
             <div class="feed-body">
               <div class="feed-title">{{ f.title }}</div>
               <div class="feed-time">{{ f.date.slice(0, 10) }}</div>
@@ -186,7 +186,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton } from 'naive-ui';
 import {
-  Heart, Mail, BookOpen, Star, CalendarHeart, CloudFog, Image, PartyPopper,
+  Heart, Mail, BookOpen, Star, CalendarHeart, CloudFog, Image, PartyPopper, X,
 } from 'lucide-vue-next';
 import api from '@/utils/request';
 import type { ApiResult, LoveInfo, DashboardData, AnniversaryDto, TimelineItemDto, AlbumDto, DailyQuoteDto } from '@/types';
@@ -343,7 +343,7 @@ useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 const moodOption = computed<EChartsOption>(() => ({
   xAxis: { type: 'category', data: dashboard.value.moodTrend.map((p) => p.label) },
   yAxis: { type: 'value', max: 10 },
-  series: [{ type: 'line', smooth: true, data: dashboard.value.moodTrend.map((p) => p.value), areaStyle: { opacity: 0.15 }, itemStyle: { color: '#ff6f7d' }, lineStyle: { color: '#ff6f7d', width: 2 } }],
+  series: [{ type: 'line', smooth: true, data: dashboard.value.moodTrend.map((p) => p.value), areaStyle: { opacity: 0.15 }, itemStyle: { color: 'var(--color-rose)' }, lineStyle: { color: 'var(--color-rose)', width: 2 } }],
   grid: { left: 30, right: 16, top: 16, bottom: 24 },
 }));
 
@@ -359,12 +359,12 @@ const wishGaugeOption = computed<EChartsOption>(() => ({
   series: [{
     type: 'gauge', startAngle: 210, endAngle: -30, min: 0, max: 100,
     radius: '98%', center: ['50%', '56%'],
-    progress: { show: true, width: 16, roundCap: true, itemStyle: { color: '#ff6f7d' } },
+    progress: { show: true, width: 16, roundCap: true, itemStyle: { color: 'var(--color-rose)' } },
     axisLine: { lineStyle: { width: 16, color: [[1, 'rgba(255,111,125,0.14)']] } },
     pointer: { show: false }, axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
     anchor: { show: false },
     detail: {
-      valueAnimation: true, formatter: '{value}%', color: '#ff6f7d', fontSize: 30, fontWeight: 800,
+      valueAnimation: true, formatter: '{value}%', color: 'var(--color-rose)', fontSize: 30, fontWeight: 800,
       offsetCenter: [0, '2%'],
     },
     title: { show: true, offsetCenter: [0, '32%'], color: 'var(--color-ink-3)', fontSize: 12 },
@@ -468,7 +468,8 @@ onMounted(async () => {
 .cele-txt { flex: 1; text-align: center; }
 .cele-close {
   flex: 0 0 auto; border: none; background: rgba(255, 255, 255, 0.22); color: #fff;
-  width: 22px; height: 22px; border-radius: 999px; cursor: pointer; font-size: 15px; line-height: 1;
+  width: 22px; height: 22px; border-radius: 999px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0;
   transition: background var(--dur-micro) var(--ease-love);
 }
 .cele-close:hover { background: rgba(255, 255, 255, 0.36); }
@@ -602,6 +603,7 @@ onMounted(async () => {
 .quote-hint {
   display: block; margin-top: 10px; text-align: right; font-size: 12px; color: var(--color-ink-3);
 }
+.q-heart { vertical-align: middle; color: var(--color-rose); }
 .quote-shuffle {
   position: absolute; top: 12px; right: 12px; z-index: 3;
   width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--color-border);

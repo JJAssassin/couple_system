@@ -3,7 +3,7 @@
   <div v-else class="account" ref="container">
     <!-- 余额大字 -->
     <section class="hero">
-      <div class="hero-title">共同小金库余额</div>
+      <h1 class="hero-title">共同小金库余额</h1>
       <div class="hero-balance">¥{{ summary.balance.toFixed(2) }}</div>
       <div class="hero-sub">
         <span>收入 ¥{{ summary.income.toFixed(2) }}</span>

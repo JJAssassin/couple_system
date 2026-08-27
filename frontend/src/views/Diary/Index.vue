@@ -1,10 +1,10 @@
 <template>
   <div class="diary-page" ref="container">
     <!-- 顶部：标题 + 写日记 -->
-    <div class="bar">
-      <h2>双人日记</h2>
+    <header class="page-head">
+      <h1>双人日记</h1>
       <n-button type="primary" v-press-bounce @click="openWrite">写日记</n-button>
-    </div>
+    </header>
 
     <!-- 分段：全部 / 我写的 / 对方写的 -->
     <div class="tabs">
@@ -337,8 +337,8 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 
 <style scoped>
 .diary-page { max-width: 880px; margin: 0 auto; }
-.bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.bar h2 { font-size: 18px; margin: 0; }
+.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.page-head h1 { font-size: 22px; margin: 0; }
 
 .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
 .tab {

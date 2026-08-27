@@ -71,7 +71,7 @@
         </div>
       </section>
 
-      <p v-else class="empty-tip">这一年还没有纪念日记录，去「纪念日」页添加一个吧～</p>
+      <IndEmpty v-else title="这一年还没有纪念日" desc="去「纪念日」页添加一个吧～" />
     </template>
 
     <!-- 年度报告分享海报 -->
@@ -86,6 +86,7 @@ import AuroraBackdrop from '@/components/Common/AuroraBackdrop.vue';
 import GradientText from '@/components/Common/GradientText.vue';
 import YearPoster from '@/components/Common/YearPoster.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { NumberRoll } from '@/interactions';
 import { fetchYearReport, type YearReport } from '@/api/stats';
 
@@ -227,8 +228,6 @@ const conflictOption = computed(() => ({
 }
 .ann-name { font-size: 14px; font-weight: 600; color: var(--color-ink); }
 .ann-date { margin-left: auto; font-size: 12px; color: var(--color-ink-3); }
-
-.empty-tip { text-align: center; color: var(--color-ink-3); font-size: 13px; padding: 24px 0; }
 
 .skeleton { height: 96px; background: linear-gradient(90deg, var(--color-ink-soft) 25%, var(--color-surface-2) 50%, var(--color-ink-soft) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; }
 @keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }

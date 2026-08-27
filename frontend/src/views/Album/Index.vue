@@ -3,7 +3,7 @@
     <!-- ===== 相册列表 ===== -->
     <section v-if="!currentAlbum" class="stagger-item">
       <div class="page-head">
-        <h2>双人相册</h2>
+        <h1>双人相册</h1>
         <NButton type="primary" size="small" v-press-bounce @click="showCreate = true">＋ 新建相册</NButton>
       </div>
 
@@ -326,6 +326,7 @@ onUnmounted(() => {
 <style scoped>
 .album-page { max-width: 960px; margin: 0 auto; }
 .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.page-head h1 { margin: 0; font-size: 22px; }
 .page-head h2 { margin: 0; font-size: 18px; }
 .album-title { flex: 1; }
 

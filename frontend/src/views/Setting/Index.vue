@@ -1,6 +1,7 @@
 <template>
   <IndSkeleton v-if="loading" variant="text" :rows="4" />
   <div v-else class="set-page">
+    <header class="page-head"><h1>设置</h1></header>
     <!-- 帐号 -->
     <section class="block love-card">
       <h2>帐号资料</h2>
@@ -42,7 +43,7 @@
     </section>
 
     <!-- TA 的绑定（双向同步） -->
-    <section class="block love-card">
+    <section class="block love-card bind-block">
       <h2>TA 的绑定 · 双向同步</h2>
       <p class="sub-text">绑定后，你和 TA 即组成一对专属情侣，首页、相册、日记、纪念日等所有数据仅你们两人实时互通。</p>
 
@@ -414,7 +415,9 @@ async function doExport() {
 </script>
 
 <style scoped>
-.set-page { max-width: 720px; margin: 0 auto; }
+.set-page { max-width: 720px; margin: 0 auto; padding-top: 4px; }
+.page-head { margin-bottom: 18px; }
+.page-head h1 { margin: 0; font-size: 22px; font-weight: 800; color: var(--color-ink); }
 .block { margin-bottom: 18px; }
 .block h2 { font-size: 16px; margin: 0 0 14px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
@@ -446,7 +449,11 @@ async function doExport() {
 }
 .lock-note { color: var(--color-ink-3); font-size: 12px; margin: 6px 0 0; line-height: 1.5; }
 
-/* 绑定块 */
+/* 绑定块（关系核心，视觉重点） */
+.bind-block {
+  border-left: 3px solid var(--color-rose);
+  background: var(--color-rose-soft);
+}
 .bind-card {
   display: flex; align-items: center; gap: 14px;
   padding: 14px; border-radius: var(--radius-lg);

@@ -1,6 +1,10 @@
 <template>
   <IndSkeleton v-if="loading" variant="grid" :rows="4" :columns="2" />
   <div v-else class="dateplan" ref="container">
+    <header class="page-head">
+      <h1>约会计划</h1>
+    </header>
+
     <!-- 统计 -->
     <section class="hero">
       <div class="stat">
@@ -228,6 +232,8 @@ onMounted(async () => {
 .stat-k { color: var(--color-ink-3); font-size: 13px; }
 .block { margin: 22px 0; }
 .block h2 { font-size: 16px; margin: 0 0 12px; }
+.page-head { margin-bottom: 4px; }
+.page-head h1 { font-size: 22px; margin: 0; }
 .block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .block-head h2 { margin: 0; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
