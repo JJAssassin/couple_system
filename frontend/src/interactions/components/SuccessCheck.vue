@@ -5,12 +5,12 @@
         v-if="showCircle"
         class="fx-check__ring"
         :cx="size / 2" :cy="size / 2" :r="size / 2 - 2"
-        :stroke="color" stroke-width="2" :opacity="active ? 1 : 0.25"
+        :stroke="color" stroke-width="1.8" :opacity="active ? 1 : 0.25"
       />
       <path
         class="fx-check__path"
         :d="path"
-        :stroke="color" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"
+        :stroke="color" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
       />
     </svg>
   </span>

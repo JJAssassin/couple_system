@@ -16,7 +16,7 @@
         @blur="focused = false"
       />
       <button v-if="clearable && modelValue !== '' && modelValue !== null" class="lf-clear" type="button" aria-label="清除" @click="clear">
-        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" /></svg>
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
       </button>
       <span v-if="counter && maxlength" class="lf-count">{{ String(modelValue ?? '').length }}/{{ maxlength }}</span>
     </div>

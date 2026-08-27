@@ -5,7 +5,7 @@
       <Calendar :size="16" :stroke-width="2" class="lf-date-ico" />
       <span class="lf-date-text">{{ display || placeholder }}</span>
       <span v-if="modelValue" class="lf-date-clear" role="button" aria-label="清除" @click.stop="clear">
-        <svg viewBox="0 0 24 24" width="13" height="13"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" /></svg>
+        <svg viewBox="0 0 24 24" width="13" height="13"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
       </span>
       <input
         ref="picker"

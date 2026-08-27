@@ -278,3 +278,11 @@ body::after {
   background-size: 160px 160px;
 }
 .reduce-motion body::after { display: none; }
+
+/* =====================================================================
+   图标描边统一（taste-skill：全站单一描边重量）
+   lucide 各组件原本混用 1.6 / 1.8 / 2 / 2.2 / 2.6；项目品牌柔描边为 1.8。
+   CSS 优先级高于 SVG presentation 属性，故一条规则即可统一全部 lucide 图标
+   （含未来新增），子 path 继承 svg 的 stroke-width。手工内联 SVG 见各组件单独归一。
+   ===================================================================== */
+.lucide { stroke-width: 1.8; }

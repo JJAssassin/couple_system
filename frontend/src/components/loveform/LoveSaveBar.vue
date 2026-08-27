@@ -13,7 +13,7 @@
     >
       <span class="lsb-spinner" v-if="loading" />
       <Transition name="lsb-check">
-        <span v-if="success" class="lsb-check"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none" /></svg></span>
+        <span v-if="success" class="lsb-check"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none" /></svg></span>
       </Transition>
       <span class="lsb-label" :class="{ hide: loading || success }">{{ saveText }}</span>
     </button>
