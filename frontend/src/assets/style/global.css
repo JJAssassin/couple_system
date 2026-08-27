@@ -193,7 +193,8 @@ html:not(.reduce-motion) .love-card:hover {
 /* ====================== 骨架屏（加载占位） ====================== */
 /* 柔光表面 + 浅色流光，替代凹陷注塑质感 */
 .sk-base {
-  background: linear-gradient(100deg, var(--color-surface-2) 30%, #ffffff 50%, var(--color-surface-2) 70%);
+  /* 中段高光用半透明白（非死白 #fff）：亮色仍是柔白微光，暗色下 surface-2 深底叠加半透白→柔和灰白光带，不刺眼且随主题自动适配 */
+  background: linear-gradient(100deg, var(--color-surface-2) 30%, rgba(255,255,255,0.55) 50%, var(--color-surface-2) 70%);
   background-size: 220% 100%;
   border-radius: var(--radius-md);
   animation: sk-shimmer 1.25s linear infinite;
