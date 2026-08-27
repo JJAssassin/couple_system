@@ -22,14 +22,14 @@
           @click="onIncrement(f)"
         >
           <div class="fp-actions">
-            <button class="edit-float" @click.stop="openEdit(f)" title="修改">✎</button>
+            <button class="edit-float" @click.stop="openEdit(f)" title="修改"><Pencil :size="14" /></button>
             <n-popconfirm
               positive-text="删除"
               negative-text="取消"
               @positive-click="onDelete(f)"
             >
               <template #trigger>
-                <button class="del-float" @click.stop title="删除">×</button>
+                <button class="del-float" @click.stop title="删除"><X :size="16" /></button>
               </template>
               确定删除「{{ f.title }}」吗？计数记录会一并清除。
             </n-popconfirm>
@@ -107,6 +107,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { NPopconfirm } from 'naive-ui';
+import { Pencil, X } from 'lucide-vue-next';
 import { LoveSheet, LoveInput, LoveTextarea, LoveSaveBar } from '@/components/loveform';
 import type { FootprintDto } from '@/types';
 import { listFootprints, createFootprint, deleteFootprint, incrementFootprint, updateFootprint } from '@/api/footprint';

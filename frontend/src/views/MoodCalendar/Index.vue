@@ -162,31 +162,33 @@ onMounted(load);
 <style scoped>
 .mood-calendar { max-width: 960px; margin: 0 auto; padding: 16px; }
 .mc-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.mc-title { font-size: 22px; font-weight: 700; color: var(--ind-text); }
-.mc-sub { font-size: 13px; color: var(--ind-text-secondary); margin-top: 4px; }
+.mc-title { font-size: 22px; font-weight: 700; color: var(--color-ink); }
+.mc-sub { font-size: 13px; color: var(--color-ink-3); margin-top: 4px; }
 .mc-nav {
-  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--ind-border);
-  background: var(--ind-card); color: var(--ind-text); font-size: 20px; cursor: pointer;
+  width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-ink); font-size: 20px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
 }
 .mc-nav:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.mc-section { margin-top: 24px; }
+.mc-section { margin-top: 24px; animation: mcRise 0.5s var(--ease-love) both; }
+@keyframes mcRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+html.reduce-motion .mc-section { animation: none; }
 .mc-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
 }
 .mc-weekday-label {
-  text-align: center; font-size: 12px; color: var(--ind-text-secondary);
+  text-align: center; font-size: 12px; color: var(--color-ink-3);
   padding-bottom: 4px;
 }
 .mc-cell {
   aspect-ratio: 1 / 1;
   border-radius: 4px;
-  background: var(--ind-bg-secondary);
+  background: var(--color-surface-2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 10px; color: var(--ind-text-secondary);
+  font-size: 10px; color: var(--color-ink-3);
   cursor: pointer;
   transition: transform 0.15s ease;
 }
@@ -197,30 +199,30 @@ onMounted(load);
 /* Tooltip */
 .mc-tooltip {
   margin-top: 12px; padding: 10px 14px; border-radius: 8px;
-  background: var(--ind-card); border: 1px solid var(--ind-border);
-  box-shadow: var(--ind-shadow-sm); font-size: 13px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); font-size: 13px;
 }
-.mc-tooltip-date { color: var(--ind-text-secondary); margin-bottom: 4px; }
-.mc-tooltip-mood { font-weight: 600; color: var(--ind-text); }
-.mc-tooltip-tag { margin-left: 6px; color: var(--ind-primary); font-weight: 400; }
-.mc-tooltip-empty { color: var(--ind-text-secondary); }
+.mc-tooltip-date { color: var(--color-ink-3); margin-bottom: 4px; }
+.mc-tooltip-mood { font-weight: 600; color: var(--color-ink); }
+.mc-tooltip-tag { margin-left: 6px; color: var(--color-rose); font-weight: 400; }
+.mc-tooltip-empty { color: var(--color-ink-3); }
 
 /* 图例 */
 .mc-legend { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-.mc-legend-label { font-size: 13px; color: var(--ind-text-secondary); margin-right: 4px; }
+.mc-legend-label { font-size: 13px; color: var(--color-ink-3); margin-right: 4px; }
 .mc-legend-item {
   width: 18px; height: 18px; border-radius: 3px; color: #fff;
   display: inline-flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 600; text-shadow: 0 1px 1px rgba(0,0,0,0.3);
 }
-.mc-legend-empty { font-size: 12px; color: var(--ind-text-secondary); margin-left: 6px; }
+.mc-legend-empty { font-size: 12px; color: var(--color-ink-3); margin-left: 6px; }
 
 /* 统计 */
 .mc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .mc-stat-card {
   padding: 16px; border-radius: 12px; text-align: center;
-  background: var(--ind-card); border: 1px solid var(--ind-border);
+  background: var(--color-surface); border: 1px solid var(--color-border);
 }
-.mc-stat-num { font-size: 24px; font-weight: 700; color: var(--ind-primary); }
-.mc-stat-label { font-size: 12px; color: var(--ind-text-secondary); margin-top: 4px; }
+.mc-stat-num { font-size: 24px; font-weight: 700; color: var(--color-rose); }
+.mc-stat-label { font-size: 12px; color: var(--color-ink-3); margin-top: 4px; }
 </style>

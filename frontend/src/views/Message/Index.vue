@@ -2,7 +2,7 @@
   <div class="msg-page" ref="container">
     <div class="page-head">
       <div>
-        <h2>消息中心</h2>
+        <h1>消息中心</h1>
         <p class="sub">共 {{ list.length }} 条 · 未读 <b>{{ unread }}</b></p>
       </div>
       <div class="ops">
@@ -197,7 +197,7 @@ onUnmounted(() => {
 <style scoped>
 .msg-page { max-width: 880px; margin: 0 auto; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
-.page-head h2 { margin: 0; font-size: 22px; }
+.page-head h1 { margin: 0; font-size: 22px; }
 .sub { margin: 4px 0 0; color: var(--color-ink-3); font-size: 13px; }
 .sub b { color: var(--color-accent); }
 .ops { display: flex; gap: 10px; }
@@ -218,7 +218,7 @@ onUnmounted(() => {
 .m-body { flex: 1; min-width: 0; }
 .m-top { display: flex; align-items: center; gap: 8px; }
 .m-title { font-weight: 600; color: var(--color-ink); }
-.m-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--color-rose); box-shadow: 0 0 0 3px rgba(255, 111, 125, 0.18); }
+.m-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--color-rose); box-shadow: 0 0 0 3px var(--color-rose-soft); }
 .m-time { font-size: 12px; color: var(--color-ink-3); font-family: var(--font-mono); margin: 2px 0 4px; }
 .m-content { font-size: 13px; color: var(--color-ink-2); line-height: 1.6; white-space: pre-wrap; }
 .m-content.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }

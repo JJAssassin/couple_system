@@ -277,7 +277,7 @@ onMounted(async () => {
 .conflict-page { max-width: 960px; margin: 0 auto; }
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .card-time { font-size: 12px; }
 .card-summary { margin-top: 8px; font-size: 15px; color: var(--color-ink); }

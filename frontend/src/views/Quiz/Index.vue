@@ -40,7 +40,7 @@
     <template v-else>
       <div v-if="activeRound" class="active love-card">
         <div class="active-top">
-          <span class="badge"><Sparkles :size="13" :stroke-width="2.2" /> 进行中</span>
+          <span class="badge"><Sparkles :size="13" /> 进行中</span>
           <span v-if="activeRound.category" class="cat">{{ activeRound.category }}</span>
           <n-popconfirm @positive-click="onAbandon(activeRound.id)">
             <template #trigger>
@@ -102,7 +102,7 @@
     <!-- 历史战绩 -->
     <section class="history">
       <div class="sec-head">
-        <h3>历史战绩</h3>
+        <h2>历史战绩</h2>
         <n-button size="small" tertiary @click="showBank = true">题库管理</n-button>
       </div>
 
@@ -120,7 +120,7 @@
         >
           <div class="round-top">
             <span class="result" :class="{ hit: r.isMatched }">
-              <component :is="r.isMatched ? Check : X" :size="13" :stroke-width="2.6" />
+              <component :is="r.isMatched ? Check : X" :size="13" />
               {{ r.isMatched ? '默契' : '没对上' }}
             </span>
             <span v-if="r.category" class="cat">{{ r.category }}</span>
@@ -408,7 +408,7 @@ onMounted(async () => {
 
 .history { margin-top: 6px; }
 .sec-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.sec-head h3 { margin: 0; font-size: 15px; }
+.sec-head h2 { margin: 0; font-size: 16px; }
 
 .rounds { display: flex; flex-direction: column; gap: 12px; }
 .round { padding: 14px 16px; position: relative; border-left: 4px solid var(--color-border); }

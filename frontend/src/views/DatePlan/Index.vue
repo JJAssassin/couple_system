@@ -223,7 +223,7 @@ onMounted(async () => {
 <style scoped>
 .dateplan { max-width: 880px; margin: 0 auto; }
 .hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center; padding: 24px 0 8px; }
-.stat-v { font-size: 34px; font-weight: 600; color: var(--color-rose); display: flex; align-items: baseline; justify-content: center; gap: 4px; }
+.stat-v { font-size: 34px; font-weight: 800; color: var(--color-rose); display: flex; align-items: baseline; justify-content: center; gap: 4px; }
 .stat-v span { font-size: 15px; color: var(--color-ink-3); }
 .stat-k { color: var(--color-ink-3); font-size: 13px; }
 .block { margin: 22px 0; }

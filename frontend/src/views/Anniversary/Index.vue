@@ -17,7 +17,7 @@
           <span v-if="hero.isYearly && occNumber(hero)" class="hero-occ">第 {{ occNumber(hero) }} 周年</span>
         </div>
 
-        <div v-if="heroToday" class="hero-today">🎉 就是今天！</div>
+        <div v-if="heroToday" class="hero-today"><PartyPopper :size="26" /> 就是今天！</div>
         <div v-else class="hero-count">
           <GradientText tag="span" class="hero-days">{{ heroCd?.d }}</GradientText>
           <span class="hero-unit">天</span>
@@ -82,7 +82,7 @@
 
           <div class="ac-next">
             <template v-if="a.nextOccurrence">
-              <span v-if="isToday(a)" class="ac-today">🎉 就是今天！</span>
+              <span v-if="isToday(a)" class="ac-today"><PartyPopper :size="16" /> 就是今天！</span>
               <template v-else>
                 <span>还有 </span>
                 <GradientText tag="span" class="ac-days">{{ cd(a.nextOccurrence)?.d }}</GradientText>
@@ -105,7 +105,7 @@
           </div>
 
           <div class="ac-actions">
-            <button class="ac-btn" @click="openPoster(a)">🎨 海报</button>
+            <button class="ac-btn" @click="openPoster(a)"><Palette :size="14" /> 海报</button>
             <button class="ac-btn" @click="openEdit(a)">编辑</button>
             <n-popconfirm
               positive-text="删除"
@@ -176,7 +176,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, type Component } from 'vue';
-import { Heart, Cake, Handshake, Sparkles } from 'lucide-vue-next';
+import { Heart, Cake, Handshake, Sparkles, PartyPopper, Palette } from 'lucide-vue-next';
 import { NSwitch, NTag, NPopconfirm } from 'naive-ui';
 import { LoveSheet, LoveInput, LoveSegmented, LoveDateField, LoveSaveBar } from '@/components/loveform';
 import type { AnniversaryDto, AnniversaryReq } from '@/types';
@@ -447,7 +447,7 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
   overflow: hidden;
 }
 .hero.past { background: linear-gradient(135deg, var(--color-surface-2), var(--color-surface)); border-color: var(--color-border); box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
-.hero.today { background: linear-gradient(135deg, #ffd9e3, #ffe9c7); animation: heroGlow 2.4s ease-in-out infinite; }
+.hero.today { background: linear-gradient(135deg, var(--color-rose-soft), var(--color-surface)); animation: heroGlow 2.4s ease-in-out infinite; }
 @keyframes heroGlow { 0%,100% { box-shadow: 0 1px 2px rgba(31,41,55,.04), 0 18px 44px -16px rgba(214,100,120,.34); } 50% { box-shadow: 0 1px 2px rgba(31,41,55,.04), 0 22px 60px -14px rgba(214,100,120,.6); } }
 .hero-main { flex: 1; min-width: 0; }
 .hero-kicker { font-size: 12px; letter-spacing: 0.12em; color: var(--color-ink-2); margin-bottom: 6px; text-transform: uppercase; }
@@ -462,7 +462,7 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 .hero-past { font-size: 14px; color: var(--color-ink-2); margin-right: 4px; }
 .hero-sub { margin-top: 10px; font-size: 13px; color: var(--color-ink-2); }
 .hero-sub b { color: var(--color-ink); }
-.hero-remind { margin-left: 8px; font-size: 11px; font-weight: 700; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 999px; }
+.hero-remind { margin-left: 8px; font-size: 11px; font-weight: 700; color: var(--color-rose); background: var(--color-rose-soft); border: 1px solid var(--color-rose-soft); padding: 2px 8px; border-radius: 999px; }
 .hero-ring { flex: 0 0 auto; }
 .dot-sep { margin: 0 6px; color: var(--color-ink-3); }
 
@@ -511,7 +511,7 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 .ac-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
 .badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
 .badge.occ { color: var(--color-rose); background: var(--color-rose-soft); border: 1px solid var(--color-rose-soft); }
-.badge.remind { color: #b45309; background: #fef3c7; border: 1px solid #fde68a; }
+.badge.remind { color: var(--color-rose); background: var(--color-rose-soft); border: 1px solid var(--color-rose-soft); }
 .badge.today { color: #fff; background: var(--color-rose); }
 
 .ac-actions { display: flex; gap: 10px; }
