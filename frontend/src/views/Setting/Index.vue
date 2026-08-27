@@ -59,7 +59,7 @@
           negative-text="再想想"
         >
           <template #trigger>
-            <NButton size="small" tertiary type="error" :loading="ui.unbinding">解除绑定</NButton>
+            <NButton size="small" tertiary type="error" v-press-bounce :loading="ui.unbinding">解除绑定</NButton>
           </template>
           确定解除与 TA 的绑定吗？你们共同的恋爱数据仍会保留。
         </NPopconfirm>
@@ -80,7 +80,7 @@
               把邀请码发给 TA，TA 在「设置 → TA 的绑定」里输入即可{{ ui.countdownText }}。
             </div>
             <div class="invite-actions">
-              <NButton size="small" @click="copyCode">复制邀请码</NButton>
+              <NButton size="small" v-press-bounce @click="copyCode">复制邀请码</NButton>
               <NButton size="small" quaternary @click="resetInvite">重新生成</NButton>
             </div>
           </template>
@@ -90,7 +90,7 @@
         <!-- 输入邀请码 -->
         <div v-else class="join-box">
           <NInput v-model:value="ui.joinCode" placeholder="输入 TA 发来的 6 位邀请码" maxlength="6" />
-          <NButton type="primary" :loading="ui.joining" :disabled="!ui.joinCode" @click="doJoin">加入并绑定</NButton>
+          <NButton type="primary" v-press-bounce :loading="ui.joining" :disabled="!ui.joinCode" @click="doJoin">加入并绑定</NButton>
         </div>
       </div>
     </section>

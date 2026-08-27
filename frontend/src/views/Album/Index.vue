@@ -51,7 +51,7 @@
           :custom-request="customRequest"
           class="head-upload"
         >
-          <NButton type="primary" size="small">＋ 上传图片</NButton>
+          <NButton type="primary" size="small" v-press-bounce>＋ 上传图片</NButton>
         </NUpload>
       </div>
 
@@ -70,7 +70,7 @@
             :show-file-list="false"
             :custom-request="customRequest"
           >
-            <NButton type="primary">＋ 上传第一张照片</NButton>
+            <NButton type="primary" v-press-bounce>＋ 上传第一张照片</NButton>
           </NUpload>
         </template>
       </IndEmpty>
@@ -120,7 +120,7 @@
           :show-file-list="false"
           :custom-request="customRequest"
         >
-          <NButton type="primary" block>＋ 上传本地图片（最多 20 张）</NButton>
+          <NButton type="primary" block v-press-bounce>＋ 上传本地图片（最多 20 张）</NButton>
         </NUpload>
       </div>
     </section>
@@ -140,7 +140,7 @@
       </NForm>
       <template #footer>
         <div class="modal-foot">
-          <NButton @click="showCreate = false">取消</NButton>
+          <NButton v-press-bounce @click="showCreate = false">取消</NButton>
           <NButton type="primary" :loading="creating" v-press-bounce @click="createAlbum">创建</NButton>
         </div>
       </template>

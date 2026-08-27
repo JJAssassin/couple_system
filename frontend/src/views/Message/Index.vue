@@ -6,7 +6,7 @@
         <p class="sub">共 {{ list.length }} 条 · 未读 <b>{{ unread }}</b></p>
       </div>
       <div class="ops">
-        <NButton size="small" :loading="loading" @click="onRefreshClick">刷新</NButton>
+        <NButton size="small" v-press-bounce :loading="loading" @click="onRefreshClick">刷新</NButton>
         <NButton size="small" type="primary" :disabled="unread === 0" v-press-bounce @click="markAllRead">全部已读</NButton>
       </div>
     </div>

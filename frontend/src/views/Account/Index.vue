@@ -144,7 +144,7 @@
       </NForm>
       <template #footer>
         <div class="account-foot">
-          <NButton class="account-btn-cancel" @click="showModal = false">取消</NButton>
+          <NButton class="account-btn-cancel" v-press-bounce @click="showModal = false">取消</NButton>
           <NButton type="primary" :loading="loading" v-press-bounce @click="save" class="account-btn-primary">保存</NButton>
         </div>
       </template>
@@ -158,7 +158,7 @@
         <NFormItem label="当月总预算（拖动滑块快速设定）" class="budget-form-item">
           <LiquidSlider v-model="budgetTotal" :min="0" :max="20000" :step="100" suffix="元" />
         </NFormItem>
-        <NButton type="primary" block :disabled="bForm.total == null" @click="saveTotal" class="budget-btn-primary">保存总预算</NButton>
+        <NButton type="primary" block v-press-bounce :disabled="bForm.total == null" @click="saveTotal" class="budget-btn-primary">保存总预算</NButton>
       </NForm>
 
       <NDivider>分类预算</NDivider>
@@ -176,7 +176,7 @@
       <div class="cb-add">
         <NInput v-model:value="bForm.catName" placeholder="分类名（如 餐饮）" style="flex: 1" class="budget-input" />
         <NInputNumber v-model:value="bForm.catLimit" :min="0" :precision="2" placeholder="额度" class="budget-input" />
-        <NButton type="primary" size="small" :disabled="!bForm.catName || bForm.catLimit == null" @click="addCatBudget" class="budget-btn-add">添加</NButton>
+        <NButton type="primary" size="small" v-press-bounce :disabled="!bForm.catName || bForm.catLimit == null" @click="addCatBudget" class="budget-btn-add">添加</NButton>
       </div>
     </NModal>
 
@@ -190,7 +190,7 @@
       />
       <template #footer>
         <div class="account-foot">
-          <NButton class="account-btn-cancel" @click="showPoster = false">关闭</NButton>
+          <NButton class="account-btn-cancel" v-press-bounce @click="showPoster = false">关闭</NButton>
           <NButton type="primary" v-click-burst @click="posterRef?.download" class="account-btn-primary">保存到相册</NButton>
         </div>
       </template>

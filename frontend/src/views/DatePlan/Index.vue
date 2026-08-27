@@ -86,7 +86,7 @@
       </NForm>
       <template #footer>
         <div class="dateplan-foot">
-          <NButton class="dateplan-btn-cancel" @click="showCreate = false">取消</NButton>
+          <NButton class="dateplan-btn-cancel" v-press-bounce @click="showCreate = false">取消</NButton>
           <NButton type="primary" :loading="saving" v-press-bounce @click="saveCreate" class="dateplan-btn-primary">保存</NButton>
         </div>
       </template>
