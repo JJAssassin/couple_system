@@ -16,6 +16,8 @@ dist.del.*
 dist.trash
 dist.bak.*
 dist.old.*
+.verify-dist/
+.vd-*/
 *.local
 .vite/
 .verify-dist/

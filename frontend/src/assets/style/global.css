@@ -246,3 +246,35 @@ html:not(.reduce-motion) .love-card:hover {
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
 }
+
+/* =====================================================================
+   排版工具层（taste-skill：层级 / 孤字 / 数字对齐）
+   - 标题统一开启 text-wrap: balance，避免末行孤字；正文 pretty
+   - 数据界面数字用等宽数字（tabular-nums），跳动时不抖动、列对齐
+   ===================================================================== */
+:where(h1, h2, h3, h4) { text-wrap: balance; }
+h4 { line-height: 1.35; font-weight: 600; letter-spacing: -0.005em; }
+p, li { text-wrap: pretty; }
+
+.tnum { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+.text-balance { text-wrap: balance; }
+.text-pretty  { text-wrap: pretty; }
+
+/* 大数字展示：恋爱天数、余额、完成率等。紧字距 + 等宽数字，强化“数字即主角”的呼吸感 */
+.num-display {
+  font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
+  letter-spacing: -0.02em; font-weight: 700;
+}
+
+/* =====================================================================
+   微噪点纹理（taste-skill Surface Upgrade：打破数字平面感，增加质感）
+   极淡 fixed 层，pointer-events:none 不挡交互；reduce-motion 关闭。
+   ===================================================================== */
+body::after {
+  content: "";
+  position: fixed; inset: 0; z-index: 60; pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+.reduce-motion body::after { display: none; }

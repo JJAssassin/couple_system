@@ -71,6 +71,31 @@ function seriesDefaults(series: any): any {
   return Array.isArray(series) ? arr : arr[0];
 }
 
+/**
+ * 递归解析 ECharts option 中的 CSS 变量字符串（如 "var(--color-ink-3)"）。
+ * 画布无法解析 CSS 变量 → 暗色模式下坐标轴/图例/标签/仪表副标题会失效（回退为默认黑）。
+ * 集中在此解析，使所有图表的 var() 都能跟随 html.dark 正确取色（配合 watch(setting.dark) 重绘）。
+ */
+function resolveCssVars(obj: any): any {
+  if (obj == null || typeof obj !== 'object') {
+    if (typeof obj === 'string') {
+      const m = obj.match(/^var\((--[\w-]+)\)$/);
+      if (m) {
+        const v = computed.value.getPropertyValue(m[1]).trim();
+        return v || obj;
+      }
+    }
+    return obj;
+  }
+  if (Array.isArray(obj)) return obj.map(resolveCssVars);
+  const out: Record<string, any> = {};
+  for (const k of Object.keys(obj)) out[k] = resolveCssVars(obj[k]);
+  return out;
+}
+
+// 解析用的计算样式快照（每次渲染刷新，确保暗色切换后取最新变量）
+const computed = { value: getComputedStyle(document.documentElement) };
+
 function render() {
   if (!el.value) return;
   if (!chart) chart = init(el.value);
@@ -84,7 +109,8 @@ function render() {
     yAxis: axisDefaults((userOpt as any).yAxis),
     series: seriesDefaults((userOpt as any).series),
   };
-  chart.setOption(merged, true);
+  computed.value = getComputedStyle(document.documentElement);
+  chart.setOption(resolveCssVars(merged), true);
   chart.resize();
 }
 
