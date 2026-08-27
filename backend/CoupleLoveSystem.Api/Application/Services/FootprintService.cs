@@ -2,6 +2,7 @@ using CoupleLoveSystem.Api;
 using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Result;
+using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,11 +12,15 @@ namespace CoupleLoveSystem.Application.Services;
 public class FootprintService
 {
     private readonly IRepository<CoupleFootprint> _repo;
+    private readonly CoupleDbContext _db;
 
-    public FootprintService(IRepository<CoupleFootprint> repo)
+    public FootprintService(IRepository<CoupleFootprint> repo, CoupleDbContext db)
     {
         _repo = repo;
+        _db = db;
     }
+
+    private bool IsRelational => _db.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory";
 
     public async Task<List<FootprintDto>> ListAsync(CancellationToken ct = default)
     {
@@ -66,16 +71,32 @@ public class FootprintService
         return Map(f);
     }
 
-    /// <summary>记录一次：计数 +1，并刷新最后记录时间，驱动另一端实时跳动。</summary>
+    /// <summary>记录一次：计数 +1，并刷新最后记录时间，驱动另一端实时跳动。
+    /// 关系型库用 ExecuteUpdate 原子自增，避免「读-改-写」在并发 +1 时丢更新（审计 P2-14）；
+    /// InMemory 测试库不支持批量更新，回退为读-改-写（测试无并发，仅保功能正确）。</summary>
     public async Task<FootprintDto> IncrementAsync(long id, long currentUserId, CancellationToken ct = default)
     {
-        var f = await _repo.GetByIdAsync(id, ct) ?? throw new NotFoundException("足迹不存在");
-        f.Count += 1;
-        f.LastIncrementTime = DateTime.UtcNow;
-        f.UpdateUserId = currentUserId;
-        _repo.Update(f);
-        await _repo.SaveChangesAsync(ct);
-        return Map(f);
+        if (IsRelational)
+        {
+            var affected = await _repo.Query()
+                .Where(f => f.Id == id)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(f => f.Count, f => f.Count + 1)
+                    .SetProperty(f => f.LastIncrementTime, DateTime.UtcNow)
+                    .SetProperty(f => f.UpdateUserId, currentUserId), ct);
+            if (affected == 0) throw new NotFoundException("足迹不存在");
+        }
+        else
+        {
+            var f = await _repo.GetByIdAsync(id, ct) ?? throw new NotFoundException("足迹不存在");
+            f.Count += 1;
+            f.LastIncrementTime = DateTime.UtcNow;
+            f.UpdateUserId = currentUserId;
+            _repo.Update(f);
+            await _repo.SaveChangesAsync(ct);
+        }
+        var f2 = await _repo.GetByIdAsync(id, ct) ?? throw new NotFoundException("足迹不存在");
+        return Map(f2);
     }
 
     private static FootprintDto Map(CoupleFootprint f) => new()

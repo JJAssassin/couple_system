@@ -19,7 +19,7 @@ public class FootprintServiceTests
     private static FootprintService Build(out CoupleDbContext db)
     {
         db = TestDb.CreateInMemoryContext();
-        return new FootprintService(new EfRepository<CoupleFootprint>(db));
+        return new FootprintService(new EfRepository<CoupleFootprint>(db), db);
     }
 
     [Fact]

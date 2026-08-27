@@ -5,6 +5,7 @@ using CoupleLoveSystem.Core.Enums;
 using CoupleLoveSystem.Core.Result;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace CoupleLoveSystem.Application.Services;
 
@@ -72,16 +73,41 @@ public class PartnerService
         if (inviter.PartnerId != null)
             throw new ConflictException("对方已经和其他人绑定了，换一个邀请码吧");
 
+        // 原子占用邀请方：仅当其 PartnerId 仍为空（未被并发的另一个 join 抢先）才写入，
+        // 从根本上杜绝「同一邀请码被两个人并发 join 导致邀请方被绑定给两人」的竞态（审计 P2-14）。
+        // 关系型库用 ExecuteUpdate 条件更新 + 事务；InMemory 测试库不支持，降级为读-改变更（仅测试用）。
+        IDbContextTransaction? tx = _db.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory"
+            ? null
+            : await _db.Database.BeginTransactionAsync(ct);
         var cid = inviter.CoupleId ?? Guid.NewGuid().ToString("N");
-        inviter.CoupleId = cid;
-        me.CoupleId = cid;
-        inviter.PartnerId = me.Id;
-        me.PartnerId = inviter.Id;
-        inviter.BindCode = null; inviter.BindCodeExpire = null;
-        me.BindCode = null; me.BindCodeExpire = null;
-        await _db.SaveChangesAsync(ct);
+        bool claimed;
+        if (_db.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+        {
+            var rows = await _db.Users
+                .Where(u => u.Id == inviter.Id && u.PartnerId == null && u.BindCode == code && u.BindCodeExpire > DateTime.UtcNow)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(u => u.PartnerId, me.Id)
+                    .SetProperty(u => u.CoupleId, cid)
+                    .SetProperty(u => u.BindCode, (string?)null)
+                    .SetProperty(u => u.BindCodeExpire, (DateTime?)null), ct);
+            claimed = rows > 0;
+        }
+        else
+        {
+            inviter.PartnerId = me.Id;
+            inviter.CoupleId = cid;
+            inviter.BindCode = null;
+            inviter.BindCodeExpire = null;
+            claimed = true;
+        }
+        if (!claimed)
+            throw new ConflictException("对方刚刚被绑定了，请向 TA 重新索取邀请码");
 
-        // 通知对方：TA 已与你绑定（对方打开 App 可见，且 SMTP 启用时还会收到邮件提醒）
+        me.CoupleId = cid;
+        me.PartnerId = inviter.Id;
+        me.BindCode = null; me.BindCodeExpire = null;
+        _db.Users.Update(me);
+
         var bindMsg = new CoupleSystemMessage
         {
             CreateUserId = me.Id,
@@ -91,9 +117,11 @@ public class PartnerService
             MessageType = MessageType.Other
         };
         _db.SystemMessages.Add(bindMsg);
-        await _notifier.NotifyAsync(bindMsg, ct);
         await _db.SaveChangesAsync(ct);
+        if (tx != null) await tx.CommitAsync(ct);
 
+        // 以下为 DB 事务之外的副作用（邮件 / 签令牌 / 广播），不占用事务，避免慢 SMTP 拉长锁。
+        await _notifier.NotifyAsync(bindMsg, ct);
         // 为加入方重签令牌（cid 已是最新 CoupleId）；邀请方将通过下方 partner 广播触发自行刷新
         var tokens = await _auth.IssueTokensForUserAsync(me.Id, ct);
         // 广播 partner 信号：此刻双方 token 的 cid 仍为旧值，均落在 anon 组，故能互相送达；
