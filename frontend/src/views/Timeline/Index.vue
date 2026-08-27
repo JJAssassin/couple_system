@@ -272,7 +272,7 @@ onMounted(load);
 .tl-chip-count { margin-left: auto; font-size: 12px; color: var(--color-ink-3); }
 .tl-chip-clear { margin-top: 8px; }
 
-.tl-wrap { flex: 1; min-width: 0; overflow-x: hidden; }
+.tl-wrap { flex: 1; min-width: 0; overflow-x: clip; }
 .tl-stats {
   display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap;
   padding: 12px 14px; margin-bottom: 18px;

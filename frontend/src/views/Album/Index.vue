@@ -332,7 +332,7 @@ onUnmounted(() => {
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
 .album-card { padding: 0; overflow: hidden; cursor: pointer; transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
 .album-cover { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--color-ink-soft); }
-.album-cover img { position: absolute; top: -15%; left: 0; width: 100%; height: 130%; object-fit: cover; will-change: transform; transition: transform var(--dur-micro) var(--ease-love); }
+.album-cover img { position: absolute; top: -15%; left: 0; width: 100%; height: 130%; object-fit: cover; transition: transform var(--dur-micro) var(--ease-love); }
 .album-cover-ph { width: 100%; height: 100%; display: grid; place-items: center; color: var(--color-ink-3); }
 html:not(.reduce-motion) .album-card:hover { transform: translateY(-3px) scale(1.015); box-shadow: 0 6px 16px rgba(31, 41, 55, 0.08), 0 22px 50px -14px rgba(122, 100, 98, 0.28); }
 .album-meta { padding: 10px 12px; }
