@@ -30,8 +30,8 @@ public class UserController : BaseController
     [HttpGet("export/download")]
     public async Task<IActionResult> ExportDownload(CancellationToken ct = default)
     {
-        var token = Request.Headers["X-Export-Token"].FirstOrDefault()
-                    ?? Request.Query["token"].ToString();
+        // 一次性下载令牌仅经 X-Export-Token 请求头传递，绝不进入 URL/查询串，避免写入访问日志（P2-11）。
+        var token = Request.Headers["X-Export-Token"].FirstOrDefault();
         if (string.IsNullOrWhiteSpace(token)) return BadRequest(ApiResult<object>.Fail(ErrorCode.ParamInvalid, "缺少下载令牌"));
         var path = await _tokenStore.GetAsync("export:" + token, ct);
         if (path == null || !System.IO.File.Exists(path))

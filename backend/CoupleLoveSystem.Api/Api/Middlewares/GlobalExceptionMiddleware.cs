@@ -43,11 +43,17 @@ public class GlobalExceptionMiddleware
             if (code == ErrorCode.ServerError)
                 _logger.LogError(ex, "未处理异常：{Path}", ctx.Request.Path);
 
+            // 服务端错误绝不向客户端泄露内部细节（表名/列名/路径等），仅返回通用文案；详细异常已记入日志。
+            // 业务异常（Forbidden/NotFound/Conflict/Unauthorized/TooManyRequests）的 Message 为开发者可控文案，可原样返回。
+            var safeMessage = code == ErrorCode.ServerError
+                ? "服务器开小差了，请稍后再试"
+                : ex.Message;
+
             try
             {
                 ctx.Response.StatusCode = code;
                 ctx.Response.ContentType = "application/json; charset=utf-8";
-                var body = ApiResult<object>.Fail(code, ex.Message);
+                var body = ApiResult<object>.Fail(code, safeMessage);
                 await ctx.Response.WriteAsync(JsonSerializer.Serialize(body, new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase

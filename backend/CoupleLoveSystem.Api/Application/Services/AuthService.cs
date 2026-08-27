@@ -2,6 +2,7 @@ using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Options;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using BCrypt.Net;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -17,12 +18,13 @@ public class AuthService
     private readonly ITokenStore _tokens;
     private readonly JwtOptions _jwt;
     private readonly LoginRateLimiter _rateLimiter;
+    private readonly IHttpContextAccessor? _http;
 
     private readonly JwtKeyResolver? _keyResolver;
 
-    public AuthService(CoupleDbContext db, ITokenStore tokens, IOptions<JwtOptions> jwt, LoginRateLimiter rateLimiter, JwtKeyResolver? keyResolver = null)
+    public AuthService(CoupleDbContext db, ITokenStore tokens, IOptions<JwtOptions> jwt, LoginRateLimiter rateLimiter, IHttpContextAccessor? http = null, JwtKeyResolver? keyResolver = null)
     {
-        _db = db; _tokens = tokens; _jwt = jwt.Value; _rateLimiter = rateLimiter; _keyResolver = keyResolver;
+        _db = db; _tokens = tokens; _jwt = jwt.Value; _rateLimiter = rateLimiter; _http = http; _keyResolver = keyResolver;
     }
 
     public async Task<LoginResp> LoginAsync(LoginReq req, string? clientIp, CancellationToken ct = default)
@@ -49,11 +51,19 @@ public class AuthService
         var userId = await FindUserIdByRefreshAsync(refreshToken, ct)
             ?? throw new UnauthorizedException("RefreshToken 失效，请重新登录");
 
-        // 轮换：作废旧 token，签发新 token——防止 RefreshToken 被盗后长期可用
+        // 严格轮换（P1-1）：呈交的 refresh 必须是该用户「当前有效」的 refresh。
+        // 旧令牌重放直接拒绝，避免攻击者用旧令牌把合法用户踢下线并劫持会话。
+        var current = await _tokens.GetAsync($"rt:{userId}", ct);
+        if (current != refreshToken)
+            throw new UnauthorizedException("RefreshToken 已失效，请重新登录");
+
+        // 软删用户禁止刷新（P1-2）：注销后 refresh 应立即失效
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, ct)
+            ?? throw new UnauthorizedException("RefreshToken 已失效，请重新登录");
+
+        // 轮换：作废当前 token，签发新 token——防止 RefreshToken 被盗后长期可用
         await _tokens.RemoveAsync($"rt:{userId}", ct);
         await _tokens.RemoveAsync($"rti:{refreshToken}", ct);
-
-        var user = await _db.Users.FirstAsync(u => u.Id == userId, ct);
         return await IssueTokensAsync(user, ct);
     }
 
@@ -70,11 +80,34 @@ public class AuthService
 
     private async Task<LoginResp> IssueTokensAsync(CoupleUser user, CancellationToken ct)
     {
+        // 吊销该用户此前持有的 refresh（含反向索引）：重新登录/重签后旧令牌立即失效，杜绝 7 天重放窗口（P1-1）
+        var priorRefresh = await _tokens.GetAsync($"rt:{user.Id}", ct);
+        if (priorRefresh != null)
+        {
+            await _tokens.RemoveAsync($"rti:{priorRefresh}", ct);
+            await _tokens.RemoveAsync($"rt:{user.Id}", ct);
+        }
+
         var access = IssueAccessToken(user.Id, user.RoleType, user.CoupleId);
         var refresh = Guid.NewGuid().ToString("N");
         var ttl = TimeSpan.FromDays(_jwt.RefreshExpireDays);
         await _tokens.SetAsync($"rt:{user.Id}", refresh, ttl, ct);
         await _tokens.SetAsync($"rti:{refresh}", user.Id.ToString(), ttl, ct); // 反向索引 token→userId，O(1) 反查
+
+        // 媒体访问 Cookie（HttpOnly）：供 /uploads 静态资源鉴权网关读取（P2-4）。
+        // <img src> 无法在请求头带 Bearer，故用 HttpOnly Cookie 在同源下自动携带；仅当处于真实 HTTP 请求上下文时写入。
+        var httpCtx = _http?.HttpContext;
+        if (httpCtx?.Response.HasStarted == false)
+        {
+            httpCtx.Response.Cookies.Append("cl_at", access, new CookieOptions
+            {
+                HttpOnly = true,
+                SameSite = SameSiteMode.Lax,
+                Secure = httpCtx.Request.IsHttps,
+                MaxAge = TimeSpan.FromMinutes(_jwt.AccessExpireMinutes),
+                Path = "/"
+            });
+        }
 
         return new LoginResp
         {
@@ -91,6 +124,10 @@ public class AuthService
         if (userId == null) return;
         await _tokens.RemoveAsync($"rt:{userId}", ct);
         await _tokens.RemoveAsync($"rti:{refreshToken}", ct);
+        // 注销时清除媒体访问 Cookie，避免令牌失效后 Cookie 仍可用于下载（P2-4）
+        var httpCtx = _http?.HttpContext;
+        if (httpCtx?.Response.HasStarted == false)
+            httpCtx.Response.Cookies.Delete("cl_at");
     }
 
     // 反向索引 rti:{token}→userId，O(1) 反查，消除原全表扫描

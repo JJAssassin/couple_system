@@ -12,6 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.FileProviders;
 using CoupleLoveSystem.Infrastructure.Email;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -124,6 +125,7 @@ if (builder.Environment.IsProduction())
 // 注册 JwtKeyResolver 单例；验签密钥通过 Configure<JwtKeyResolver> 延迟从容器解析，
 // 既避免注册期过早构造，也避免 BuildServiceProvider 产生重复单例副本（ASP0000）。
 builder.Services.AddSingleton<JwtKeyResolver>();
+builder.Services.AddHttpContextAccessor(); // 供 AuthService 在签发令牌时写入媒体访问 Cookie（P2-4）
 
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()!;
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -132,6 +134,22 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
     .Configure<JwtKeyResolver>((o, key) =>
     {
         o.RequireHttpsMetadata = false; // 内网 IIS 终结点已 HTTPS，此处关以方便开发
+        // P2-4：<img src="/uploads/.."> 无法在请求头携带 Bearer，故允许从 HttpOnly Cookie cl_at 取令牌
+        // （仅当 Authorization 头缺失时），供 /uploads 鉴权网关鉴权静态资源。
+        o.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                if (string.IsNullOrEmpty(ctx.Token) &&
+                    !ctx.Request.Headers.ContainsKey("Authorization") &&
+                    ctx.Request.Cookies.TryGetValue("cl_at", out var cookie) &&
+                    !string.IsNullOrEmpty(cookie))
+                {
+                    ctx.Token = cookie;
+                }
+                return Task.CompletedTask;
+            }
+        };
         o.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -182,6 +200,23 @@ using (var scope = app.Services.CreateScope())
 }
 
 // ---- Pipeline（顺序：静态文件 -> Swagger -> 异常 -> 认证 -> 授权 -> 路由） ----
+
+// P2-4：/uploads 此前在认证前即可公开读取，任何拿到 GUID 链接的人都能下载私密照片。
+// 现要求请求已认证（Authorization 头 或 cl_at Cookie），未认证一律 401，且不会触达下方静态文件托管。
+app.Use(async (ctx, next) =>
+{
+    if (ctx.Request.Path.StartsWithSegments("/uploads", StringComparison.OrdinalIgnoreCase))
+    {
+        var authResult = await ctx.AuthenticateAsync(JwtBearerDefaults.AuthenticationScheme);
+        if (!authResult.Succeeded)
+        {
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return;
+        }
+    }
+    await next();
+});
+
 app.UseStaticFiles(); // 提供 wwwroot 静态资源（Swagger 等）
 
 // 显式托管 /uploads：上传图片落盘于 WebRootPath??ContentRootPath/uploads，

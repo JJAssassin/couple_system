@@ -105,7 +105,8 @@ public class DiaryService
         var c = new CoupleDiaryComment
         {
             DiaryId = req.DiaryId,
-            Content = req.Content,
+            // 评论正文同样过净化，与日记正文一致，防止 XSS（P2-9）
+            Content = _html.Sanitize(req.Content),
             CreateUserId = currentUserId,
             CreateTime = DateTime.UtcNow
         };

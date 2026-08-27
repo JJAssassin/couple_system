@@ -28,12 +28,37 @@ public sealed class HtmlSanitizerService
         _sanitizer.AllowedSchemes.Clear();
         _sanitizer.AllowedSchemes.Add("https");
         _sanitizer.AllowedSchemes.Add("http");
-        _sanitizer.AllowedSchemes.Add("data"); // 仅图片 base64（已限 img 标签）
+        // data: 协议在 PostProcessDom 中按标签收紧：仅 img 的 base64 内嵌图可用，
+        // a 的 href 与非 img 的 src 上的 data: 全部剔除，杜绝 data:text/html 钓鱼/XSS（P2-8）
+        _sanitizer.AllowedSchemes.Add("data");
 
         _sanitizer.PostProcessDom += (_, e) =>
         {
+            // a 标签：强制 rel 防 reverse-tabnabbing；剔除 data: 钓鱼/XSS 链接
             foreach (var a in e.Document.GetElementsByTagName("a"))
+            {
                 a.SetAttribute("rel", "noopener noreferrer");
+                var href = a.GetAttribute("href");
+                if (href != null && href.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                    a.RemoveAttribute("href");
+            }
+            // 其它可承载 src 的标签（iframe/embed/object/source/video/audio 等）：剔除 data: src，防脚本执行
+            foreach (var tag in new[] { "iframe", "embed", "object", "source", "video", "audio", "script", "link", "image" })
+            {
+                foreach (var el in e.Document.GetElementsByTagName(tag))
+                {
+                    var src = el.GetAttribute("src");
+                    if (src != null && src.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+                        el.RemoveAttribute("src");
+                }
+            }
+            // img 上的 data: 仅允许位图（png/jpeg/gif/webp），SVG 可携带脚本，剔除以防 XSS
+            foreach (var img in e.Document.GetElementsByTagName("img"))
+            {
+                var src = img.GetAttribute("src");
+                if (src != null && src.StartsWith("data:image/svg", StringComparison.OrdinalIgnoreCase))
+                    img.RemoveAttribute("src");
+            }
         };
     }
 

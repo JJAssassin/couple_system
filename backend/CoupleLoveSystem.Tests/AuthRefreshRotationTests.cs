@@ -18,7 +18,8 @@ public class AuthRefreshRotationTests
 {
     private static CoupleDbContext NewDb()
     {
-        var opt = new DbContextOptionsBuilder<CoupleDbContext>().UseInMemoryDatabase("rotation-test").Options;
+        // 每个用例独立的内存库，避免固定库名导致跨用例数据污染/主键冲突
+        var opt = new DbContextOptionsBuilder<CoupleDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options;
         var db = new CoupleDbContext(opt);
         db.Users.Add(new CoupleUser
         {
@@ -61,5 +62,41 @@ public class AuthRefreshRotationTests
         // 新 token 仍可用
         var again = await svc.RefreshAsync(refreshed.RefreshToken);
         Assert.NotEqual(refreshed.RefreshToken, again.RefreshToken);
+    }
+
+    [Fact]
+    public async Task ReLogin_Revokes_Previous_Refresh()
+    {
+        var db = NewDb();
+        var store = new InMemoryTokenStore();
+        var svc = NewSvc(db, store);
+
+        var first = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        // 同账号再次登录：应吊销第一次签发的 refresh（P1-1）
+        var second = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        Assert.NotEqual(first.RefreshToken, second.RefreshToken);
+
+        // 旧 refresh 现在应失效（否则攻击者可凭旧令牌长期刷新/劫持）
+        await Assert.ThrowsAsync<UnauthorizedException>(() => svc.RefreshAsync(first.RefreshToken));
+        // 新 refresh 仍可用
+        var again = await svc.RefreshAsync(second.RefreshToken);
+        Assert.NotEqual(second.RefreshToken, again.RefreshToken);
+    }
+
+    [Fact]
+    public async Task SoftDeleted_User_Cannot_Refresh()
+    {
+        var db = NewDb();
+        var store = new InMemoryTokenStore();
+        var svc = NewSvc(db, store);
+
+        var login = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        // 软删该用户（模拟注销）
+        var user = db.Users.Single(u => u.UserName == "partner_a");
+        user.IsDeleted = true;
+        db.SaveChanges();
+
+        // 软删后 refresh 应失效，返回 401 而非 500（P1-2）
+        await Assert.ThrowsAsync<UnauthorizedException>(() => svc.RefreshAsync(login.RefreshToken));
     }
 }
