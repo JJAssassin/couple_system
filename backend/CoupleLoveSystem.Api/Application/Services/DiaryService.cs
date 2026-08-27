@@ -10,7 +10,8 @@ using System.Linq;
 namespace CoupleLoveSystem.Application.Services;
 
 /// <summary>
-/// <summary>日记服务：含私密日记可见性控制，越权访问抛出 ForbiddenException；评论接口见 ListCommentsAsync / AddCommentAsync</summary>
+/// 日记服务：含私密日记可见性控制，越权访问抛出 ForbiddenException；评论接口见 ListCommentsAsync / AddCommentAsync。
+/// </summary>
 public class DiaryService
 {
     private readonly IRepository<CoupleDiary> _diaryRepo;
@@ -23,9 +24,15 @@ public class DiaryService
         _diaryRepo = diaryRepo; _commentRepo = commentRepo; _db = db; _html = html;
     }
 
-    public async Task<PagedResult<DiaryDto>> ListAsync(int page, int pageSize, long currentUserId, CancellationToken ct = default)
+    public async Task<PagedResult<DiaryDto>> ListAsync(int page, int pageSize, long currentUserId, string? author = null, CancellationToken ct = default)
     {
         var q = PermissionFilter.WhereVisible(_diaryRepo.Query(), currentUserId);
+        // 按作者筛选（全部 / 我写的 / 对方写的）；WhereVisible 已排除对方"仅自己"可见的私密日记，不会泄漏
+        if (!string.IsNullOrEmpty(author))
+        {
+            if (author == "mine") q = q.Where(d => d.CreateUserId == currentUserId);
+            else if (author == "partner") q = q.Where(d => d.CreateUserId != currentUserId);
+        }
         var total = await q.CountAsync(ct);
         var items = await q.OrderByDescending(d => d.DiaryDate)
             .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
@@ -128,6 +135,5 @@ public class DiaryService
         CreateUserId = c.CreateUserId, CreateTime = c.CreateTime
     };
 
-    /// <summary>
-    /// <summary>创建 / 更新日记时使用 HtmlSanitizerService 净化 content 与 cover 的 HTML，防止 XSS</summary>
+    /// <summary>创建 / 更新日记时使用 HtmlSanitizerService 净化 content 与 cover 的 HTML，防止 XSS。</summary>
 }

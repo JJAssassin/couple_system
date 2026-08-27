@@ -200,11 +200,16 @@ function loadMore() {
 watch(filtered, () => {
   displayCount.value = 12;
 });
+// 切换 tab 时按 author 重新向后台拉取，保证"对方写的"等分页数据完整
+watch(tab, () => {
+  void load();
+});
 
 async function load() {
   loading.value = true;
   try {
-    const p = await listDiary({ page: 1, pageSize: 50 });
+    // tab 过滤下沉到后端：author=mine/partner/all，避免 >50 篇时"对方写的"tab 漏数据
+    const p = await listDiary({ page: 1, pageSize: 50, author: tab.value });
     list.value = p.items;
   } finally {
     loading.value = false;

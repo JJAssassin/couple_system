@@ -65,10 +65,6 @@ public class HomeServiceCacheTests
         cache = new FakeCacheService();
         return new HomeService(db,
             new AnniversaryRepository(db),
-            new EfRepository<CoupleDiary>(db),
-            new EfRepository<CoupleWish>(db),
-            new EfRepository<CoupleAccountRecord>(db),
-            new EfRepository<CoupleConflict>(db),
             cache);
     }
 

@@ -78,12 +78,15 @@ public class AccountService
         await _repo.SaveChangesAsync(ct);
     }
 
-    /// <summary>查询账户汇总（余额与收支统计）</summary>
+    /// <summary>查询账户汇总（余额与收支统计）。数据库端 SUM，避免全表加载到内存。</summary>
     public async Task<AccountSummaryDto> SummaryAsync(long currentUserId, CancellationToken ct = default)
     {
-        var list = await _db.AccountRecords.AsNoTracking().ToListAsync(ct);
-        var income = list.Where(a => a.RecordType == AccountRecordType.Income).Sum(a => a.Amount);
-        var expend = list.Where(a => a.RecordType == AccountRecordType.Expend).Sum(a => a.Amount);
+        var income = await _db.AccountRecords.AsNoTracking()
+            .Where(a => a.RecordType == AccountRecordType.Income)
+            .SumAsync(a => a.Amount, ct);
+        var expend = await _db.AccountRecords.AsNoTracking()
+            .Where(a => a.RecordType == AccountRecordType.Expend)
+            .SumAsync(a => a.Amount, ct);
         return new AccountSummaryDto
         {
             Income = income,
@@ -91,37 +94,53 @@ public class AccountService
         };
     }
 
-    /// <summary>记账统计：当月收支 + 近 6 个月（含当月）收支趋势，供月度趋势/分类可视化。</summary>
+    /// <summary>记账统计：当月收支 + 近 6 个月（含当月）收支趋势，供月度趋势/分类可视化。SQL 端按年/月聚合一次返回。</summary>
     public async Task<AccountStatisticsDto> StatisticsAsync(int year, int month, long currentUserId, CancellationToken ct = default)
     {
         if (year < 2000 || year > 2100) throw new ConflictException("年份不合法");
         if (month < 1 || month > 12) throw new ConflictException("月份需为 1-12");
 
-        var all = await _db.AccountRecords.AsNoTracking().ToListAsync(ct);
-        var monthRecords = all.Where(a => a.RecordTime.Year == year && a.RecordTime.Month == month).ToList();
+        // 一次性把「近 6 个月窗口」内的记录按 年/月 聚合到 SQL 层，避免全表加载
+        var since = new DateTime(year, month, 1).AddMonths(-5);
+        var until = new DateTime(year, month, 1).AddMonths(1); // 当月月末次日（不含）
 
-        // 近 6 个月（含当月）逐月收支
+        var rows = await _db.AccountRecords.AsNoTracking()
+            .Where(a => a.RecordTime >= since && a.RecordTime < until)
+            .GroupBy(a => new { a.RecordTime.Year, a.RecordTime.Month })
+            .Select(g => new
+            {
+                g.Key.Year,
+                g.Key.Month,
+                Income = g.Sum(x => x.RecordType == AccountRecordType.Income ? x.Amount : 0m),
+                Expense = g.Sum(x => x.RecordType == AccountRecordType.Expend ? x.Amount : 0m),
+            })
+            .ToListAsync(ct);
+
+        // 以 (年,月) 为键，便于把无记录的月份补 0
+        var byKey = rows.ToDictionary(r => (r.Year, r.Month), r => r);
+
+        // 近 6 个月（含当月）逐月收支，无记录的月份补 0
         var trend = new List<AccountTrendDto>();
-        var cursor = new DateTime(year, month, 1).AddMonths(-5);
+        var cursor = since;
         for (var i = 0; i < 6; i++)
         {
-            var y = cursor.Year; var m = cursor.Month;
-            var recs = all.Where(a => a.RecordTime.Year == y && a.RecordTime.Month == m).ToList();
+            byKey.TryGetValue((cursor.Year, cursor.Month), out var rec);
             trend.Add(new AccountTrendDto
             {
-                Month = $"{y:D4}-{m:D2}",
-                Income = recs.Where(a => a.RecordType == AccountRecordType.Income).Sum(a => a.Amount),
-                Expense = recs.Where(a => a.RecordType == AccountRecordType.Expend).Sum(a => a.Amount),
+                Month = $"{cursor.Year:D4}-{cursor.Month:D2}",
+                Income = rec?.Income ?? 0m,
+                Expense = rec?.Expense ?? 0m,
             });
             cursor = cursor.AddMonths(1);
         }
 
+        byKey.TryGetValue((year, month), out var cur);
         return new AccountStatisticsDto
         {
             Year = year,
             Month = month,
-            MonthIncome = monthRecords.Where(a => a.RecordType == AccountRecordType.Income).Sum(a => a.Amount),
-            MonthExpense = monthRecords.Where(a => a.RecordType == AccountRecordType.Expend).Sum(a => a.Amount),
+            MonthIncome = cur?.Income ?? 0m,
+            MonthExpense = cur?.Expense ?? 0m,
             Trend = trend,
         };
     }

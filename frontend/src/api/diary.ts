@@ -8,7 +8,7 @@ import type {
   DiaryCommentReq,
 } from '@/types';
 
-export async function listDiary(params: { page?: number; pageSize?: number }) {
+export async function listDiary(params: { page?: number; pageSize?: number; author?: 'all' | 'mine' | 'partner' }) {
   const { data } = await api.get('/diary/list', { params });
   return (data as ApiResult<PagedResult<DiaryDto>>).data;
 }

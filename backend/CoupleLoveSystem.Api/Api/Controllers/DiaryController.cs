@@ -15,8 +15,9 @@ public class DiaryController : BaseController
 
     [HttpGet("list")]
     public async Task<ActionResult<ApiResult<PagedResult<DiaryDto>>>> List(
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default) =>
-        Ok(ApiResult<PagedResult<DiaryDto>>.Ok(await _svc.ListAsync(page, pageSize, CurrentUserId, ct)));
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20,
+        [FromQuery] string? author = null, CancellationToken ct = default) =>
+        Ok(ApiResult<PagedResult<DiaryDto>>.Ok(await _svc.ListAsync(page, pageSize, CurrentUserId, author, ct)));
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResult<DiaryDto>>> Get(long id, CancellationToken ct) =>

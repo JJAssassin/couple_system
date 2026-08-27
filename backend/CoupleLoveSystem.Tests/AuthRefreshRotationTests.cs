@@ -51,17 +51,20 @@ public class AuthRefreshRotationTests
         var store = new InMemoryTokenStore();
         var svc = NewSvc(db, store);
 
-        var login = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
-        var oldRt = login.RefreshToken;
+        // refresh 现仅存于 ITokenStore（HttpOnly Cookie），不从响应体取
+        await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        var oldRt = (await store.GetAsync("rt:1"))!;
 
-        var refreshed = await svc.RefreshAsync(oldRt);
-        Assert.NotEqual(oldRt, refreshed.RefreshToken); // 已轮换
+        await svc.RefreshAsync(oldRt);
+        var newRt = (await store.GetAsync("rt:1"))!;
+        Assert.NotEqual(oldRt, newRt); // 已轮换
 
         // 旧 token 应失效
         await Assert.ThrowsAsync<UnauthorizedException>(() => svc.RefreshAsync(oldRt));
         // 新 token 仍可用
-        var again = await svc.RefreshAsync(refreshed.RefreshToken);
-        Assert.NotEqual(refreshed.RefreshToken, again.RefreshToken);
+        await svc.RefreshAsync(newRt);
+        var againRt = (await store.GetAsync("rt:1"))!;
+        Assert.NotEqual(newRt, againRt);
     }
 
     [Fact]
@@ -71,16 +74,19 @@ public class AuthRefreshRotationTests
         var store = new InMemoryTokenStore();
         var svc = NewSvc(db, store);
 
-        var first = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        var firstRt = (await store.GetAsync("rt:1"))!;
         // 同账号再次登录：应吊销第一次签发的 refresh（P1-1）
-        var second = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
-        Assert.NotEqual(first.RefreshToken, second.RefreshToken);
+        await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        var secondRt = (await store.GetAsync("rt:1"))!;
+        Assert.NotEqual(firstRt, secondRt);
 
         // 旧 refresh 现在应失效（否则攻击者可凭旧令牌长期刷新/劫持）
-        await Assert.ThrowsAsync<UnauthorizedException>(() => svc.RefreshAsync(first.RefreshToken));
+        await Assert.ThrowsAsync<UnauthorizedException>(() => svc.RefreshAsync(firstRt));
         // 新 refresh 仍可用
-        var again = await svc.RefreshAsync(second.RefreshToken);
-        Assert.NotEqual(second.RefreshToken, again.RefreshToken);
+        await svc.RefreshAsync(secondRt);
+        var againRt = (await store.GetAsync("rt:1"))!;
+        Assert.NotEqual(secondRt, againRt);
     }
 
     [Fact]
@@ -90,13 +96,14 @@ public class AuthRefreshRotationTests
         var store = new InMemoryTokenStore();
         var svc = NewSvc(db, store);
 
-        var login = await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        await svc.LoginAsync(new LoginReq { UserName = "partner_a", Password = "123456" }, "127.0.0.1");
+        var rt = (await store.GetAsync("rt:1"))!;
         // 软删该用户（模拟注销）
         var user = db.Users.Single(u => u.UserName == "partner_a");
         user.IsDeleted = true;
         db.SaveChanges();
 
         // 软删后 refresh 应失效，返回 401 而非 500（P1-2）
-        await Assert.ThrowsAsync<UnauthorizedException>(() => svc.RefreshAsync(login.RefreshToken));
+        await Assert.ThrowsAsync<UnauthorizedException>(() => svc.RefreshAsync(rt));
     }
 }

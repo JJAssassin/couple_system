@@ -19,19 +19,38 @@ public class WishService
     }
 
     /// <summary>许愿服务：愿望可由一方认领（ClaimUserName），记录认领用户 Users</summary>
+    /// <summary>愿望列表：数据库端排序 + 分页；认领人昵称用子查询投影，避免全量加载用户表到内存。</summary>
     public async Task<PagedResult<WishDto>> ListAsync(int page, int pageSize, long currentUserId, CancellationToken ct = default)
     {
-        var all = await _repo.Query()
-            .OrderBy(w => w.Status).ThenBy(w => w.Priority).ThenByDescending(w => w.CreateTime)
+        var query = _db.Wishes.AsNoTracking()
+            .OrderBy(w => w.Status).ThenBy(w => w.Priority).ThenByDescending(w => w.CreateTime);
+
+        var total = await query.CountAsync(ct);
+
+        var items = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(w => new WishDto
+            {
+                Id = w.Id,
+                WishType = w.WishType,
+                Title = w.Title,
+                Description = w.Description,
+                ExpectTime = w.ExpectTime,
+                Priority = w.Priority,
+                Status = w.Status,
+                ClaimUserId = w.ClaimUserId,
+                ClaimUserName = _db.Users
+                    .Where(u => w.ClaimUserId != null && u.Id == w.ClaimUserId)
+                    .Select(u => u.NickName)
+                    .FirstOrDefault(),
+                CompleteTime = w.CompleteTime,
+                CompleteRemark = w.CompleteRemark,
+                CompleteImage = w.CompleteImage,
+                CreateUserId = w.CreateUserId,
+                CreateTime = w.CreateTime
+            })
             .ToListAsync(ct);
-
-        var nameOf = (await _userRepo.Query().ToListAsync(ct))
-            .ToDictionary(u => u.Id, u => u.NickName);
-
-        var total = all.Count;
-        var items = all.Skip((page - 1) * pageSize).Take(pageSize)
-            .Select(w => Map(w, nameOf.TryGetValue(w.ClaimUserId ?? 0, out var n) ? n : null))
-            .ToList();
 
         return new PagedResult<WishDto> { Items = items, Total = total, Page = page, PageSize = pageSize };
     }

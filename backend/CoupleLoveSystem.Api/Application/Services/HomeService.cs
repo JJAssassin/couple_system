@@ -12,20 +12,11 @@ public class HomeService
 {
     private readonly CoupleDbContext _db;
     private readonly IAnniversaryRepository _annRepo;
-    private readonly IRepository<CoupleDiary> _diaryRepo;
-    private readonly IRepository<CoupleWish> _wishRepo;
-    private readonly IRepository<CoupleAccountRecord> _accountRepo;
-    private readonly IRepository<CoupleConflict> _conflictRepo;
     private readonly ICacheService _cache;
 
-    public HomeService(CoupleDbContext db, IAnniversaryRepository annRepo,
-        IRepository<CoupleDiary> diaryRepo, IRepository<CoupleWish> wishRepo,
-        IRepository<CoupleAccountRecord> accountRepo,
-        IRepository<CoupleConflict> conflictRepo,
-        ICacheService cache)
+    public HomeService(CoupleDbContext db, IAnniversaryRepository annRepo, ICacheService cache)
     {
-        _db = db; _annRepo = annRepo; _diaryRepo = diaryRepo; _wishRepo = wishRepo;
-        _accountRepo = accountRepo; _conflictRepo = conflictRepo; _cache = cache;
+        _db = db; _annRepo = annRepo; _cache = cache;
     }
 
     public async Task<LoveInfoDto> GetLoveInfoAsync(long currentUserId, CancellationToken ct = default)
@@ -71,31 +62,50 @@ public class HomeService
     private async Task<DashboardDataDto> ComputeDashboardAsync(long currentUserId, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
-        // 心情趋势：合并双方日记（情侣共享视角）
-        var mood = (await _diaryRepo.ListAsync(d => d.DiaryDate != null, ct))
-            .Where(d => d.DiaryDate!.Value >= now.AddDays(-30))
+
+        // 心情趋势：近 30 天按天聚合（SQL 端），避免全表加载日记
+        var sinceMood = now.AddDays(-30);
+        var moodRows = await _db.Diaries.AsNoTracking()
+            .Where(d => d.DiaryDate != null && d.DiaryDate.Value >= sinceMood)
             .GroupBy(d => d.DiaryDate!.Value.Date)
-            .OrderBy(g => g.Key)
-            .Select(g => new ChartPointDto { Label = g.Key.ToString("MM-dd"), Value = g.Average(x => x.MoodScore) })
+            .Select(g => new { Day = g.Key, Avg = g.Average(x => x.MoodScore) })
+            .ToListAsync(ct);
+        var mood = moodRows
+            .OrderBy(r => r.Day)
+            .Select(r => new ChartPointDto { Label = r.Day.ToString("MM-dd"), Value = r.Avg })
             .ToList();
 
-        // 矛盾趋势：近 6 月每月数量
-        var conflict = (await _conflictRepo.ListAsync(c => c.OccurTime >= now.AddMonths(-6), ct))
-            .GroupBy(c => c.OccurTime.ToString("yyyy-MM"))
-            .OrderBy(g => g.Key)
-            .Select(g => new ChartPointDto { Label = g.Key, Value = g.Count() })
+        // 矛盾趋势：近 6 月每月数量（SQL 端按 年/月 聚合）
+        var sinceConflict = now.AddMonths(-6);
+        var conflictRows = await _db.Conflicts.AsNoTracking()
+            .Where(c => c.OccurTime >= sinceConflict)
+            .GroupBy(c => new { c.OccurTime.Year, c.OccurTime.Month })
+            .Select(g => new { g.Key.Year, g.Key.Month, Cnt = g.Count() })
+            .ToListAsync(ct);
+        var conflict = conflictRows
+            .OrderBy(r => r.Year).ThenBy(r => r.Month)
+            .Select(r => new ChartPointDto { Label = $"{r.Year:D4}-{r.Month:D2}", Value = r.Cnt })
             .ToList();
 
-        // 愿望完成率：共享清单，统计全部
-        var wishes = await _wishRepo.Query().ToListAsync(ct);
-        var rate = wishes.Count == 0 ? 0 : (double)wishes.Count(w => w.Status == WishStatus.Completed) / wishes.Count;
+        // 愿望完成率：两次 COUNT（共享清单，数据量情侣级很小）
+        var wishTotal = await _db.Wishes.AsNoTracking().CountAsync(ct);
+        var wishDone = await _db.Wishes.AsNoTracking()
+            .CountAsync(w => w.Status == WishStatus.Completed, ct);
+        var rate = wishTotal == 0 ? 0 : (double)wishDone / wishTotal;
 
-        // 共同余额：共享账本，统计全部
-        var accounts = await _accountRepo.Query().ToListAsync(ct);
+        // 共同余额：共享账本，SQL 端 SUM
+        var acctAgg = await _db.AccountRecords.AsNoTracking()
+            .GroupBy(_ => 0)
+            .Select(g => new
+            {
+                Income = g.Sum(a => a.RecordType == AccountRecordType.Income ? a.Amount : 0m),
+                Expend = g.Sum(a => a.RecordType == AccountRecordType.Expend ? a.Amount : 0m),
+            })
+            .FirstOrDefaultAsync(ct);
         var summary = new AccountSummaryDto
         {
-            Income = accounts.Where(a => a.RecordType == AccountRecordType.Income).Sum(a => a.Amount),
-            Expend = accounts.Where(a => a.RecordType == AccountRecordType.Expend).Sum(a => a.Amount)
+            Income = acctAgg?.Income ?? 0m,
+            Expend = acctAgg?.Expend ?? 0m
         };
 
         // 连续互动天数（独立缓存，按日刷新）
