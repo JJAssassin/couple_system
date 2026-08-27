@@ -185,7 +185,7 @@ const auth = useAuthStore();
 const setting = useSettingStore();
 const partner = usePartnerStore();
 const msg = useMessage();
-const { onSync } = useRealtime();
+const { onSync, rehandshake } = useRealtime();
 const { requestNotificationPermission } = usePwa();
 const notifySupported = notificationsSupported();
 const notifyDenied = ref(typeof Notification !== 'undefined' && Notification.permission === 'denied');
@@ -286,6 +286,8 @@ async function doJoin() {
     await partnerApi.joinPartner(ui.joinCode.trim().toUpperCase());
     await partner.load();
     ui.joinCode = '';
+    // 令牌 cid 已随绑定更新，重握手让实时推送落到新情侣组（否则仍留在 anon 组收不到对方实时更新）
+    await rehandshake();
     feedback.bound();
   } catch {
     /* 拦截器已提示 */
@@ -300,12 +302,25 @@ async function doUnbind() {
     await partner.load();
     resetInvite();
     ui.joinCode = '';
+    await rehandshake();
     feedback.unbound();
   } catch {
     /* 拦截器已提示 */
   } finally {
     ui.unbinding = false;
   }
+}
+
+// 对方触发绑定/解绑：对方已拿到重签令牌，本方需自行用 refresh 重签（实时信号里不含令牌），
+// 再用新 cid 重新握手，确保实时推送落到正确情侣组。
+async function onPartnerSignal() {
+  await partner.load();
+  try {
+    await auth.restoreSession();
+  } catch {
+    /* 刷新失败不阻断，下次请求 401 拦截器会兜底 */
+  }
+  await rehandshake();
 }
 
 const form = reactive({
@@ -332,8 +347,8 @@ onMounted(async () => {
     coupleName.value = s?.coupleName ?? '';
   } catch { /* 忽略 */ }
   await partner.load();
-  // 实时：对方绑定/解绑 → 刷新绑定状态；共享信息（恋爱纪念日/昵称）被修改 → 刷新
-  onSync('partner', () => partner.load());
+  // 实时：对方绑定/解绑 → 刷新绑定状态并重签令牌/重握手；共享信息（恋爱纪念日/昵称）被修改 → 刷新
+  onSync('partner', onPartnerSignal);
   onSync('setting', reloadCoupleSetting);
 });
 onUnmounted(() => {
@@ -391,7 +406,7 @@ async function doExport() {
     const resp = await exportAll();
     feedback.exported(`couple_export.zip（含 ${resp.mediaCount ?? 0} 个媒体文件）`);
   } catch {
-    /* 错误已由响应拦截器提示 */
+    msg.error('导出下载失败，请稍后重试');
   } finally {
     exporting.value = false;
   }

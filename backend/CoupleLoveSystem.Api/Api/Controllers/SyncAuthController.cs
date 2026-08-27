@@ -31,6 +31,13 @@ public class SyncAuthController : ControllerBase
         if (!long.TryParse(userIdClaim, out var userId))
             return Unauthorized();
 
+        // 幂等重绑：先移除旧情侣组，再绑定新身份并加入新组。
+        // 绑定/解绑后前端会拿重签的新令牌重新握手，使连接从 anon 组（或旧情侣组）迁移到最新情侣组，
+        // 否则实时推送仍会落到旧组，导致「刚绑定却收不到对方实时更新」。
+        var prev = _identities.TryGet(req.ConnectionId);
+        if (prev is not null && prev.Value.coupleId != coupleId)
+            await _hub.Groups.RemoveFromGroupAsync(req.ConnectionId, SyncHub.GroupForCouple(prev.Value.coupleId), ct);
+
         _identities.Bind(req.ConnectionId, userId, coupleId);
         await _hub.Groups.AddToGroupAsync(req.ConnectionId, SyncHub.GroupForCouple(coupleId), ct);
         return Ok(ApiResults.Ok(new { online = false }, "已绑定实时同步通道"));

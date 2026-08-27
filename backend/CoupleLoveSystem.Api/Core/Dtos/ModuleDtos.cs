@@ -410,7 +410,8 @@ public class UpdateProfileReq
 }
 public class ExportResp
 {
-    public string DownloadUrl { get; set; } = string.Empty;
+    /// <summary>一次性下载令牌：映射到临时目录中的 zip 文件，带短 TTL，下载后即作废。绝不返回公开可猜的 URL。</summary>
+    public string Token { get; set; } = string.Empty;
     public string FileName { get; set; } = string.Empty;
     public int MediaCount { get; set; }
 }

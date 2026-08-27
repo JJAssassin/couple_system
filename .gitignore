@@ -18,9 +18,9 @@ dist.bak.*
 dist.old.*
 *.local
 .vite/
+.verify-dist/
 .vite-cache/
 *.tsbuildinfo
-vitest.config.ts.timestamp-*.mjs
 .tmp/
 _tmp_*
 .trash_*.bak

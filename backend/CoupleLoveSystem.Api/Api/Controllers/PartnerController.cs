@@ -22,14 +22,14 @@ public class PartnerController : BaseController
         Ok(ApiResult<InviteDto>.Ok(await _svc.CreateInviteAsync(CurrentUserId, ct)));
 
     [HttpPost("join")]
-    public async Task<ActionResult<ApiResult<PartnerInfoDto>>> Join([FromBody] JoinReq req, CancellationToken ct) =>
-        Ok(ApiResult<PartnerInfoDto>.Ok(await _svc.JoinAsync(req.Code, CurrentUserId, ct)));
+    public async Task<ActionResult<ApiResult<JoinResultDto>>> Join([FromBody] JoinReq req, CancellationToken ct) =>
+        Ok(ApiResult<JoinResultDto>.Ok(await _svc.JoinAsync(req.Code, CurrentUserId, ct)));
 
     [HttpPost("unbind")]
-    public async Task<ActionResult<ApiResult<object>>> Unbind(CancellationToken ct)
+    public async Task<ActionResult<ApiResult<LoginResp>>> Unbind(CancellationToken ct)
     {
-        await _svc.UnbindAsync(CurrentUserId, ct);
-        return Ok(ApiResult<object>.Ok(new { }, "已解除绑定，你们的数据仍然保留"));
+        var tokens = await _svc.UnbindAsync(CurrentUserId, ct);
+        return Ok(ApiResult<LoginResp>.Ok(tokens, "已解除绑定，你们的数据仍然保留"));
     }
 }
 

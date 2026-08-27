@@ -86,6 +86,23 @@ export function useRealtime() {
     return off;
   }
 
+  /**
+   * 重新握手：用「当前最新」accessToken 重新上报 connectionId，使连接迁到正确的情侣组。
+   * 绑定 / 解绑后令牌被后端重签（cid 已变），若不重握手，SignalR 连接仍留在旧的 anon 组（或旧情侣组），
+   * 实时推送会落到旧组、对方刚绑定却收不到你的实时更新。调用前请确保 accessToken 已是新 cid 的令牌。
+   */
+  async function rehandshake() {
+    const conn = connection.value;
+    if (!conn) return;
+    const token = useAuthStore().accessToken;
+    if (!token) return;
+    try {
+      await authenticate(conn);
+    } catch {
+      /* 握手失败不影响主流程，下次连接/重连会自愈 */
+    }
+  }
+
   // 订阅所有模块的实时信号（无论是否显式订阅某模块）。用于"伴侣更新"等跨模块轻提示。
   function onAnySync(cb: (sig: SyncSignal) => void) {
     anyListeners.add(cb);
@@ -94,7 +111,7 @@ export function useRealtime() {
     return off;
   }
 
-  return { partnerOnline, ensure, onSync, onAnySync, useModuleSync };
+  return { partnerOnline, ensure, onSync, onAnySync, rehandshake, useModuleSync };
 }
 
 // 增量同步助手：在 onSync 基础上，当后端信号携带实体 Payload 时做就地 upsert/remove，避免整表重载。

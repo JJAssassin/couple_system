@@ -415,6 +415,12 @@ export interface TimelineItemDto {
   nextOccurrence?: string | null;
 }
 
+// ---------- 绑定结果（重签令牌随响应返回） ----------
+export interface JoinResult {
+  partner: PartnerInfo;
+  tokens: LoginResp;
+}
+
 // ---------- 用户 / 导出 ----------
 export interface UpdateProfileReq {
   nickName?: string;
@@ -422,8 +428,10 @@ export interface UpdateProfileReq {
   oldPassword?: string;
   newPassword?: string;
 }
+// 导出改为「一次性下载令牌」：服务器映射临时目录中的 zip，带短 TTL 且下载即作废，
+// 绝不返回公开可猜 URL，规避无鉴权可下载导致的 PII 泄露。
 export interface ExportResp {
-  downloadUrl: string;
+  token: string;
   fileName: string;
   mediaCount?: number;
 }

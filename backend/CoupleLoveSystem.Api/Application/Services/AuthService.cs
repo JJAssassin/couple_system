@@ -41,19 +41,7 @@ public class AuthService
         // 登录成功：清空该账号的失败计数
         await _rateLimiter.ResetAsync(req.UserName, ct);
 
-        var access = IssueAccessToken(user.Id, user.RoleType, user.CoupleId);
-        var refresh = Guid.NewGuid().ToString("N");
-        var ttl = TimeSpan.FromDays(_jwt.RefreshExpireDays);
-        await _tokens.SetAsync($"rt:{user.Id}", refresh, ttl, ct);
-        await _tokens.SetAsync($"rti:{refresh}", user.Id.ToString(), ttl, ct); // 反向索引 token→userId，O(1) 反查
-
-        return new LoginResp
-        {
-            AccessToken = access,
-            RefreshToken = refresh,
-            ExpiresIn = _jwt.AccessExpireMinutes * 60,
-            UserProfile = ToProfile(user)
-        };
+        return await IssueTokensAsync(user, ct);
     }
 
     public async Task<LoginResp> RefreshAsync(string refreshToken, CancellationToken ct = default)
@@ -66,16 +54,32 @@ public class AuthService
         await _tokens.RemoveAsync($"rti:{refreshToken}", ct);
 
         var user = await _db.Users.FirstAsync(u => u.Id == userId, ct);
+        return await IssueTokensAsync(user, ct);
+    }
+
+    /// <summary>
+    /// 为指定用户签发全新 access + refresh（refresh 写入 ITokenStore 并建立反向索引）。
+    /// 复用于登录、刷新、以及绑定/解绑后的令牌重签——保证 cid 声明与库中当前 CoupleId 一致，
+    /// 避免「绑定成功却空库」（旧 token 的 cid 仍为旧值，被全局过滤器挡掉真实数据）。
+    /// </summary>
+    public async Task<LoginResp> IssueTokensForUserAsync(long userId, CancellationToken ct = default)
+    {
+        var user = await _db.Users.FirstAsync(u => u.Id == userId && !u.IsDeleted, ct);
+        return await IssueTokensAsync(user, ct);
+    }
+
+    private async Task<LoginResp> IssueTokensAsync(CoupleUser user, CancellationToken ct)
+    {
         var access = IssueAccessToken(user.Id, user.RoleType, user.CoupleId);
-        var newRt = Guid.NewGuid().ToString("N");
+        var refresh = Guid.NewGuid().ToString("N");
         var ttl = TimeSpan.FromDays(_jwt.RefreshExpireDays);
-        await _tokens.SetAsync($"rt:{userId}", newRt, ttl, ct);
-        await _tokens.SetAsync($"rti:{newRt}", userId.ToString(), ttl, ct);
+        await _tokens.SetAsync($"rt:{user.Id}", refresh, ttl, ct);
+        await _tokens.SetAsync($"rti:{refresh}", user.Id.ToString(), ttl, ct); // 反向索引 token→userId，O(1) 反查
 
         return new LoginResp
         {
             AccessToken = access,
-            RefreshToken = newRt,
+            RefreshToken = refresh,
             ExpiresIn = _jwt.AccessExpireMinutes * 60,
             UserProfile = ToProfile(user)
         };

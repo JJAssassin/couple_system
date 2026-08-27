@@ -249,9 +249,11 @@ public class CoupleSystemMessage : BaseEntity, ICoupleScoped
     public bool IsRead { get; set; }
 }
 
-/// <summary>情侣级共享设置：整库即一对情侣，用固定 Key="global" 的单行承载共享态（相恋日期、情侣名等）。</summary>
+/// <summary>情侣级共享设置：用固定 Key="global" 的单行承载共享态（相恋日期、情侣名等）。
+/// 实现 ICoupleScoped → 自动挂全局情侣过滤器（仅本情侣可见）+ 插入时由拦截器盖章 CoupleId，
+/// 从而杜绝多对情侣共享同一行导致的跨情侣串扰（此前未实现该接口，所有情侣读写同一行）。</summary>
 [Broadcast("setting")]
-public class CoupleSetting : BaseEntity
+public class CoupleSetting : BaseEntity, ICoupleScoped
 {
     public string Key { get; set; } = "global";
     public DateTime? LoveStartTime { get; set; } // 相恋纪念日（共享，任一方设置双方生效）

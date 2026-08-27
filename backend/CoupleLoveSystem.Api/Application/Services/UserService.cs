@@ -17,10 +17,11 @@ public class UserService
     private readonly IRepository<CoupleUser> _userRepo;
     private readonly CoupleDbContext _db;
     private readonly IWebHostEnvironment _env;
+    private readonly ITokenStore _tokens;
 
-    public UserService(IRepository<CoupleUser> userRepo, CoupleDbContext db, IWebHostEnvironment env)
+    public UserService(IRepository<CoupleUser> userRepo, CoupleDbContext db, IWebHostEnvironment env, ITokenStore tokens)
     {
-        _userRepo = userRepo; _db = db; _env = env;
+        _userRepo = userRepo; _db = db; _env = env; _tokens = tokens;
     }
 
     public async Task<UserProfileDto> UpdateProfileAsync(UpdateProfileReq req, long currentUserId, CancellationToken ct = default)
@@ -81,7 +82,15 @@ public class UserService
         }
 
         var zipName = $"export_{currentUserId}_{Guid.NewGuid():N}.zip";
-        var zipPath = Path.Combine(uploadsRoot, zipName);
+        // 写入系统临时目录（非公开 /uploads），文件本身不对外暴露为可猜 URL
+        var exportTemp = Path.Combine(Path.GetTempPath(), "couple-export");
+        Directory.CreateDirectory(exportTemp);
+        // 兜底清理：未下载（令牌已过期）的历史 zip 可能滞留临时目录，清理超过 1 小时的旧文件，避免磁盘堆积
+        foreach (var old in Directory.GetFiles(exportTemp).Where(f => (DateTime.UtcNow - File.GetLastWriteTimeUtc(f)).TotalHours > 1))
+        {
+            try { File.Delete(old); } catch { /* 忽略单个清理失败 */ }
+        }
+        var zipPath = Path.Combine(exportTemp, zipName);
         using (var fs = new FileStream(zipPath, FileMode.Create, FileAccess.Write))
         using (var zip = new ZipArchive(fs, ZipArchiveMode.Create, leaveOpen: false))
         {
@@ -96,9 +105,14 @@ public class UserService
                 zip.CreateEntryFromFile(f, "media/" + Path.GetFileName(f));
         }
 
+        // 一次性下载令牌：映射临时文件全路径，带 10 分钟 TTL；下载端点消费后即删文件并作废令牌
+        var token = Guid.NewGuid().ToString("N");
+        var tokenKey = "export:" + token;
+        await _tokens.SetAsync(tokenKey, zipPath, TimeSpan.FromMinutes(10), ct);
+
         return new ExportResp
         {
-            DownloadUrl = $"/uploads/{zipName}",
+            Token = token,
             FileName = "couple_export.zip",
             MediaCount = media.Count
         };

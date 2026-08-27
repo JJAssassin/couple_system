@@ -133,6 +133,13 @@ public class InviteDto
     public DateTime ExpiresAt { get; set; }
 }
 
+/// <summary>加入结果：返回对方资料 + 为加入方重签的全新令牌（cid 已是最新 CoupleId）。</summary>
+public class JoinResultDto
+{
+    public PartnerInfoDto Partner { get; set; } = new();
+    public LoginResp Tokens { get; set; } = new();
+}
+
 // ---------- 足迹 / 自定义计数卡 ----------
 public class FootprintDto
 {

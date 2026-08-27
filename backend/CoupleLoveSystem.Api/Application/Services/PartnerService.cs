@@ -8,12 +8,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CoupleLoveSystem.Application.Services;
 
-/// <summary>绑定对方：生成邀请码 / 凭码加入 / 查询状态 / 解除绑定。整库即一对情侣，绑定后双方共享同一 CoupleId 与全部恋爱数据。</summary>
+/// <summary>绑定对方：生成邀请码 / 凭码加入 / 查询状态 / 解除绑定。绑定后双方共享同一 CoupleId 与全部恋爱数据。</summary>
 public class PartnerService
 {
     private readonly CoupleDbContext _db;
     private readonly SystemMessageEmailNotifier _notifier;
-    public PartnerService(CoupleDbContext db, SystemMessageEmailNotifier notifier) => (_db, _notifier) = (db, notifier);
+    private readonly AuthService _auth;
+    private readonly SyncBroadcaster _broadcaster;
+    public PartnerService(CoupleDbContext db, SystemMessageEmailNotifier notifier, AuthService auth, SyncBroadcaster broadcaster)
+        => (_db, _notifier, _auth, _broadcaster) = (db, notifier, auth, broadcaster);
 
     public async Task<BindStatusDto> GetStatusAsync(long userId, CancellationToken ct = default)
     {
@@ -50,8 +53,11 @@ public class PartnerService
         return new InviteDto { Code = code, ExpiresAt = me.BindCodeExpire.Value };
     }
 
-    /// <summary>凭邀请码加入：把双方并入同一 CoupleId 并互指 PartnerId。同一时刻仅允许两人成双。</summary>
-    public async Task<PartnerInfoDto> JoinAsync(string code, long userId, CancellationToken ct = default)
+    /// <summary>凭邀请码加入：把双方并入同一 CoupleId 并互指 PartnerId。同一时刻仅允许两人成双。
+    /// 加入后双方 CoupleId 已更新，但旧 JWT 的 cid 声明仍是旧值（多为空），全局过滤器会据此挡掉真实数据
+    /// （表现为「绑定成功却空库」）。故此处为「加入方」重签全新令牌一并返回；并为「邀请方」广播 partner 信号，
+    /// 前端收到后即刷新自身令牌，双方都能立刻看到共享数据。</summary>
+    public async Task<JoinResultDto> JoinAsync(string code, long userId, CancellationToken ct = default)
     {
         code = (code ?? "").Trim().ToUpperInvariant();
         var me = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, ct)
@@ -88,15 +94,23 @@ public class PartnerService
         await _notifier.NotifyAsync(bindMsg, ct);
         await _db.SaveChangesAsync(ct);
 
-        return Map(inviter);
+        // 为加入方重签令牌（cid 已是最新 CoupleId）；邀请方将通过下方 partner 广播触发自行刷新
+        var tokens = await _auth.IssueTokensForUserAsync(me.Id, ct);
+        // 广播 partner 信号：此刻双方 token 的 cid 仍为旧值，均落在 anon 组，故能互相送达；
+        // 邀请方前端据此刷新令牌，立刻获得正确 cid。
+        await _broadcaster.NotifyAsync("partner", ct);
+
+        return new JoinResultDto { Partner = Map(inviter), Tokens = tokens };
     }
 
-    /// <summary>解除绑定：双方互解，回到未绑定状态（相恋纪念日等情侣共享数据不受影响）。</summary>
-    public async Task UnbindAsync(long userId, CancellationToken ct = default)
+    /// <summary>解除绑定：双方互解，回到未绑定状态（相恋纪念日等情侣共享数据不受影响）。
+    /// 解绑后 CoupleId 置空，旧令牌的 cid 仍指向原空间，可被过滤器放行读取已解绑方的数据——故为重绑方重签
+    /// cid="" 的全新令牌并返回，同时向对方广播 partner 信号促其刷新，杜绝解绑后仍可读旧数据的越权窗口。</summary>
+    public async Task<LoginResp> UnbindAsync(long userId, CancellationToken ct = default)
     {
         var me = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId && !u.IsDeleted, ct)
             ?? throw new NotFoundException("用户不存在");
-        if (me.PartnerId == null) return;
+        if (me.PartnerId == null) return await _auth.IssueTokensForUserAsync(me.Id, ct);
 
         var partner = await _db.Users.FirstOrDefaultAsync(u => u.Id == me.PartnerId && !u.IsDeleted, ct);
         me.PartnerId = null; me.CoupleId = null; me.BindCode = null; me.BindCodeExpire = null;
@@ -105,6 +119,10 @@ public class PartnerService
             partner.PartnerId = null; partner.CoupleId = null; partner.BindCode = null; partner.BindCodeExpire = null;
         }
         await _db.SaveChangesAsync(ct);
+
+        var tokens = await _auth.IssueTokensForUserAsync(me.Id, ct);
+        if (partner != null) await _broadcaster.NotifyAsync("partner", ct);
+        return tokens;
     }
 
     private static string GenCode()
