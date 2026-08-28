@@ -46,26 +46,65 @@ function baseOption(): any {
   };
 }
 
-// 给坐标轴设默认：关闭网格线（除非调用方显式指定），柔和坐标文字
+// 给坐标轴设默认：极简无框风——隐藏生硬坐标轴实线与刻度，仅留超轻虚线网格
 function axisDefaults(axis: any): any {
   if (!axis) return axis;
   const c = themeColors();
+  const gridColor = setting.dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
   const arr = Array.isArray(axis) ? axis : [axis];
   arr.forEach((a: any) => {
-    if (a.splitLine === undefined) a.splitLine = { show: false };
-    if (a.axisLine === undefined) a.axisLine = { lineStyle: { color: c.border } };
-    if (a.axisLabel === undefined) a.axisLabel = { color: c.text };
+    if (a.splitLine === undefined) a.splitLine = { show: true, lineStyle: { color: gridColor, type: 'dashed' } };
+    if (a.axisLine === undefined) a.axisLine = { show: false };
+    if (a.axisTick === undefined) a.axisTick = { show: false };
+    if (a.axisLabel === undefined) a.axisLabel = { color: c.text, fontSize: 11 };
+    else if (a.axisLabel && a.axisLabel.color === undefined) a.axisLabel.color = c.text;
   });
   return Array.isArray(axis) ? arr : arr[0];
 }
 
-// 柱状图默认圆角（除非调用方已自定义 itemStyle）
+// hex → rgba（兼容 3/6 位），用于渐变与发光阴影
+function hexToRgba(hex: string, alpha: number): string {
+  let h = hex.replace('#', '');
+  if (h.length === 3) h = h.split('').map((c) => c + c).join('');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// 柱状图默认圆角；折线图默认发光曲线 + 渐变区域填充（除非调用方已自定义）
 function seriesDefaults(series: any): any {
   if (!series) return series;
   const arr = Array.isArray(series) ? series : [series];
-  arr.forEach((s: any) => {
+  arr.forEach((s: any, i: number) => {
     if (s.type === 'bar' && !s.itemStyle?.borderRadius) {
       s.itemStyle = { ...(s.itemStyle || {}), borderRadius: [6, 6, 0, 0] };
+    }
+    if (s.type === 'line') {
+      if (s.smooth === undefined) s.smooth = 0.4;
+      if (s.showSymbol === undefined) s.showSymbol = false;
+      const colorStr =
+        (typeof s.color === 'string' && s.color.startsWith('#')) ? s.color :
+        (s.itemStyle && typeof s.itemStyle.color === 'string' && s.itemStyle.color.startsWith('#')) ? s.itemStyle.color :
+        PALETTE[i % PALETTE.length];
+      const lineColor = colorStr.startsWith('#') ? colorStr : `#${colorStr}`;
+      if (!s.lineStyle) s.lineStyle = {};
+      if (s.lineStyle.width === undefined) s.lineStyle.width = 3.5;
+      if (s.lineStyle.color === undefined) s.lineStyle.color = lineColor;
+      if (s.lineStyle.shadowColor === undefined) s.lineStyle.shadowColor = hexToRgba(lineColor, 0.4);
+      if (s.lineStyle.shadowBlur === undefined) s.lineStyle.shadowBlur = 10;
+      if (s.lineStyle.shadowOffsetY === undefined) s.lineStyle.shadowOffsetY = 4;
+      if (!s.areaStyle) {
+        s.areaStyle = {
+          color: {
+            type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: hexToRgba(lineColor, 0.28) },
+              { offset: 1, color: hexToRgba(lineColor, 0) },
+            ],
+          },
+        };
+      }
     }
   });
   return Array.isArray(series) ? arr : arr[0];
