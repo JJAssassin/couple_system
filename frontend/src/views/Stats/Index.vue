@@ -75,7 +75,7 @@
     </template>
 
     <!-- 年度报告分享海报 -->
-    <YearPoster ref="poster" :report="report" />
+    <YearPoster ref="poster" :report="report" :photos="posterPhotos" :footprints="posterFootprints" />
   </div>
 </template>
 
@@ -89,11 +89,16 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { NumberRoll } from '@/interactions';
 import { fetchYearReport, type YearReport } from '@/api/stats';
+import { listAlbum, listImages } from '@/api/album';
+import { listFootprints } from '@/api/footprint';
+import type { ImageDto, FootprintDto } from '@/types';
 
 const currentYear = new Date().getFullYear();
 const report = ref<YearReport | null>(null);
 const selectedYear = ref(currentYear);
 const poster = ref<InstanceType<typeof YearPoster> | null>(null);
+const posterPhotos = ref<ImageDto[]>([]);
+const posterFootprints = ref<FootprintDto[]>([]);
 
 function fmt(n: number): string {
   const v = Math.abs(Math.round(n * 100) / 100);
@@ -117,7 +122,31 @@ async function load() {
     /* 拦截器已 toast */
   }
 }
-onMounted(load);
+async function loadPosterAssets() {
+  try {
+    const [albumRes, fpRes] = await Promise.all([
+      listAlbum({ page: 1, pageSize: 20 }),
+      listFootprints(),
+    ]);
+    const albums = (albumRes.data as { data: { items: { id: number; cover?: string }[] } }).data.items ?? [];
+    // 收集封面照片 + 各相册前几张照片
+    const covers = albums.map((a) => a.cover).filter(Boolean) as string[];
+    const extra: string[] = [];
+    for (const a of albums.slice(0, 3)) {
+      try {
+        const { data: imgRes } = await listImages(a.id);
+        const imgs = (imgRes.data as { data: ImageDto[] }).data ?? [];
+        extra.push(...imgs.slice(0, 4).map((i) => i.url || i.imagePath).filter(Boolean));
+      } catch { /* ignore */ }
+    }
+    const urls = Array.from(new Set([...extra, ...covers])).slice(0, 9);
+    posterPhotos.value = urls.map((url, idx) => ({ id: idx + 1, albumId: 0, imagePath: url, url, createUserId: 0, createTime: '' } as ImageDto));
+    posterFootprints.value = fpRes ?? [];
+  } catch {
+    /* 静默忽略：海报降级为占位数据 */
+  }
+}
+onMounted(() => { load(); loadPosterAssets(); });
 
 // ---- ECharts options（ChartWrap 提供主题/调色板） ----
 const financeOption = computed(() => {
