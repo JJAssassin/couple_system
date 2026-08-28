@@ -194,6 +194,7 @@ public class CoupleImage : BaseEntity, ICoupleScoped
     public string? Remark { get; set; }
     public DateTime? ShootTime { get; set; }
     public string? Location { get; set; }
+    public int SortOrder { get; set; } = 0;
 }
 
 [Broadcast("conflict")]

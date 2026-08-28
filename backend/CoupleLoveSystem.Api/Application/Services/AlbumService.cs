@@ -1,4 +1,5 @@
 using CoupleLoveSystem.Api;
+using System.Collections.Generic;
 using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Result;
@@ -86,8 +87,49 @@ public class AlbumService
     public async Task<List<ImageDto>> ListImagesAsync(long albumId, CancellationToken ct = default)
     {
         var imgs = await _imgRepo.Query().Where(i => i.AlbumId == albumId)
-            .OrderByDescending(i => i.CreateTime).ToListAsync(ct);
+            .OrderBy(i => i.SortOrder).ThenByDescending(i => i.CreateTime).ToListAsync(ct);
         return imgs.Select(MapImage).ToList();
+    }
+
+    /// <summary>拖拽排序：按传入的 id 顺序写入 SortOrder（只更新传入项；其余项顺序由列表查询的 SortOrder/CreateTime 兜底）。</summary>
+    public async Task ReorderImagesAsync(List<long> ids, CancellationToken ct = default)
+    {
+        if (ids == null || ids.Count == 0) return;
+        var items = await _imgRepo.Query().Where(i => ids.Contains(i.Id)).ToListAsync(ct);
+        var map = items.ToDictionary(i => i.Id);
+        for (int k = 0; k < ids.Count; k++)
+        {
+            if (map.TryGetValue(ids[k], out var img))
+            {
+                img.SortOrder = k;
+                _imgRepo.Update(img);
+            }
+        }
+        await _imgRepo.SaveChangesAsync(ct);
+    }
+
+    /// <summary>批量删除：逻辑删除（保留磁盘图片）。全局情侣隔离过滤器保证只影响本情侣的图片。</summary>
+    public async Task BatchDeleteImagesAsync(List<long> ids, CancellationToken ct = default)
+    {
+        if (ids == null || ids.Count == 0) return;
+        var items = await _imgRepo.Query().Where(i => ids.Contains(i.Id)).ToListAsync(ct);
+        foreach (var img in items) _imgRepo.SoftDelete(img);
+        await _imgRepo.SaveChangesAsync(ct);
+    }
+
+    /// <summary>批量移动到其他相册：目标相册须经全局过滤器确认属于本情侣（否则 NotFound）。</summary>
+    public async Task BatchMoveImagesAsync(List<long> ids, long targetAlbumId, CancellationToken ct = default)
+    {
+        if (ids == null || ids.Count == 0) return;
+        var target = await _repo.GetByIdAsync(targetAlbumId, ct)
+            ?? throw new NotFoundException("目标相册不存在");
+        var items = await _imgRepo.Query().Where(i => ids.Contains(i.Id)).ToListAsync(ct);
+        foreach (var img in items)
+        {
+            img.AlbumId = target.Id;
+            _imgRepo.Update(img);
+        }
+        await _imgRepo.SaveChangesAsync(ct);
     }
 
     public static AlbumDto Map(CoupleAlbum a) => new()

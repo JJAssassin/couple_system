@@ -13,6 +13,7 @@ export const feedback = {
   created: (what = '') => n().success(`已添加${what}`),
   updated: (what = '') => n().success(`已更新${what}`),
   deleted: (what = '') => n().success(`已删除${what}`),
+  moved: (what = '') => n().success(`已移动${what}`),
   sended: (what = '') => n().success(`已发送${what}`),
   bound: () => n().success('绑定成功，你们的数据现在双向同步啦'),
   unbound: () => n().success('已解除绑定'),

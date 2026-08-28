@@ -287,6 +287,21 @@ public class ImageDto
     public long CreateUserId { get; set; }
     public DateTime CreateTime { get; set; }
 }
+
+// 相册图片批量操作请求（#17 相册批量：多选删除 / 移动到其他相册 / 拖拽排序）
+public class AlbumImageBatchDeleteReq
+{
+    public List<long> Ids { get; set; } = new();
+}
+public class AlbumImageBatchMoveReq
+{
+    public List<long> Ids { get; set; } = new();
+    public long TargetAlbumId { get; set; }
+}
+public class AlbumImageReorderReq
+{
+    public List<long> Ids { get; set; } = new();
+}
 #endregion
 
 #region 矛盾 Conflict

@@ -90,6 +90,17 @@
           <template #icon><Heart :size="14" :stroke-width="1.8" :fill="onlyFav ? 'currentColor' : 'none'" /></template>
           仅看收藏
         </NButton>
+        <NButton
+          quaternary
+          size="small"
+          :type="selectMode ? 'primary' : 'default'"
+          :class="{ on: selectMode }"
+          class="sel-toggle"
+          @click="toggleSelectMode"
+        >
+          <template #icon><CheckSquare :size="14" :stroke-width="1.8" /></template>
+          选择
+        </NButton>
       </div>
 
       <IndSkeleton v-if="imgLoading" variant="grid" :rows="6" :columns="3" />
@@ -119,9 +130,9 @@
       />
 
       <div v-else class="img-grid">
-        <!-- 桌面端：网格首位的“添加照片”磁贴，入口更醒目 -->
+        <!-- 桌面端：网格首位的“添加照片”磁贴 -->
         <NUpload
-          v-if="!isMobile()"
+          v-if="!isMobile() && !selectMode"
           multiple
           :max="20"
           accept="image/*"
@@ -134,17 +145,34 @@
             <div class="add-txt">添加照片</div>
           </div>
         </NUpload>
-        <div
-          v-for="img in filteredImages"
-          :key="img.id"
-          class="img-cell love-card"
-          @click="openLightbox(img)"
+
+        <draggable
+          v-model="images"
+          item-key="id"
+          class="img-drag"
+          :handle="'.drag-handle'"
+          :animation="160"
+          :disabled="selectMode || isFiltering"
+          @end="onReorder"
         >
-          <img class="thumb" :src="img.url || img.imagePath" :alt="img.remark || 'photo'" loading="lazy" />
-          <div class="img-cap" v-if="img.remark">{{ img.remark }}</div>
-          <button class="img-fav" :class="{ on: favs.has(img.id) }" @click.stop="toggleFav(img)" :aria-label="favs.has(img.id) ? '取消收藏' : '收藏'"><Heart :size="14" :fill="favs.has(img.id) ? 'currentColor' : 'none'" /></button>
-          <NButton class="img-del" size="tiny" quaternary circle :disabled="removingId === img.id" :aria-busy="removingId === img.id" :aria-label="removingId === img.id ? '正在删除' : '删除照片'" @click.stop="removeImage(img)">✕</NButton>
-        </div>
+          <template #item="{ element: img }">
+            <div
+              class="img-cell love-card"
+              :class="{ selected: selectMode && selectedIds.has(img.id) }"
+              v-show="matchesFilter(img)"
+              @click="onCellClick(img)"
+            >
+              <img class="thumb" :src="img.url || img.imagePath" :alt="img.remark || 'photo'" loading="lazy" />
+              <div class="img-cap" v-if="img.remark" v-show="!selectMode">{{ img.remark }}</div>
+              <button class="img-fav" v-if="!selectMode" :class="{ on: favs.has(img.id) }" @click.stop="toggleFav(img)" :aria-label="favs.has(img.id) ? '取消收藏' : '收藏'"><Heart :size="14" :fill="favs.has(img.id) ? 'currentColor' : 'none'" /></button>
+              <NButton v-if="!selectMode" class="img-del" size="tiny" quaternary circle :disabled="removingId === img.id" :aria-busy="removingId === img.id" :aria-label="removingId === img.id ? '正在删除' : '删除照片'" @click.stop="removeImage(img)">✕</NButton>
+              <span class="drag-handle" v-if="!selectMode" @click.stop><GripVertical :size="16" :stroke-width="1.8" /></span>
+              <div class="select-overlay" v-if="selectMode">
+                <Check v-if="selectedIds.has(img.id)" :size="22" :stroke-width="3" />
+              </div>
+            </div>
+          </template>
+        </draggable>
       </div>
 
       <AlbumLightbox
@@ -153,6 +181,24 @@
         :favs="favs"
         @toggle-fav="onLightboxFav"
       />
+
+      <!-- 批量操作栏（选择模式下） -->
+      <div v-if="selectMode" class="batch-bar">
+        <span class="batch-count">已选 {{ selectedIds.size }} 张</span>
+        <NButton size="small" :disabled="!selectedIds.size" @click="openMove">移动到相册</NButton>
+        <NButton size="small" type="error" :disabled="!selectedIds.size" @click="batchDelete">删除</NButton>
+        <NButton size="small" quaternary @click="exitSelect">完成</NButton>
+      </div>
+
+      <NModal v-model:show="showMove" title="移动到相册" preset="card" style="width:92%;max-width:420px">
+        <NSelect v-model:value="moveTarget" :options="moveOptions" placeholder="选择目标相册" />
+        <template #footer>
+          <div class="modal-foot">
+            <NButton @click="showMove = false">取消</NButton>
+            <NButton type="primary" :disabled="!moveTarget || !selectedIds.size" :loading="moving" @click="confirmBatchMove">移动</NButton>
+          </div>
+        </template>
+      </NModal>
 
       <!-- 移动端固定底部上传 -->
       <div v-if="isMobile()" class="upload-fab">
@@ -194,10 +240,10 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import {
-  NButton, NModal, NForm, NFormItem, NInput, NUpload, NTag,
+  NButton, NModal, NForm, NFormItem, NInput, NUpload, NTag, NSelect,
 } from 'naive-ui';
 import type { UploadCustomRequestOptions } from 'naive-ui';
-import type { AlbumDto, AlbumReq, ImageDto, ApiResult } from '@/types';
+import type { AlbumDto, AlbumReq, ImageDto, ApiResult, PagedResult } from '@/types';
 import * as albumApi from '@/api/album';
 import { isMobile } from '@/composables/useDevice';
 import { useStaggerEnter } from '@/composables/useAnimation';
@@ -206,9 +252,10 @@ import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { feedback } from '@/utils/feedback';
-import { Heart, Search } from 'lucide-vue-next';
+import { Heart, Search, GripVertical, Check, CheckSquare } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';
 import ImageField from '@/components/Common/ImageField.vue';
+import draggable from 'vuedraggable';
 
 const setting = useSettingStore();
 
@@ -386,6 +433,95 @@ async function removeImage(img: ImageDto) {
   }
 }
 
+// #17 相册批量：多选 + 批量删除 / 移动到其他相册 + 拖拽排序
+const selectMode = ref(false);
+const selectedIds = ref<Set<number>>(new Set());
+const showMove = ref(false);
+const moveTarget = ref<number | null>(null);
+const moving = ref(false);
+const moveOptions = ref<{ label: string; value: number }[]>([]);
+
+const isFiltering = computed(() => !!imgKeyword.value.trim() || onlyFav.value);
+function matchesFilter(img: ImageDto) {
+  if (onlyFav.value && !favs.value.has(img.id)) return false;
+  const kw = imgKeyword.value.trim().toLowerCase();
+  if (kw && !((img.remark || '') + ' ' + (img.url || img.imagePath || '')).toLowerCase().includes(kw)) return false;
+  return true;
+}
+function toggleSelectMode() {
+  selectMode.value = !selectMode.value;
+  if (!selectMode.value) selectedIds.value = new Set();
+}
+function exitSelect() {
+  selectMode.value = false;
+  selectedIds.value = new Set();
+}
+function onCellClick(img: ImageDto) {
+  if (selectMode.value) {
+    const s = new Set(selectedIds.value);
+    s.has(img.id) ? s.delete(img.id) : s.add(img.id);
+    selectedIds.value = s;
+  } else {
+    openLightbox(img);
+  }
+}
+async function onReorder() {
+  try {
+    await albumApi.reorderImages(images.value.map((i) => i.id));
+  } catch {
+    feedback.error('排序保存失败，已撤销');
+    if (currentAlbum.value) {
+      const res = await albumApi.listImages(currentAlbum.value.id);
+      images.value = (res.data as ApiResult<ImageDto[]>).data ?? [];
+    }
+  }
+}
+async function batchDelete() {
+  if (!selectedIds.value.size) return;
+  const ids = [...selectedIds.value];
+  try {
+    await albumApi.batchDeleteImages(ids);
+    images.value = images.value.filter((i) => !selectedIds.value.has(i.id));
+    if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - ids.length);
+    feedback.deleted('所选照片');
+  } catch {
+    feedback.error('批量删除失败，请重试');
+  } finally {
+    exitSelect();
+  }
+}
+async function openMove() {
+  if (!selectedIds.value.size) return;
+  try {
+    const res = await albumApi.listAlbum({ page: 1, pageSize: 100 });
+    const all = (res.data as ApiResult<PagedResult<AlbumDto>>).data?.items ?? [];
+    moveOptions.value = all
+      .filter((a) => !currentAlbum.value || a.id !== currentAlbum.value.id)
+      .map((a) => ({ label: a.albumName, value: a.id }));
+    moveTarget.value = null;
+    showMove.value = true;
+  } catch {
+    feedback.error('获取相册列表失败');
+  }
+}
+async function confirmBatchMove() {
+  if (!moveTarget.value || !selectedIds.value.size) return;
+  const ids = [...selectedIds.value];
+  moving.value = true;
+  try {
+    await albumApi.batchMoveImages(ids, moveTarget.value);
+    images.value = images.value.filter((i) => !selectedIds.value.has(i.id));
+    if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - ids.length);
+    feedback.moved('所选照片');
+    showMove.value = false;
+  } catch {
+    feedback.error('批量移动失败，请重试');
+  } finally {
+    moving.value = false;
+    exitSelect();
+  }
+}
+
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 const { useModuleSync } = useRealtime();
@@ -420,10 +556,13 @@ html:not(.reduce-motion) .album-card:hover { transform: translateY(-3px) scale(1
 .album-meta { padding: 10px 12px; }
 .album-name { font-weight: 500; }
 
-.img-grid { columns: 3; column-gap: 8px; }
-.img-cell { position: relative; padding: 0; overflow: hidden; margin-bottom: 8px; break-inside: avoid; border-radius: var(--radius-md); }
-.img-cell :deep(img) { width: 100%; height: auto; display: block; transition: transform var(--dur-micro) var(--ease-love); }
-.thumb { width: 100%; height: auto; display: block; cursor: zoom-in; transition: transform var(--dur-micro) var(--ease-love); }
+.img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 8px; }
+.img-drag { display: contents; }
+.img-cell { position: relative; padding: 0; overflow: hidden; aspect-ratio: 1; cursor: pointer; border-radius: var(--radius-md); }
+.img-cell :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--dur-micro) var(--ease-love); }
+.thumb { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; transition: transform var(--dur-micro) var(--ease-love); }
+html:not(.reduce-motion) .img-cell:hover :deep(img) { transform: scale(1.05); }
+.img-cell.selected { box-shadow: 0 0 0 2px var(--color-accent); }
 html:not(.reduce-motion) .img-cell:hover :deep(img) { transform: scale(1.05); }
 .img-cap {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 8px; font-size: 12px; color: #fff;
@@ -452,7 +591,26 @@ html:not(.reduce-motion) .img-cell:hover .img-fav, .img-fav.on { opacity: 1; }
 .upload-hint { font-size: 12px; color: var(--color-ink-3); margin: 4px 0 0; }
 
 /* 网格首位的"添加照片"磁贴 */
-.add-tile-wrap { margin-bottom: 8px; break-inside: avoid; }
+.add-tile-wrap { margin: 0; }
+.drag-handle {
+  position: absolute; right: 6px; bottom: 6px; width: 26px; height: 26px; border-radius: 6px;
+  background: rgba(0, 0, 0, 0.45); color: #fff; display: grid; place-items: center; cursor: grab;
+  opacity: 0; transition: opacity var(--dur-micro) var(--ease-love); z-index: 3;
+}
+html:not(.reduce-motion) .img-cell:hover .drag-handle, .drag-handle:active { opacity: 1; }
+.drag-handle:active { cursor: grabbing; }
+.select-overlay {
+  position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
+  background: rgba(0, 0, 0, 0.38); border: 2px solid transparent; box-sizing: border-box; z-index: 2;
+}
+.img-cell.selected .select-overlay { background: rgba(var(--color-accent-rgb, 122, 100, 98), 0.28); border-color: var(--color-accent); }
+.sel-toggle { flex: 0 0 auto; }
+.batch-bar {
+  position: fixed; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 16px);
+  z-index: 30; display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  background: var(--color-surface, #fff); border-radius: var(--radius-lg); box-shadow: 0 8px 24px rgba(31, 41, 55, 0.16);
+}
+.batch-count { flex: 1; font-size: 13px; color: var(--color-ink-2); }
 .add-tile {
   width: 100%; aspect-ratio: 1 / 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 6px; cursor: pointer;
@@ -483,6 +641,6 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: 0
 @media (max-width: 767px) {
   :global(.album-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
   .album-grid { grid-template-columns: repeat(2, 1fr); }
-  .img-grid { columns: 2; }
+  .img-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
 }
 </style>

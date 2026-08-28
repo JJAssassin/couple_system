@@ -40,4 +40,25 @@ public class AlbumController : BaseController
     [HttpGet("image/list")]
     public async Task<ActionResult<ApiResult<List<ImageDto>>>> ImageList([FromQuery] long albumId, CancellationToken ct) =>
         Ok(ApiResult<List<ImageDto>>.Ok(await _svc.ListImagesAsync(albumId, ct)));
+
+    [HttpPost("image/batch-delete")]
+    public async Task<ActionResult<ApiResult<object>>> BatchDeleteImages([FromBody] AlbumImageBatchDeleteReq req, CancellationToken ct)
+    {
+        await _svc.BatchDeleteImagesAsync(req.Ids, ct);
+        return Ok(ApiResults.Ok(new { }, "已删除所选照片"));
+    }
+
+    [HttpPost("image/batch-move")]
+    public async Task<ActionResult<ApiResult<object>>> BatchMoveImages([FromBody] AlbumImageBatchMoveReq req, CancellationToken ct)
+    {
+        await _svc.BatchMoveImagesAsync(req.Ids, req.TargetAlbumId, ct);
+        return Ok(ApiResults.Ok(new { }, "已移动到目标相册"));
+    }
+
+    [HttpPost("image/reorder")]
+    public async Task<ActionResult<ApiResult<object>>> ReorderImages([FromBody] AlbumImageReorderReq req, CancellationToken ct)
+    {
+        await _svc.ReorderImagesAsync(req.Ids, ct);
+        return Ok(ApiResults.Ok(new { }, "已更新顺序"));
+    }
 }

@@ -30,4 +30,15 @@ export function deleteImage(id: number) {
   return api.delete(`/image/delete?id=${id}`);
 }
 
+// #17 相册批量：多选删除 / 移动到其他相册 / 拖拽排序
+export function batchDeleteImages(ids: number[]) {
+  return api.post('/album/image/batch-delete', { ids });
+}
+export function batchMoveImages(ids: number[], targetAlbumId: number) {
+  return api.post('/album/image/batch-move', { ids, targetAlbumId });
+}
+export function reorderImages(ids: number[]) {
+  return api.post('/album/image/reorder', { ids });
+}
+
 export type { AlbumDto, AlbumReq, ImageDto, PagedResult, ApiResult };
