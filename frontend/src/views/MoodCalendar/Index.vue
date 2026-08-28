@@ -32,8 +32,14 @@
               'has-mood': cell.day?.moodScore != null,
             }"
             :style="cell.day?.moodScore != null ? { background: moodColor(cell.day.moodScore) } : {}"
+            :tabindex="cell.day ? 0 : -1"
+            :role="cell.day ? 'button' : undefined"
+            :aria-label="cell.day ? (cell.day.moodScore != null ? cell.day.date + ' 心情 ' + cell.day.moodScore + ' 分' : cell.day.date + ' 无记录') : ''"
             @mouseenter="hover = cell.day"
             @mouseleave="hover = null"
+            @click="cell.day && (hover = cell.day)"
+            @keydown.enter.prevent="cell.day && (hover = cell.day)"
+            @keydown.space.prevent="cell.day && (hover = cell.day)"
           >
             <span v-if="cell.day" class="mc-cell-text">{{ cell.day.date.split('-')[2] }}</span>
           </div>
@@ -192,10 +198,11 @@ html.reduce-motion .mc-section { animation: none; }
   background: var(--color-surface-2);
   display: flex; align-items: center; justify-content: center;
   font-size: 10px; color: var(--color-ink-3);
-  cursor: pointer;
   transition: transform 0.15s ease;
 }
+.mc-cell:not(.empty) { cursor: pointer; }
 .mc-cell:not(.empty):hover { transform: scale(1.15); z-index: 2; }
+.mc-cell:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 1px; }
 .mc-cell.has-mood { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 .mc-cell-text { pointer-events: none; }
 
