@@ -27,6 +27,11 @@ api.interceptors.request.use((cfg: InternalAxiosRequestConfig) => {
 
 // 并发刷新锁：避免多个 401 同时刷新
 let refreshing: Promise<string> | null = null;
+// 刷新冷却：限流(429)或网络抖动时，短时间内不再重复打 /auth/refresh。
+// 目的① 别把后端「刷新 5 次/分/IP」限流桶打满；目的② 杜绝「刷新被限流 → 登出 →
+// 下一笔请求又刷新 → 又被限流」的自杀循环（见 2026-08-28 复盘）。
+let lastRefreshAt = 0;
+const REFRESH_COOLDOWN_MS = 15_000;
 
 api.interceptors.response.use(
   (res) => {
@@ -45,6 +50,13 @@ api.interceptors.response.use(
     if (cfg && shouldTrack(cfg)) useGlobalLoading().end();
     if (err.response?.status === 401 && !cfg.headers['X-Retry']) {
       cfg.headers['X-Retry'] = '1';
+      const now = Date.now();
+      // 冷却期内：跳过刷新，直接按失败处理（不登出、保留本地 token），
+      // 等冷却后由下次请求再试，避免在限流窗口里高频重试把桶打满。
+      if (now - lastRefreshAt < REFRESH_COOLDOWN_MS) {
+        return Promise.reject(err);
+      }
+      lastRefreshAt = now;
       try {
         const newAt = await (refreshing ??= doRefresh());
         refreshing = null;
@@ -53,12 +65,12 @@ api.interceptors.response.use(
       } catch (refreshErr) {
         refreshing = null;
         const rerr = refreshErr as AxiosError;
-        if (rerr?.response) {
-          // 服务端明确拒绝刷新（refreshToken 失效/过期）→ 真登出
+        const status = rerr?.response?.status;
+        // 仅当刷新端点「明确拒绝」令牌（401/400/403 失效/过期）才真登出；
+        // 429 限流或网络层失败一律不登出——保留本地 token，等冷却后下次请求自动恢复，
+        // 避免移动端弱网/被限流时「刷新失败 → 登出 → 又被踢回登录页」的循环。
+        if (status === 401 || status === 400 || status === 403) {
           useAuthStore().logout();
-        } else {
-          // 网络层失败（弱网/代理抖动/CF 边缘波动）：绝不登出，保留本地 token，
-          // 避免移动端弱网下「点功能 → 刷新请求超时 → 被误踢回登录页」。
         }
         return Promise.reject(err);
       }
