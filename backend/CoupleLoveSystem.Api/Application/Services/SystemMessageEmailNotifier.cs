@@ -1,4 +1,4 @@
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Infrastructure.Email;
 using Microsoft.EntityFrameworkCore;
 

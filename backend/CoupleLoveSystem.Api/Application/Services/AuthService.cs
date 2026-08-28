@@ -170,7 +170,7 @@ public class AuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private static UserProfileDto ToProfile(Core.Entities.CoupleUser u) => new()
+    private static UserProfileDto ToProfile(Domain.Entities.CoupleUser u) => new()
     {
         Id = u.Id, NickName = u.NickName, Avatar = u.Avatar, RoleType = u.RoleType, LoveStartTime = u.LoveStartTime
     };

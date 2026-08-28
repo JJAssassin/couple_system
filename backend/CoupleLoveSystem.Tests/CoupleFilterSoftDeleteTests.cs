@@ -1,4 +1,4 @@
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Tests.Infrastructure;
 using Microsoft.EntityFrameworkCore;

@@ -1,9 +1,9 @@
 using CoupleLoveSystem.Api;
 using CoupleLoveSystem.Application.Services;
 using CoupleLoveSystem.Core.Dtos;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Core.Result;
-using CoupleLoveSystem.Infrastructure.Repositories;
+using CoupleLoveSystem.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;

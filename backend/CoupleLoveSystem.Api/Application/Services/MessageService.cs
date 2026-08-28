@@ -1,7 +1,7 @@
 using CoupleLoveSystem.Core.Dtos;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Infrastructure.Persistence;
-using CoupleLoveSystem.Infrastructure.Repositories;
+using CoupleLoveSystem.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoupleLoveSystem.Application.Services;

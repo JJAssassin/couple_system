@@ -5,7 +5,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using CoupleLoveSystem.Application.Services;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Infrastructure.Cache;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Infrastructure.Repositories;

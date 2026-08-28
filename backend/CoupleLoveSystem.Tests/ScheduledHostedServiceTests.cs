@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using CoupleLoveSystem.Api;
 using CoupleLoveSystem.Api.Hubs;
 using CoupleLoveSystem.Application.Services;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Core.Enums;
 using CoupleLoveSystem.Core.Options;
 using CoupleLoveSystem.Infrastructure.Email;

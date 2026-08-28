@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Core.Enums;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Infrastructure.Repositories;

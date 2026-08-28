@@ -1,4 +1,4 @@
-namespace CoupleLoveSystem.Core.Entities;
+namespace CoupleLoveSystem.Domain.Entities;
 
 /// <summary>
 /// 标注在实体类上，声明「该实体发生变更后应通过 SignalR 广播给对应情侣组的模块名」。

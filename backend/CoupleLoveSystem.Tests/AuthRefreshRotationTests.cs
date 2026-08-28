@@ -1,6 +1,6 @@
 using CoupleLoveSystem.Application.Services;
 using CoupleLoveSystem.Core.Dtos;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Core.Options;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Tests.Infrastructure;

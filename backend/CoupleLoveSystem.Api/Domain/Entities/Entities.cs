@@ -1,6 +1,6 @@
 using CoupleLoveSystem.Core.Enums;
 
-namespace CoupleLoveSystem.Core.Entities;
+namespace CoupleLoveSystem.Domain.Entities;
 
 /// <summary>所有业务表统一基础字段（逻辑删除，不物理删除情感数据）。</summary>
 public abstract class BaseEntity

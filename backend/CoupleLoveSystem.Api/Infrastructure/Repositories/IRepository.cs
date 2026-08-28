@@ -1,18 +1,8 @@
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
+using CoupleLoveSystem.Domain.Interfaces;
 using System.Linq.Expressions;
 
 namespace CoupleLoveSystem.Infrastructure.Repositories;
-
-public interface IRepository<T> where T : BaseEntity
-{
-    IQueryable<T> Query();
-    Task<T?> GetByIdAsync(long id, CancellationToken ct = default);
-    Task<List<T>> ListAsync(Expression<Func<T, bool>>? predicate = null, CancellationToken ct = default);
-    Task AddAsync(T entity, CancellationToken ct = default);
-    void Update(T entity);
-    void SoftDelete(T entity);   // 逻辑删除：IsDeleted = true
-    Task<int> SaveChangesAsync(CancellationToken ct = default);
-}
 
 public class EfRepository<T> : IRepository<T> where T : BaseEntity
 {

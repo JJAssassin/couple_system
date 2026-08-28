@@ -2,7 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CoupleLoveSystem.Api;
 using CoupleLoveSystem.Api.Hubs;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;

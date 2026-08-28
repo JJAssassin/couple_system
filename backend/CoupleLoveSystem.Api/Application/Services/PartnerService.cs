@@ -1,6 +1,6 @@
 using CoupleLoveSystem.Api;
 using CoupleLoveSystem.Core.Dtos;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Core.Enums;
 using CoupleLoveSystem.Core.Result;
 using CoupleLoveSystem.Infrastructure.Persistence;

@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using CoupleLoveSystem.Api;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Infrastructure.Realtime;
 using Microsoft.EntityFrameworkCore;

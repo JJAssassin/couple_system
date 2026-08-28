@@ -1,13 +1,8 @@
 using CoupleLoveSystem.Core.Dtos;
-using CoupleLoveSystem.Core.Entities;
+using CoupleLoveSystem.Domain.Entities;
+using CoupleLoveSystem.Domain.Interfaces;
 
 namespace CoupleLoveSystem.Infrastructure.Repositories;
-
-public interface IAnniversaryRepository : IRepository<CoupleAnniversary>
-{
-    Task<PagedResult<CoupleAnniversary>> PagedAsync(int page, int pageSize, long currentUserId, CancellationToken ct = default);
-    Task<List<CoupleAnniversary>> NearestAsync(int take, CancellationToken ct = default);
-}
 
 public class AnniversaryRepository : EfRepository<CoupleAnniversary>, IAnniversaryRepository
 {

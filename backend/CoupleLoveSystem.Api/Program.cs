@@ -3,6 +3,7 @@ using CoupleLoveSystem.Api;
 using CoupleLoveSystem.Api.Hubs;
 using CoupleLoveSystem.Application.Services;
 using CoupleLoveSystem.Core.Options;
+using CoupleLoveSystem.Domain.Interfaces;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Infrastructure.Redis;
 using CoupleLoveSystem.Infrastructure.Cache;
