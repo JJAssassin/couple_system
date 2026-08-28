@@ -221,7 +221,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch, onUnmounted } from 'vue';
 import {
   NButton, NTag, NPopconfirm, NTabs, NTabPane,
 } from 'naive-ui';
@@ -244,6 +244,7 @@ import {
   LoveSheet, LoveInput, LoveTextarea, LoveSegmented, LoveDateField, LoveSaveBar,
 } from '@/components/loveform';
 import { feedback } from '@/utils/feedback';
+import { toLocalISO } from '@/utils/format';
 import { fireConfetti } from '@/composables/useConfetti';
 
 const notify = useNotifyStore();
@@ -254,6 +255,17 @@ const listEl = ref<HTMLElement>();
 const activeTab = ref<number>(1);
 const statusFilter = ref<string>('all');
 const wishes = ref<WishDto[]>([]);
+
+// 统一延时器管理：避免组件卸载后 setTimeout 仍回调（跨页已确认的真实泄漏模式）
+const pendingTimers = new Set<number>();
+function later(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+  pendingTimers.add(id);
+}
+onUnmounted(() => {
+  pendingTimers.forEach((id) => clearTimeout(id));
+  pendingTimers.clear();
+});
 
 // 卡片翻面状态（09 卡片翻面）：逐卡记录是否翻到背面
 const flips = reactive<Record<number, boolean>>({});
@@ -389,14 +401,14 @@ async function submitForm() {
   }
   saving.value = true;
   try {
-    form.expectTime = expectTs.value ? new Date(expectTs.value).toISOString() : undefined;
+    form.expectTime = toLocalISO(expectTs.value);
     if (editing.value) {
       await updateWish(editing.value.id, { ...form });
     } else {
       await createWish({ ...form });
     }
     saved.value = true;
-    window.setTimeout(async () => {
+    later(async () => {
       showForm.value = false;
       if (editing.value) feedback.updated('愿望');
       else feedback.created('愿望');
@@ -426,7 +438,7 @@ async function submitComplete() {
     await completeWish({ ...completeForm });
     savedComplete.value = true;
     fireConfetti();
-    window.setTimeout(async () => {
+    later(async () => {
       showComplete.value = false;
       feedback.saved('愿望');
       await load();
