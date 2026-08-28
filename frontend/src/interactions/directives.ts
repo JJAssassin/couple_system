@@ -1,4 +1,5 @@
 import type { Directive, App } from 'vue';
+import { hapticForAction } from '@/composables/useHaptic';
 
 /** 系统是否要求降级动效（用户设置或系统偏好） */
 function reduceMotion(): boolean {
@@ -43,6 +44,8 @@ export const vPressBounce: Directive<HTMLElement> = {
       el.style.transition = 'transform var(--fx-dur-micro, 140ms) var(--fx-ease-soft, ease)';
       el.style.transform = 'scale(0.96)';
       el.style.willChange = 'transform';
+      // 按压即触发轻触反馈：所有 v-press-bounce 按钮（全站主操作）一次性获得 Web Haptic 触感
+      hapticForAction('tap');
     };
     const up = () => {
       if (reduceMotion()) {

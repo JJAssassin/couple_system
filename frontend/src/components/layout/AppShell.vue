@@ -219,8 +219,10 @@ function logout() {
   display: inline-flex; align-items: center; justify-content: center;
   width: 38px; height: 38px; border-radius: 10px; cursor: pointer;
   border: 1px solid transparent; background: transparent; color: var(--color-ink-2);
-  transition: all var(--dur-micro) var(--ease-love);
+  transition: transform var(--dur-micro) var(--fx-ease-back, cubic-bezier(0.34, 1.56, 0.64, 1)),
+    color var(--dur-micro) var(--ease-love), background var(--dur-micro) var(--ease-love);
 }
+.tb-icon:active { transform: scale(0.96); }
 .tb-icon:hover { color: var(--color-rose); background: var(--color-rose-soft); }
 .tb-logout:hover { color: var(--color-rose); }
 
@@ -267,10 +269,10 @@ function logout() {
 .tab {
   flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
   color: var(--color-ink-3); text-decoration: none; cursor: pointer; background: none; border: none;
-  font-size: 11px; padding: 4px 0; transition: color var(--dur-micro) var(--ease-love);
+  font-size: 11px; padding: 4px 0; transition: color var(--dur-micro) var(--ease-love), transform var(--dur-micro) var(--fx-ease-back, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
 .tab.router-link-active { color: var(--color-rose); }
-.tab:active { transform: scale(0.94); }
+.tab:active { transform: scale(0.96); }
 .tab-lbl { line-height: 1; }
 .drawer-fade-enter-active, .drawer-fade-leave-active { transition: opacity var(--dur-pop) var(--ease-love); }
 .drawer-fade-enter-from, .drawer-fade-leave-to { opacity: 0; }
