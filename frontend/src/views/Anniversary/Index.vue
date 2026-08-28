@@ -219,10 +219,25 @@ function openPoster(a: AnniversaryDto) {
 /* ---------- 实时倒计时引擎：每秒刷新 now，驱动所有倒计时 ---------- */
 const now = ref(Date.now());
 let timer: number | undefined;
+// 统一管理延迟回调（保存后关弹窗 / 删除动画后再移除），卸载时一次性清理，避免过期定时器
+const pendingTimers = new Set<number>();
+function later(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+  pendingTimers.add(id);
+}
 interface Countdown { d: number; h: number; m: number; s: number; diff: number }
+// 仅含日期的字符串（YYYY-MM-DD）按「本地日历日」解析，避免被当 UTC 零点而在负时区差一天
+function parseLocalDate(s?: string | null): Date | null {
+  if (!s) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const [y, mo, d] = s.split('-').map(Number);
+    return new Date(y, mo - 1, d);
+  }
+  return new Date(s);
+}
 function cd(iso?: string | null): Countdown | null {
   if (!iso) return null;
-  const target = new Date(iso).getTime();
+  const target = parseLocalDate(iso)!.getTime();
   let diff = target - now.value;
   if (diff < 0) diff = 0;
   return {
@@ -239,11 +254,12 @@ const pad = (n?: number) => String(n ?? 0).padStart(2, '0');
 // 第 N 周年（仅每年重复）
 function occNumber(a: AnniversaryDto): number | null {
   if (!a.isYearly || !a.nextOccurrence) return null;
-  return new Date(a.nextOccurrence).getFullYear() - new Date(a.targetDate).getFullYear() + 1;
+  return parseLocalDate(a.nextOccurrence)!.getFullYear() - parseLocalDate(a.targetDate)!.getFullYear() + 1;
 }
 // 已过去天数（用于过期的一次性纪念日）
 function daysSince(a: AnniversaryDto): number {
-  return Math.max(0, Math.floor((now.value - new Date(a.targetDate).getTime()) / 86_400_000));
+  const t = parseLocalDate(a.targetDate)?.getTime() ?? now.value;
+  return Math.max(0, Math.floor((now.value - t) / 86_400_000));
 }
 // 是否「今天」就是目标日
 function isToday(a: AnniversaryDto): boolean {
@@ -263,8 +279,8 @@ function isSoon(a: AnniversaryDto): boolean {
 // 本周年进度（仅每年重复）：自上次发生日到下次发生日的占比
 function yearProgress(a: AnniversaryDto): number {
   if (!a.isYearly || !a.nextOccurrence) return 0;
-  const next = new Date(a.nextOccurrence).getTime();
-  const last = new Date(a.nextOccurrence);
+  const next = parseLocalDate(a.nextOccurrence)!.getTime();
+  const last = parseLocalDate(a.nextOccurrence)!;
   last.setFullYear(last.getFullYear() - 1);
   const lastMs = last.getTime();
   const pct = ((now.value - lastMs) / (next - lastMs)) * 100;
@@ -286,7 +302,7 @@ const pastHero = computed<AnniversaryDto | null>(() => {
   if (hero.value) return null;
   return items.value
     .filter((a) => !a.nextOccurrence)
-    .sort((a, b) => new Date(b.targetDate).getTime() - new Date(a.targetDate).getTime())[0] ?? null;
+    .sort((a, b) => (parseLocalDate(b.targetDate)?.getTime() ?? 0) - (parseLocalDate(a.targetDate)?.getTime() ?? 0))[0] ?? null;
 });
 
 /* ---------- 历史回顾统计 ---------- */
@@ -334,7 +350,8 @@ async function load() {
 
 function fmtDate(s?: string | null) {
   if (!s) return '—';
-  const d = new Date(s);
+  const d = parseLocalDate(s);
+  if (!d) return '—';
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
@@ -350,7 +367,7 @@ function openEdit(a: AnniversaryDto) {
   form.value = {
     name: a.name,
     anniversaryType: a.anniversaryType,
-    dateTs: new Date(a.targetDate).getTime(),
+    dateTs: parseLocalDate(a.targetDate)!.getTime(),
     remindDays: a.remindDays,
     isYearly: a.isYearly,
     coverImage: a.coverImage ?? '',
@@ -364,7 +381,12 @@ function toReq(): AnniversaryReq {
   return {
     name: form.value.name.trim(),
     anniversaryType: form.value.anniversaryType,
-    targetDate: form.value.dateTs ? new Date(form.value.dateTs).toISOString().slice(0, 10) : '',
+    targetDate: form.value.dateTs
+      ? (() => {
+          const dd = new Date(form.value.dateTs!);
+          return `${dd.getFullYear()}-${String(dd.getMonth() + 1).padStart(2, '0')}-${String(dd.getDate()).padStart(2, '0')}`;
+        })()
+      : '',
     remindDays: form.value.remindDays,
     isYearly: form.value.isYearly,
     coverImage: form.value.coverImage.trim() || undefined,
@@ -395,16 +417,19 @@ async function submit() {
       feedback.created('纪念日');
     }
     saved.value = true;
-    window.setTimeout(() => { showForm.value = false; }, 680);
+    later(() => { showForm.value = false; }, 680);
   } finally { submitting.value = false; }
 }
 
 async function onDelete(a: AnniversaryDto) {
   try {
     await deleteAnniversary(a.id);
-    items.value = items.value.filter((x) => x.id !== a.id);
+    // 先标记 pop 动画，等 0.3s 动画播完再真正移除；修复原「先移除导致动画永不触发」
     poppingId.value = a.id;
-    setTimeout(() => (poppingId.value = null), 300);
+    later(() => {
+      items.value = items.value.filter((x) => x.id !== a.id);
+      poppingId.value = null;
+    }, 300);
     feedback.deleted('纪念日');
   } catch { /* 忽略 */ }
 }
@@ -419,7 +444,11 @@ onMounted(async () => {
   // 伴侣在另一台设备新增/刷新纪念日时，卡片错落入场
   useSyncSettle('anniversary', container, items, '.anniv-card');
 });
-onUnmounted(() => { if (timer) clearInterval(timer); });
+onUnmounted(() => {
+  if (timer) clearInterval(timer);
+  pendingTimers.forEach((id) => clearTimeout(id));
+  pendingTimers.clear();
+});
 </script>
 
 <style scoped>
