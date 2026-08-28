@@ -117,19 +117,38 @@
         <div v-if="!comments.length" class="sub-text">还没有评论，来抢沙发～</div>
         <div v-for="c in comments" :key="c.id" class="comment">
           <div class="sub-text">{{ authorLabel(c.createUserId) }} · {{ fmtDateTime(c.createTime) }}</div>
-          <div class="comment-body">{{ c.content }}</div>
+          <div class="comment-body"><template v-for="(seg, si) in segments(c.content)" :key="si"><span v-if="seg.isMention" class="mention">@{{ seg.text }}</span><template v-else>{{ seg.text }}</template></template></div>
         </div>
 
         <template #footer>
           <div class="comment-box">
+            <div class="comment-hint sub-text">输入 <kbd>@</kbd> 可提及对方</div>
             <n-input
+              ref="commentInput"
               v-model:value="commentText"
               type="textarea"
               placeholder="说点什么…"
               class="comment-input"
               aria-label="评论内容"
               :autosize="{ minRows: 3, maxRows: 8 }"
+              @input="onCommentInput"
+              @keydown="onCommentKeydown"
+              @blur="closeMention"
             />
+            <div v-if="mentionOpen" class="mention-pop" role="listbox" aria-label="提及候选">
+              <button
+                v-for="(cand, ci) in mentionCandidates"
+                :key="cand.name"
+                type="button"
+                class="mention-item"
+                :class="{ active: ci === activeMention }"
+                role="option"
+                :aria-selected="ci === activeMention"
+                @mousedown.prevent="applyMention(cand.name)"
+                @mouseenter="activeMention = ci"
+              >@{{ cand.name }}</button>
+              <div v-if="!mentionCandidates.length" class="mention-empty">未绑定伴侣，无法 @ 提及</div>
+            </div>
             <n-button type="primary" :loading="sending" :disabled="!commentText.trim()" v-click-burst @click="sendComment">
               发送
             </n-button>
@@ -141,7 +160,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
 import {
   NButton, NDrawer, NDrawerContent, NTag, NDivider, NInput,
 } from 'naive-ui';
@@ -305,6 +324,106 @@ const comments = ref<DiaryCommentDto[]>([]);
 const commentText = ref('');
 const sending = ref(false);
 
+// ---------- 评论 @提及 (#11) ----------
+const commentInput = ref<{ $el: HTMLElement } | null>(null);
+const mentionOpen = ref(false);
+const mentionQuery = ref('');
+const mentionStart = ref(0);
+const activeMention = ref(0);
+
+const partnerName = computed(() => partner.status?.partner?.nickName || '');
+const mentionCandidates = computed(() => {
+  const n = partnerName.value;
+  if (!n) return [];
+  if (mentionQuery.value && !n.includes(mentionQuery.value)) return [];
+  return [{ name: n }];
+});
+
+function getCommentTextarea(): HTMLTextAreaElement | null {
+  const el = commentInput.value as unknown as { $el?: HTMLElement } | null;
+  return (el?.$el?.querySelector('textarea') as HTMLTextAreaElement) ?? null;
+}
+
+function onCommentInput(e: string) {
+  const ta = getCommentTextarea();
+  if (!ta) return;
+  const val = e ?? commentText.value;
+  const pos = ta.selectionStart;
+  const before = val.slice(0, pos);
+  const m = before.match(/(^|\s)@([^\s@]*)$/);
+  if (m) {
+    mentionStart.value = pos - m[2].length - 1;
+    mentionQuery.value = m[2];
+    activeMention.value = 0;
+    mentionOpen.value = true;
+  } else {
+    mentionOpen.value = false;
+  }
+}
+
+function closeMention() {
+  mentionOpen.value = false;
+  mentionQuery.value = '';
+}
+
+function applyMention(name: string) {
+  const ta = getCommentTextarea();
+  const pos = ta ? ta.selectionStart : commentText.value.length;
+  const before = commentText.value.slice(0, mentionStart.value);
+  const after = commentText.value.slice(pos);
+  commentText.value = `${before}@${name} ${after}`;
+  closeMention();
+  nextTick(() => {
+    if (ta) {
+      const np = before.length + name.length + 2;
+      ta.focus();
+      ta.setSelectionRange(np, np);
+    }
+  });
+}
+
+function onCommentKeydown(e: KeyboardEvent) {
+  if (!mentionOpen.value || !mentionCandidates.value.length) return;
+  const list = mentionCandidates.value;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    activeMention.value = (activeMention.value + 1) % list.length;
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    activeMention.value = (activeMention.value - 1 + list.length) % list.length;
+  } else if (e.key === 'Enter' || e.key === 'Tab') {
+    e.preventDefault();
+    applyMention(list[activeMention.value].name);
+  } else if (e.key === 'Escape') {
+    e.preventDefault();
+    closeMention();
+  }
+}
+
+// 渲染评论正文中的 @提及 高亮（仅匹配已绑定伴侣昵称，避免误高亮）
+const mentionRe = computed(() => {
+  const n = partnerName.value;
+  return n ? new RegExp(`@${escapeRegExp(n)}`, 'g') : null;
+});
+function segments(text: string): { text: string; isMention: boolean }[] {
+  const re = mentionRe.value;
+  if (!re || !text) return [{ text, isMention: false }];
+  const out: { text: string; isMention: boolean }[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  re.lastIndex = 0;
+  while ((m = re.exec(text))) {
+    if (m.index > last) out.push({ text: text.slice(last, m.index), isMention: false });
+    out.push({ text: m[0].slice(1), isMention: true });
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) out.push({ text: text.slice(last), isMention: false });
+  return out;
+}
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 async function openDetail(d: DiaryDto) {
   current.value = d;
   showDetail.value = true;
@@ -369,7 +488,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 
 .comment { padding: 10px 0; border-top: 1px solid var(--color-ink-soft); }
 .comment-body { margin-top: 4px; }
-.comment-box { display: flex; flex-direction: column; gap: 10px; }
+.comment-box { position: relative; display: flex; flex-direction: column; gap: 10px; }
 .comment-input :deep(.n-input__textarea),
 .comment-input :deep(textarea) {
   font-size: 15px;
@@ -378,6 +497,27 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
   resize: vertical;
 }
 .comment-box .n-button { align-self: flex-end; min-width: 92px; }
+.comment-hint { font-size: 12px; }
+.comment-hint kbd {
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+  border-radius: 4px; padding: 0 5px; font-family: var(--font-mono); font-size: 11px;
+}
+.mention-pop {
+  position: absolute; left: 0; right: 0; bottom: 100%; margin-bottom: 6px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 10px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 4px; z-index: 20; max-height: 160px; overflow: auto;
+}
+.mention-item {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  border: none; background: transparent; color: var(--color-ink);
+  padding: 7px 10px; border-radius: 7px; font-size: 14px;
+}
+.mention-item.active, .mention-item:hover {
+  background: var(--color-rose-soft, rgba(214, 51, 108, 0.10)); color: var(--color-rose);
+}
+.mention-empty { padding: 8px 10px; font-size: 13px; color: var(--color-ink-3); }
+.mention { color: var(--color-rose); font-weight: 600; }
 
 .diary-form { display: flex; flex-direction: column; gap: 18px; }
 </style>
