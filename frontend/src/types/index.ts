@@ -464,6 +464,29 @@ export interface ExportResp {
   mediaCount?: number;
 }
 
+// 全量备份导入（与 ExportResp 导出配对）
+export interface ImportCounts {
+  anniversaries: number;
+  diaries: number;
+  wishes: number;
+  conflicts: number;
+  accountRecords: number;
+  dateRecords: number;
+  systemMessages: number;
+  total?: number;
+}
+export interface ImportPreviewResult {
+  valid: boolean;
+  message: string;
+  counts: ImportCounts;
+}
+export interface ImportCommitResult {
+  importedTotal: number;
+  imported: ImportCounts;
+  mediaRestored: number;
+  warnings?: string[];
+}
+
 // ---------- 足迹 / 自定义计数卡 ----------
 export interface FootprintDto {
   id: number;

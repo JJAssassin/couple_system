@@ -158,18 +158,47 @@
       <h2>数据备份</h2>
       <p class="sub-text">导出当前账号可见的全部数据（纪念日 / 日记 / 愿望 / 矛盾 / 留言 / 记账 / 约会 / 消息）。</p>
       <NButton :loading="exporting" v-press-bounce @click="doExport">导出全部数据</NButton>
+      <NButton class="import-ml" :loading="importing" @click="openImport">导入备份</NButton>
     </section>
+
+    <NModal v-model:show="showImport" class="import-modal" preset="card" title="导入备份" style="max-width: 460px">
+      <div v-if="!preview">
+        <p class="sub-text">选择此前从「导出全部数据」得到的 .zip 或 .json 备份文件。导入将按导出对称范围覆盖当前账号的数据（纪念日 / 日记 / 愿望 / 矛盾 / 记账 / 约会 / 消息）。</p>
+        <input class="file-input" type="file" accept=".zip,.json" @change="onFileChosen" />
+        <div class="modal-foot">
+          <NButton @click="showImport = false">取消</NButton>
+          <NButton type="primary" :disabled="!importFile" :loading="importing" @click="doPreview">解析预览</NButton>
+        </div>
+      </div>
+      <div v-else>
+        <p class="sub-text">{{ previewMsg }}</p>
+        <ul class="import-counts">
+          <li>纪念日：{{ previewCounts.anniversaries }}</li>
+          <li>日记：{{ previewCounts.diaries }}</li>
+          <li>愿望：{{ previewCounts.wishes }}</li>
+          <li>矛盾记录：{{ previewCounts.conflicts }}</li>
+          <li>记账：{{ previewCounts.accountRecords }}</li>
+          <li>约会：{{ previewCounts.dateRecords }}</li>
+          <li>消息：{{ previewCounts.systemMessages }}</li>
+          <li><b>合计：{{ previewCounts.total ?? sumPreview }}</b></li>
+        </ul>
+        <div class="modal-foot">
+          <NButton @click="resetImport">上一步</NButton>
+          <NButton type="warning" :loading="committing" @click="doCommit">确认覆盖导入</NButton>
+        </div>
+      </div>
+    </NModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import { useMessage } from 'naive-ui';
-import { NForm, NFormItem, NInput, NButton, NPopconfirm } from 'naive-ui';
-import { updateProfile, exportAll } from '@/api/user';
+import { NForm, NFormItem, NInput, NButton, NPopconfirm, NModal } from 'naive-ui';
+import { updateProfile, exportAll, importBackupPreview, importBackupCommit } from '@/api/user';
 import * as coupleApi from '@/api/couple';
 import * as partnerApi from '@/api/partner';
-import type { ApiResult, CoupleSetting, BindStatus, InviteResp } from '@/types';
+import type { ApiResult, CoupleSetting, BindStatus, InviteResp, ImportCounts } from '@/types';
 import { useAuthStore } from '@/store/authStore';
 import { useSettingStore, ACCENTS } from '@/store/settingStore';
 import { usePartnerStore } from '@/store/partnerStore';
@@ -412,6 +441,61 @@ async function doExport() {
     exporting.value = false;
   }
 }
+
+// —— 全量备份导入（与导出配对）——
+const showImport = ref(false);
+const importing = ref(false);
+const committing = ref(false);
+const preview = ref(false);
+const importFile = ref<File | null>(null);
+const previewMsg = ref('');
+const previewCounts = ref<ImportCounts>({
+  anniversaries: 0, diaries: 0, wishes: 0, conflicts: 0,
+  accountRecords: 0, dateRecords: 0, systemMessages: 0,
+});
+const sumPreview = computed(() =>
+  previewCounts.value.anniversaries + previewCounts.value.diaries + previewCounts.value.wishes +
+  previewCounts.value.conflicts + previewCounts.value.accountRecords +
+  previewCounts.value.dateRecords + previewCounts.value.systemMessages);
+
+function openImport() { resetImport(); showImport.value = true; }
+function resetImport() { preview.value = false; importFile.value = null; previewMsg.value = ''; }
+function onFileChosen(e: Event) {
+  const t = e.target as HTMLInputElement;
+  importFile.value = t.files && t.files.length ? t.files[0] : null;
+}
+async function doPreview() {
+  if (!importFile.value) return;
+  importing.value = true;
+  try {
+    const r = await importBackupPreview(importFile.value);
+    if (r.valid) {
+      preview.value = true;
+      previewMsg.value = r.message;
+      previewCounts.value = r.counts;
+    } else {
+      msg.error(r.message);
+    }
+  } catch {
+    msg.error('解析失败，请确认文件为有效的备份');
+  } finally {
+    importing.value = false;
+  }
+}
+async function doCommit() {
+  if (!importFile.value) return;
+  committing.value = true;
+  try {
+    const r = await importBackupCommit(importFile.value);
+    feedback.imported(r.importedTotal, 0, 0);
+    if (r.warnings && r.warnings.length) msg.warning(r.warnings.join('；'));
+    showImport.value = false;
+  } catch {
+    msg.error('导入失败，请稍后重试');
+  } finally {
+    committing.value = false;
+  }
+}
 </script>
 
 <style scoped>
@@ -488,4 +572,13 @@ async function doExport() {
 
 .join-box { display: flex; gap: 10px; }
 .join-box :deep(.n-input) { flex: 1; }
+
+.import-ml { margin-left: 8px; }
+</style>
+
+<style>
+.import-modal .sub-text { margin: 0 0 12px; }
+.import-modal .file-input { display: block; width: 100%; margin: 8px 0 4px; }
+.import-modal .modal-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.import-modal .import-counts { margin: 10px 0; padding-left: 20px; line-height: 1.95; }
 </style>

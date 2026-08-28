@@ -2,6 +2,7 @@ using CoupleLoveSystem.Application.Services;
 using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Result;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoupleLoveSystem.Api.Controllers;
@@ -41,4 +42,14 @@ public class UserController : BaseController
         try { System.IO.File.Delete(path); } catch { /* 临时文件清理失败不阻断下载 */ }
         return File(bytes, "application/zip", "couple_export.zip");
     }
+
+    /// <summary>全量备份导入（与 /export/alldata 配对）：预览阶段仅解析统计，不落库，供前端二次确认。</summary>
+    [HttpPost("import/preview")]
+    public async Task<ActionResult<ApiResult<ImportPreviewResult>>> ImportPreview([FromForm] IFormFile file, CancellationToken ct = default) =>
+        Ok(ApiResult<ImportPreviewResult>.Ok(await _svc.ImportPreviewAsync(file, ct)));
+
+    /// <summary>全量备份导入落库：按导出对称范围清空后插入（幂等，重复导入不翻倍），覆盖当前账号导出的对应数据范围。</summary>
+    [HttpPost("import/commit")]
+    public async Task<ActionResult<ApiResult<ImportCommitResult>>> ImportCommit([FromForm] IFormFile file, CancellationToken ct = default) =>
+        Ok(ApiResult<ImportCommitResult>.Ok(await _svc.ImportCommitAsync(file, CurrentUserId, ct)));
 }

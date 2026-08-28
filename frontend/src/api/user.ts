@@ -1,5 +1,5 @@
 import api from '@/utils/request';
-import type { ApiResult, UpdateProfileReq, UserProfile, ExportResp } from '@/types';
+import type { ApiResult, UpdateProfileReq, UserProfile, ExportResp, ImportPreviewResult, ImportCommitResult } from '@/types';
 
 export async function updateProfile(req: UpdateProfileReq) {
   const { data } = await api.put('/user/profile', req);
@@ -26,3 +26,18 @@ export async function exportAll() {
   window.URL.revokeObjectURL(url);
   return resp;
 }
+
+export async function importBackupPreview(file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  const { data } = await api.post('/user/import/preview', form);
+  return (data as ApiResult<ImportPreviewResult>).data;
+}
+
+export async function importBackupCommit(file: File) {
+  const form = new FormData();
+  form.append('file', file);
+  const { data } = await api.post('/user/import/commit', form);
+  return (data as ApiResult<ImportCommitResult>).data;
+}
+

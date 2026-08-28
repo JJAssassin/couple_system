@@ -572,5 +572,34 @@ public class ExportResp
     public string FileName { get; set; } = string.Empty;
     public int MediaCount { get; set; }
 }
+
 #endregion
+
+#region 全量备份导入（与 UserService.ExportAsync 导出配对）
+public class ImportPreviewResult
+{
+    public bool Valid { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public ImportCounts Counts { get; set; } = new();
+}
+public class ImportCounts
+{
+    public int Anniversaries { get; set; }
+    public int Diaries { get; set; }
+    public int Wishes { get; set; }
+    public int Conflicts { get; set; }
+    public int AccountRecords { get; set; }
+    public int DateRecords { get; set; }
+    public int SystemMessages { get; set; }
+    public int Total => Anniversaries + Diaries + Wishes + Conflicts + AccountRecords + DateRecords + SystemMessages;
+}
+public class ImportCommitResult
+{
+    public int ImportedTotal { get; set; }
+    public ImportCounts Imported { get; set; } = new();
+    public int MediaRestored { get; set; }
+    public List<string> Warnings { get; set; } = new();
+}
+#endregion
+
 
