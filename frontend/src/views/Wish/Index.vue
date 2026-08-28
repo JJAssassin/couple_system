@@ -244,6 +244,7 @@ import {
   LoveSheet, LoveInput, LoveTextarea, LoveSegmented, LoveDateField, LoveSaveBar,
 } from '@/components/loveform';
 import { feedback } from '@/utils/feedback';
+import { fireConfetti } from '@/composables/useConfetti';
 
 const notify = useNotifyStore();
 const loading = ref(true);
@@ -424,6 +425,7 @@ async function submitComplete() {
   try {
     await completeWish({ ...completeForm });
     savedComplete.value = true;
+    fireConfetti();
     window.setTimeout(async () => {
       showComplete.value = false;
       feedback.saved('愿望');

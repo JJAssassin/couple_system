@@ -213,6 +213,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import { feedback } from '@/utils/feedback';
+import { fireHearts } from '@/composables/useConfetti';
 
 const auth = useAuthStore();
 const notify = useNotifyStore();
@@ -286,6 +287,7 @@ async function onAnswer(roundId: number, answer: number) {
     const r = await answerQuizRound({ roundId, answer });
     if (r.isRevealed) {
       notify.success(r.isMatched ? '默契达成！你们选了同一个 🎉' : '这次没对上，聊聊看？');
+      if (r.isMatched) fireHearts();
     } else {
       notify.success('已提交，等 TA 作答');
     }

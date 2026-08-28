@@ -39,7 +39,7 @@
             :key="c"
             class="swatch"
             :class="{ on: draftColor === c }"
-            :style="{ background: c }"
+            :style="{ background: c, '--c': c }"
             :aria-label="`颜色 ${c}`"
             @click="hapticForAction('tap'); draftColor = draftColor === c ? '' : c"
           />
@@ -111,7 +111,7 @@
             :key="c"
             class="swatch"
             :class="{ on: editColor === c }"
-            :style="{ background: c }"
+            :style="{ background: c, '--c': c }"
             @click="hapticForAction('tap'); editColor = editColor === c ? '' : c"
           />
           <button class="swatch none" :class="{ on: !editColor }" @click="hapticForAction('tap'); editColor = ''">无</button>
@@ -301,6 +301,16 @@ onUnmounted(() => {
   box-shadow: 0 0 0 1px var(--color-border); transition: transform var(--dur-micro) var(--ease-love);
 }
 .swatch.on { border-color: var(--color-ink); transform: scale(1.12); }
+/* 选色光晕扩散：使用当前色作为 --c，选中瞬间光晕由内向外扩散 */
+.swatch:not(.none).on {
+  animation: swatch-spread var(--fx-dur-pop, 320ms) var(--fx-ease-out, ease);
+  box-shadow: 0 0 0 3px var(--c), 0 0 14px 3px color-mix(in srgb, var(--c) 45%, transparent);
+}
+@keyframes swatch-spread {
+  0%   { box-shadow: 0 0 0 0 var(--c), 0 0 0 0 transparent; }
+  60%  { box-shadow: 0 0 0 4px var(--c), 0 0 22px 7px color-mix(in srgb, var(--c) 60%, transparent); }
+  100% { box-shadow: 0 0 0 3px var(--c), 0 0 14px 3px color-mix(in srgb, var(--c) 45%, transparent); }
+}
 .swatch.none { background: var(--color-surface-2); color: var(--color-ink-3); font-size: 11px; display: grid; place-items: center; }
 
 .wall { display: flex; flex-direction: column; gap: 12px; }
