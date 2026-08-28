@@ -512,9 +512,17 @@ onUnmounted(() => {
   display: inline-block;
 }
 .hero-days {
-  font-size: 52px; font-weight: 800; color: var(--color-rose);
+  font-size: 52px; font-weight: 900;
   display: flex; align-items: baseline; justify-content: center; gap: 8px;
   margin-top: 6px;
+  /* 渐变大字：品牌色渐变 + 等宽数字（"天" 后缀由 .hero-days span 单独着色） */
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 55%, var(--color-cocoa) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
   animation: heartbeat 2.6s var(--ease-love) infinite;
 }
 @keyframes heartbeat {

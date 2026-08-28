@@ -593,7 +593,17 @@ onMounted(async () => {
 .account { max-width: 880px; margin: 0 auto; }
 .hero { text-align: center; padding: 24px 0 8px; }
 .hero-title { color: var(--color-ink-2); }
-.hero-balance { font-size: 48px; font-weight: 600; color: var(--color-cocoa); }
+.hero-balance {
+  font-size: 48px; font-weight: 900;
+  /* 渐变大字：品牌色渐变 + 等宽数字 */
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 55%, var(--color-cocoa) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
 .hero-sub { color: var(--color-ink-3); font-size: 13px; display: flex; gap: 18px; justify-content: center; }
 .block { margin: 22px 0; }
 .block h2 { font-size: 16px; margin: 0 0 12px; }
