@@ -31,7 +31,12 @@
         v-for="d in displayList"
         :key="d.id"
         class="love-card diary-card"
+        role="button"
+        tabindex="0"
+        :aria-label="`查看日记：${d.title}`"
         @click="openDetail(d)"
+        @keydown.enter="openDetail(d)"
+        @keydown.space.prevent="openDetail(d)"
       >
         <div class="row1">
           <span class="title title-clamp">{{ d.title }}</span>
@@ -160,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import {
   NButton, NDrawer, NDrawerContent, NTag, NDivider, NInput,
 } from 'naive-ui';
@@ -223,6 +228,17 @@ watch(filtered, () => {
 // 切换 tab 时按 author 重新向后台拉取，保证"对方写的"等分页数据完整
 watch(tab, () => {
   void load();
+});
+
+// 统一管理延迟回调（保存后收起表单 + 提示），卸载时一次性清理，避免过期定时器在组件销毁后误触发
+const pendingTimers = new Set<number>();
+function later(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+  pendingTimers.add(id);
+}
+onUnmounted(() => {
+  pendingTimers.forEach((id) => clearTimeout(id));
+  pendingTimers.clear();
 });
 
 async function load() {
@@ -302,12 +318,12 @@ async function submit() {
       moodScore: form.moodScore,
       permissionType: form.permissionType,
       weather: form.weather || undefined,
-      diaryDate: form.dateTs ? new Date(form.dateTs).toISOString() : undefined,
+      diaryDate: form.dateTs ? toLocalISO(form.dateTs) : undefined,
     };
     await createDiary(req);
     saved.value = true;
-    // 让「保存」按钮先完成对勾动画，再收起表单
-    window.setTimeout(async () => {
+    // 让「保存」按钮先完成对勾动画，再收起表单；用 later() 跟踪，切页时自动清理
+    later(async () => {
       showWrite.value = false;
       feedback.saved('日记');
       await load();
@@ -452,6 +468,12 @@ const permMeta: Record<PermissionType, { label: string; type: 'success' | 'warni
 function fmtDate(s?: string) {
   return s ? s.slice(0, 10) : '';
 }
+// 把本地时间戳格式化为「本地时刻」ISO（不带 Z），避免 toISOString() 转 UTC 导致东八区等正偏移时区日期前移一天
+function toLocalISO(ts: number): string {
+  const d = new Date(ts);
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
 function fmtDateTime(s?: string) {
   return s ? s.replace('T', ' ').slice(0, 16) : '';
 }
@@ -475,6 +497,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .diary-card { cursor: pointer; }
+.diary-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .row1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .title { font-weight: 500; flex: 1; }
 .row2 { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 13px; }
