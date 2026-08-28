@@ -94,7 +94,7 @@
       mode="more"
       :page="1"
       :page-size="20"
-      :total="messages.length"
+      :total="filteredList.length"
       :loading="loading"
       :has-more="hasMore"
       @load-more="loadMore"
@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { NButton, NInput, NPopconfirm, NTabs, NTabPane } from 'naive-ui';
 import { LoveSheet, LoveTextarea, LoveSaveBar } from '@/components/loveform';
 import { Pin } from 'lucide-vue-next';
@@ -161,6 +161,13 @@ const container = ref<HTMLElement>();
 const messages = ref<BoardMessageDto[]>([]);
 const activeTab = ref<'public' | 'private'>('public');
 
+// 统一管理延迟回调（保存后关弹窗），卸载时一次性清理，避免过期定时器
+const pendingTimers = new Set<number>();
+function later(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+  pendingTimers.add(id);
+}
+
 const draft = ref('');
 const draftColor = ref('');
 const draftImage = ref<string | undefined>(undefined);
@@ -172,15 +179,16 @@ const editDraft = ref('');
 const editColor = ref('');
 
 const displayCount = ref(20);
-const displayList = computed(() => {
-  const list = messages.value.filter(m => {
-    if (activeTab.value === 'public') return !m.isPrivate;
-    return m.isPrivate && (m.receiverUserId === meId.value || m.createUserId === meId.value);
-  });
-  return list.slice(0, displayCount.value);
-});
-const hasMore = computed(() => displayCount.value < messages.value.length);
+const filteredList = computed(() => messages.value.filter(m => {
+  if (activeTab.value === 'public') return !m.isPrivate;
+  return m.isPrivate && (m.receiverUserId === meId.value || m.createUserId === meId.value);
+}));
+const displayList = computed(() => filteredList.value.slice(0, displayCount.value));
+// 分页基于「当前标签页过滤后」的数量，而非全量 messages，避免切到条数少的标签仍显示「加载更多」
+const hasMore = computed(() => displayCount.value < filteredList.value.length);
 function loadMore() { displayCount.value += 20; }
+// 切换标签时重置分页游标，两个标签各自从第一页开始
+watch(activeTab, () => { displayCount.value = 20; });
 
 function fmt(s: string) {
   const d = new Date(s);
@@ -228,7 +236,7 @@ async function submitEdit() {
     await updateBoard(editId.value, { content: editDraft.value.trim(), color: editColor.value || undefined });
     feedback.updated('留言');
     saved.value = true;
-    window.setTimeout(async () => {
+    later(async () => {
       showEdit.value = false;
       await load();
     }, 680);
@@ -270,6 +278,10 @@ onMounted(async () => {
   useModuleSync('board', { items: messages, getId: (i) => i.id, load, map: overlaySyncMap });
   // 伴侣发来新留言时，消息卡错落入场（避开编辑区 composer）
   useSyncSettle('board', container, messages, '.msg');
+});
+onUnmounted(() => {
+  pendingTimers.forEach((id) => clearTimeout(id));
+  pendingTimers.clear();
 });
 </script>
 
