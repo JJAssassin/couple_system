@@ -334,7 +334,7 @@ const catPieOption = computed<EChartsOption>(() => ({
     radius: ['42%', '68%'],
     center: ['50%', '44%'],
     avoidLabelOverlap: true,
-    itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+    itemStyle: { borderRadius: 6, borderColor: 'var(--color-surface)', borderWidth: 2 },
     label: { formatter: '{b}\n¥{c}' },
     data: catPieData.value.map((c, i) => ({
       name: c.category || '未分类',

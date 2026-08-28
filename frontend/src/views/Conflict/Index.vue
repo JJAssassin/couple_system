@@ -76,7 +76,7 @@
         <template v-if="detail">
           <div class="detail-row">
             <span class="k">等级</span>
-            <n-tag :type="levelMap[detail.conflictLevel].type" size="small" round>
+            <n-tag :type="levelMap[detail.conflictLevel]?.type ?? 'default'" size="small" round>
               {{ levelMap[detail.conflictLevel].label }}
             </n-tag>
           </div>
