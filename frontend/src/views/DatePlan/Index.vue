@@ -98,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onUnmounted } from 'vue';
 import {
   NButton, NRate, NTag, NPopconfirm, useMessage,
 } from 'naive-ui';
@@ -112,6 +112,7 @@ import IndPager from '@/components/industrial/IndPager.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { usePagedList } from '@/composables/usePagedList';
 import { feedback } from '@/utils/feedback';
+import { toLocalISO } from '@/utils/format';
 
 const loading = ref(true);
 const stats = ref<dp.DateStats>({ totalDates: 0, avgScore: 0 });
@@ -134,6 +135,17 @@ const history = computed(() => list.value.filter((d) => d.isCompleted));
 
 const fmtTime = (iso?: string) => (iso ? new Date(iso).toLocaleString('zh-CN') : '时间待定');
 
+// 统一延时器管理：避免组件卸载后 setTimeout 仍回调（跨页已确认的真实泄漏模式）
+const pendingTimers = new Set<number>();
+function later(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+  pendingTimers.add(id);
+}
+onUnmounted(() => {
+  pendingTimers.forEach((id) => clearTimeout(id));
+  pendingTimers.clear();
+});
+
 async function loadStats() {
   stats.value = await dp.dateStats();
 }
@@ -141,7 +153,7 @@ async function refresh() {
   await Promise.all([loadStats(), refreshList()]);
 }
 
-function toIso(ts: number | null) { return ts ? new Date(ts).toISOString() : undefined; }
+function toIso(ts: number | null) { return toLocalISO(ts); }
 
 const showCreate = ref(false);
 const cform = ref<{ planTime: number | null; location: string; budget: string; remark?: string }>({
@@ -169,7 +181,7 @@ async function saveCreate() {
     });
     created.value = true;
     feedback.created('约会');
-    window.setTimeout(async () => {
+    later(async () => {
       showCreate.value = false;
       await refresh();
     }, 680);
@@ -197,14 +209,14 @@ async function saveComplete() {
       planTime: active.value.planTime,
       location: active.value.location,
       budget: active.value.budget,
-      realTime: new Date().toISOString(),
+      realTime: toLocalISO(Date.now()),
       realCost: completeForm.value.realCost ? Number(completeForm.value.realCost) : undefined,
       experienceScore: completeForm.value.score,
       remark: active.value.remark,
     });
     completed.value = true;
     message.success('约会完成');
-    window.setTimeout(async () => {
+    later(async () => {
       showComplete.value = false;
       await refresh();
     }, 680);
