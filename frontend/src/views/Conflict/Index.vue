@@ -71,13 +71,13 @@
     </LoveSheet>
 
     <!-- 详情 -->
-    <n-drawer v-model:show="showDetail" :width="420" placement="right" class="conflict-drawer">
+    <n-drawer v-model:show="showDetail" :width="detailWidth" placement="right" class="conflict-drawer">
       <n-drawer-content :title="detail?.summary || '矛盾详情'">
         <template v-if="detail">
           <div class="detail-row">
             <span class="k">等级</span>
             <n-tag :type="levelMap[detail.conflictLevel]?.type ?? 'default'" size="small" round>
-              {{ levelMap[detail.conflictLevel].label }}
+              {{ levelMap[detail.conflictLevel]?.label ?? '未知' }}
             </n-tag>
           </div>
           <div class="detail-row"><span class="k">发生时间</span><span>{{ fmt(detail.occurTime) }}</span></div>
@@ -110,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue';
 import {
   NButton, NDrawer, NDrawerContent, NTag, NPopconfirm,
 } from 'naive-ui';
@@ -126,12 +126,20 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import { feedback } from '@/utils/feedback';
 import { usePagedList } from '@/composables/usePagedList';
+import { isMobile } from '@/composables/useDevice';
 
 const notify = useNotifyStore();
 const submitting = ref(false);
 const container = ref<HTMLElement>();
 const saved = ref(false);
 const summaryInvalid = ref(false);
+
+// 统一管理延迟回调（保存后关弹窗），卸载时一次性清理，避免过期定时器
+const pendingTimers = new Set<number>();
+function later(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+  pendingTimers.add(id);
+}
 
 const { list, page, pageSize, total, loading, hasMore, nextPage, refresh, loadFirst } = usePagedList<ConflictDto>(
   async (p) => {
@@ -220,7 +228,7 @@ async function submitForm() {
     else await createConflict(buildReq());
     feedback.saved('复盘');
     saved.value = true;
-    window.setTimeout(async () => {
+    later(async () => {
       showForm.value = false;
       await refresh();
     }, 680);
@@ -230,6 +238,8 @@ async function submitForm() {
 // ---- 详情 ----
 const showDetail = ref(false);
 const detail = ref<ConflictDto | null>(null);
+// 抽屉宽度：移动端占满屏宽，避免固定 420px 在窄屏上溢出/截断
+const detailWidth = computed(() => (isMobile() ? '100%' : 420));
 
 async function openDetail(c: ConflictDto) {
   detail.value = await getConflict(c.id);
@@ -270,6 +280,10 @@ onMounted(async () => {
   onSync('conflict', () => refresh());
   // 伴侣新增/和解矛盾时，卡片错落入场
   useSyncSettle('conflict', container, list, '.love-card');
+});
+onUnmounted(() => {
+  pendingTimers.forEach((id) => clearTimeout(id));
+  pendingTimers.clear();
 });
 </script>
 
