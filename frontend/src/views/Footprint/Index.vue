@@ -18,18 +18,23 @@
           v-for="f in items"
           :key="f.id"
           class="fp-card"
+          role="button"
+          tabindex="0"
+          :aria-label="`记录一次：${f.title}`"
           :class="{ pop: poppingId === f.id, reached: f.targetCount != null && f.count >= f.targetCount }"
           @click="onIncrement(f)"
+          @keydown.enter="onIncrement(f)"
+          @keydown.space.prevent="onIncrement(f)"
         >
           <div class="fp-actions">
-            <button class="edit-float" @click.stop="openEdit(f)" title="修改" aria-label="修改"><Pencil :size="14" /></button>
+            <button class="edit-float" @click.stop @keydown.stop title="修改" aria-label="修改"><Pencil :size="14" /></button>
             <n-popconfirm
               positive-text="删除"
               negative-text="取消"
               @positive-click="onDelete(f)"
             >
               <template #trigger>
-                <button class="del-float" @click.stop title="删除" aria-label="删除"><X :size="16" /></button>
+                <button class="del-float" @click.stop @keydown.stop title="删除" aria-label="删除"><X :size="16" /></button>
               </template>
               确定删除「{{ f.title }}」吗？计数记录会一并清除。
             </n-popconfirm>
@@ -105,7 +110,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { NPopconfirm } from 'naive-ui';
 import { Pencil, X } from 'lucide-vue-next';
 import { LoveSheet, LoveInput, LoveTextarea, LoveSaveBar } from '@/components/loveform';
@@ -132,6 +137,17 @@ const poppingId = ref<number | null>(null);
 const editingId = ref<number | null>(null);
 const form = ref({ title: '', emoji: '✨', targetCount: '' as string, description: '' });
 const emojiPresets = ['✨', '🤗', '💋', '💍', '🎬', '🍜', '🌟', '📷', '☕', '🌙'];
+
+// 统一管理延迟回调（增量后弹跳复位 / 保存后收起表单），卸载时一次性清理，避免过期定时器在组件销毁后误触发
+const pendingTimers = new Set<number>();
+function later(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+  pendingTimers.add(id);
+}
+onUnmounted(() => {
+  pendingTimers.forEach((id) => clearTimeout(id));
+  pendingTimers.clear();
+});
 
 function resetForm() {
   form.value = { title: '', emoji: '✨', targetCount: '', description: '' };
@@ -178,7 +194,7 @@ function fmt(s: string) {
 
 async function onIncrement(f: FootprintDto) {
   poppingId.value = f.id;
-  setTimeout(() => (poppingId.value = null), 420);
+  later(() => { poppingId.value = null; }, 420);
   try {
     const updated = await incrementFootprint(f.id);
     const i = items.value.findIndex((x) => x.id === f.id);
@@ -220,7 +236,7 @@ async function submit() {
       feedback.updated('足迹');
     }
     saved.value = true;
-    window.setTimeout(() => { showForm.value = false; resetForm(); }, 680);
+    later(() => { showForm.value = false; resetForm(); }, 680);
   } finally { submitting.value = false; }
 }
 
@@ -273,6 +289,7 @@ onMounted(async () => {
 }
 .fp-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
 .fp-card:active { transform: scale(0.97); }
+.fp-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .fp-card.pop { animation: fpPop 0.42s var(--ease-love); }
 @keyframes fpPop {
   0% { transform: scale(1); }
