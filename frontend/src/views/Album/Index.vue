@@ -326,15 +326,20 @@ function applyParallax() {
     return;
   }
   const vh = window.innerHeight || document.documentElement.clientHeight;
-  grid.querySelectorAll<HTMLElement>('.album-cover').forEach((card) => {
+  // 先批量读取所有卡片位置（仅触发一次回流），再统一写入 transform，
+  // 避免原「逐元素读写」导致的 layout thrashing（每次 getBoundingClientRect 强制同步回流）
+  const cards = Array.from(grid.querySelectorAll<HTMLElement>('.album-cover'));
+  const measures: { img: HTMLElement | null; center: number }[] = cards.map((card) => {
     const img = card.querySelector<HTMLElement>('img');
-    if (!img) return;
     const r = card.getBoundingClientRect();
-    const center = r.top + r.height / 2;
-    // 卡片中心相对视口中心的归一化偏移（-0.5 ~ 0.5），乘以系数得到 ±12px 视差
+    return { img, center: r.top + r.height / 2 };
+  });
+  for (const { img, center } of measures) {
+    if (!img) continue;
+    // 卡片中心相对视口中心的归一化偏移（-0.5 ~ 0.5），乘以系数得到 ±24px 视差
     const delta = (center - vh / 2) / vh;
     img.style.transform = `translateY(${(-delta * 24).toFixed(2)}px)`;
-  });
+  }
 }
 function onScrollParallax() {
   if (parallaxRAF) return;
@@ -396,7 +401,8 @@ function onLightboxFav(id: number) {
 async function loadAlbums() {
   loading.value = true;
   try {
-    const res = await albumApi.listAlbum({ page: 1, pageSize: 50 });
+    // 相册数量通常很少，单次拉全量（避免超过 pageSize 被后端截断导致前端过滤漏项）
+    const res = await albumApi.listAlbum({ page: 1, pageSize: 200 });
     albums.value = (res.data as ApiResult<{ items: AlbumDto[] }>).data?.items ?? [];
   } finally {
     loading.value = false;
@@ -454,6 +460,7 @@ async function customRequest(opt: UploadCustomRequestOptions) {
     const res = await albumApi.uploadImage(currentAlbum.value.id, file);
     const dto = (res.data as ApiResult<ImageDto>).data;
     if (dto) images.value.unshift(dto);
+    if (currentAlbum.value) currentAlbum.value.imageCount = (currentAlbum.value.imageCount || 0) + 1;
     feedback.saved('照片');
     opt.onFinish();
   } catch {
@@ -744,6 +751,8 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: 0
   :global(.album-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
   .album-grid { grid-template-columns: repeat(2, 1fr); }
   .img-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+  /* 移动端固定上传 / 批量栏会盖住最后一行，给内容区留底白 */
+  .album-page { padding-bottom: 84px; }
 }
 
 /* #16-c 相册照片批量导入 */
