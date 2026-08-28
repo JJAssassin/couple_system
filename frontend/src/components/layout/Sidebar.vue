@@ -252,7 +252,7 @@ onUnmounted(() => {
 }
 .bell:hover { color: var(--color-rose); background: var(--color-rose-soft); }
 .badge {
-  position: absolute; top: -2px; right: -4px; background: var(--color-rose); color: #fff;
+  position: absolute; top: 2px; right: 4px; background: var(--color-rose); color: #fff;
   font-size: 10px; line-height: 1; padding: 2px 5px; border-radius: 10px; font-family: var(--font-mono);
   animation: badgePulse 1.8s var(--ease-love) infinite;
 }

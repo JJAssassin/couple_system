@@ -442,7 +442,7 @@ onMounted(async () => {
 </script>
 <style scoped>
 .home { max-width: 880px; margin: 0 auto; }
-.hero { position: relative; text-align: center; padding: 28px 0 8px; overflow: hidden; }
+.hero { position: relative; text-align: center; padding: 28px 0 8px; overflow: hidden; border-radius: var(--radius-lg, 24px); }
 .hero-hearts { z-index: 0; }
 .hero > :not(.hero-hearts):not(.hero-aurora):not(.hero-blob) { position: relative; z-index: 1; }
 .hero-aurora { z-index: 0; }
