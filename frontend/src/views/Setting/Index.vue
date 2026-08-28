@@ -224,7 +224,13 @@ const isIOS = ref(/iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.userA
 const loading = ref(false);
 const saving = ref(false);
 const exporting = ref(false);
-const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD（本地）
+const todayStr = toDateStr(); // YYYY-MM-DD（本地，时区稳定）
+
+// 本地时区稳定的 YYYY-MM-DD，避免 toLocaleDateString 区域/时区漂移（与首页同款）
+function toDateStr(d: Date = new Date()): string {
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
 
 // 情侣级共享信息（任一方设置，双方生效）
 const coupleSetting = ref<CoupleSetting | null>(null);
