@@ -26,8 +26,13 @@
               v-for="m in unreadList"
               :key="m.id"
               class="m-card love-card unread"
+              role="button"
+              tabindex="0"
+              :aria-label="`展开消息：${m.title}`"
               :class="{ open: expanded.has(m.id) }"
               @click="open(m)"
+              @keydown.enter="open(m)"
+              @keydown.space.prevent="open(m)"
             >
               <span class="m-ico"><component :is="iconFor(m.messageType)" :size="20" /></span>
               <div class="m-body">
@@ -49,8 +54,13 @@
               v-for="m in readList"
               :key="m.id"
               class="m-card love-card"
+              role="button"
+              tabindex="0"
+              :aria-label="`展开消息：${m.title}`"
               :class="{ open: expanded.has(m.id) }"
               @click="open(m)"
+              @keydown.enter="open(m)"
+              @keydown.space.prevent="open(m)"
             >
               <span class="m-ico dim"><component :is="iconFor(m.messageType)" :size="20" /></span>
               <div class="m-body">
@@ -210,6 +220,7 @@ onUnmounted(() => {
 }
 .m-card.unread { box-shadow: 0 0 0 1.5px var(--color-rose), 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
 .m-card:active { transform: scale(0.99); }
+.m-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .m-ico {
   flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
   font-size: 20px; color: var(--color-rose); background: var(--color-rose-soft); box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
