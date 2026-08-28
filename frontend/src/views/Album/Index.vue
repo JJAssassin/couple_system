@@ -7,6 +7,19 @@
         <NButton type="primary" size="small" v-press-bounce @click="showCreate = true">＋ 新建相册</NButton>
       </div>
 
+      <div class="album-toolbar">
+        <NInput
+          v-model:value="albumKeyword"
+          placeholder="搜索相册名称"
+          clearable
+          size="small"
+          aria-label="搜索相册名称"
+          class="album-search"
+        >
+          <template #prefix><Search :size="15" :stroke-width="1.8" /></template>
+        </NInput>
+      </div>
+
       <IndSkeleton v-if="loading" variant="grid" :rows="6" :columns="3" />
       <IndEmpty
         v-else-if="albums.length === 0"
@@ -18,7 +31,7 @@
 
       <div v-else class="album-grid" ref="albumGrid">
         <div
-          v-for="a in albums"
+          v-for="a in filteredAlbums"
           :key="a.id"
           class="love-card album-card stagger-item"
           @click="openAlbum(a)"
@@ -55,6 +68,30 @@
         </NUpload>
       </div>
 
+      <div class="album-toolbar">
+        <NInput
+          v-model:value="imgKeyword"
+          placeholder="搜索照片（备注或文件名）"
+          clearable
+          size="small"
+          aria-label="搜索照片"
+          class="album-search"
+        >
+          <template #prefix><Search :size="15" :stroke-width="1.8" /></template>
+        </NInput>
+        <NButton
+          quaternary
+          size="small"
+          :type="onlyFav ? 'primary' : 'default'"
+          :class="{ on: onlyFav }"
+          class="fav-toggle"
+          @click="onlyFav = !onlyFav"
+        >
+          <template #icon><Heart :size="14" :stroke-width="1.8" :fill="onlyFav ? 'currentColor' : 'none'" /></template>
+          仅看收藏
+        </NButton>
+      </div>
+
       <IndSkeleton v-if="imgLoading" variant="grid" :rows="6" :columns="3" />
 
       <IndEmpty
@@ -75,6 +112,12 @@
         </template>
       </IndEmpty>
 
+      <IndEmpty
+        v-else-if="filteredImages.length === 0"
+        title="没有匹配的照片"
+        desc="换个关键词，或关闭「仅看收藏」试试"
+      />
+
       <div v-else class="img-grid">
         <!-- 桌面端：网格首位的“添加照片”磁贴，入口更醒目 -->
         <NUpload
@@ -92,7 +135,7 @@
           </div>
         </NUpload>
         <div
-          v-for="img in images"
+          v-for="img in filteredImages"
           :key="img.id"
           class="img-cell love-card"
           @click="openLightbox(img)"
@@ -163,7 +206,7 @@ import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { feedback } from '@/utils/feedback';
-import { Heart } from 'lucide-vue-next';
+import { Heart, Search } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';
 import ImageField from '@/components/Common/ImageField.vue';
 
@@ -219,12 +262,35 @@ function toggleFav(img: ImageDto) {
   favs.value = s;
 }
 
+// #21 移动端筛选：相册列表 + 相册内图片的搜索 / 收藏筛选（前端数组过滤，无额外请求）
+const albumKeyword = ref('');
+const imgKeyword = ref('');
+const onlyFav = ref(false);
+
+const filteredAlbums = computed(() => {
+  const kw = albumKeyword.value.trim().toLowerCase();
+  if (!kw) return albums.value;
+  return albums.value.filter((a) => (a.albumName || '').toLowerCase().includes(kw));
+});
+
+const filteredImages = computed(() => {
+  let r = images.value;
+  if (onlyFav.value) r = r.filter((i) => favs.value.has(i.id));
+  const kw = imgKeyword.value.trim().toLowerCase();
+  if (kw) {
+    r = r.filter((i) =>
+      ((i.remark || '') + ' ' + (i.url || i.imagePath || '')).toLowerCase().includes(kw),
+    );
+  }
+  return r;
+});
+
 const lightboxIndex = ref(-1);
 const lbImages = computed(() =>
-  images.value.map((i) => ({ id: i.id, url: i.url || i.imagePath, remark: i.remark }))
+  filteredImages.value.map((i) => ({ id: i.id, url: i.url || i.imagePath, remark: i.remark }))
 );
 function openLightbox(img: ImageDto) {
-  lightboxIndex.value = images.value.findIndex((i) => i.id === img.id);
+  lightboxIndex.value = filteredImages.value.findIndex((i) => i.id === img.id);
 }
 function onLightboxFav(id: number) {
   const img = images.value.find((i) => i.id === id);
@@ -399,6 +465,21 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: 0
 .add-txt { font-size: 13px; font-weight: 500; }
 :deep(.add-tile-wrap .n-upload-trigger) { width: 100%; height: 100%; }
 :deep(.head-upload) { margin-left: auto; }
+.album-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.album-search { flex: 1 1 220px; min-width: 0; }
+.fav-toggle { flex: 0 0 auto; }
+@media (max-width: 520px) {
+  .album-toolbar { flex-direction: column; align-items: stretch; }
+  .album-search { flex: 1 1 100%; }
+  .fav-toggle { width: 100%; justify-content: center; }
+}
+
 @media (max-width: 767px) {
   :global(.album-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }
   .album-grid { grid-template-columns: repeat(2, 1fr); }
