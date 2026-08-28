@@ -75,7 +75,7 @@
     </template>
 
     <!-- 年度报告分享海报 -->
-    <YearPoster ref="poster" :report="report" :photos="posterPhotos" :footprints="posterFootprints" />
+    <CoupleSummaryPoster ref="poster" :data="posterData" />
   </div>
 </template>
 
@@ -84,7 +84,7 @@ import { ref, computed, onMounted } from 'vue';
 import ChartWrap from '@/components/ChartWrap.vue';
 import AuroraBackdrop from '@/components/Common/AuroraBackdrop.vue';
 import GradientText from '@/components/Common/GradientText.vue';
-import YearPoster from '@/components/Common/YearPoster.vue';
+import CoupleSummaryPoster from '@/components/Common/CoupleSummaryPoster.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { NumberRoll } from '@/interactions';
@@ -92,13 +92,49 @@ import { fetchYearReport, type YearReport } from '@/api/stats';
 import { listAlbum, listImages } from '@/api/album';
 import { listFootprints } from '@/api/footprint';
 import type { ImageDto, FootprintDto } from '@/types';
+import type { PosterData } from '@/types/poster';
 
 const currentYear = new Date().getFullYear();
 const report = ref<YearReport | null>(null);
 const selectedYear = ref(currentYear);
-const poster = ref<InstanceType<typeof YearPoster> | null>(null);
+const poster = ref<InstanceType<typeof CoupleSummaryPoster> | null>(null);
 const posterPhotos = ref<ImageDto[]>([]);
 const posterFootprints = ref<FootprintDto[]>([]);
+
+// 把后端 YearReport + 相册/足迹列表，映射成手账海报所需的 PosterData。
+// agreements / goals / coverCaption 后端暂无字段，留空则对应板块自动隐藏。
+const posterData = computed<PosterData>(() => {
+  const r = report.value;
+  if (!r) return {};
+  const first = posterPhotos.value[0];
+  const coverPhoto = first ? first.url || first.imagePath : undefined;
+  const metrics = [
+    { icon: '📖', label: '篇日记', value: r.diaryCount, unit: '篇' },
+    { icon: '📷', label: '张照片', value: r.imageCount, unit: '张' },
+    { icon: '💌', label: '愿望达成', value: `${r.wishDone}/${r.wishCreated}` },
+    { icon: '🧩', label: '默契率', value: r.matchRate, unit: '%' },
+    { icon: '💬', label: '悄悄话', value: r.boardCount, unit: '条' },
+    { icon: '📍', label: '足迹', value: r.footprintCount, unit: '个' },
+    { icon: '🎯', label: '约会成行', value: `${r.dateCompleted}/${r.dateCount}` },
+    { icon: '✅', label: '待办完成', value: r.todoDone, unit: '件' },
+    { icon: '🤝', label: '矛盾和解', value: `${r.conflictResolved}/${r.conflictCount}` },
+    { icon: '💝', label: '纪念日', value: r.anniversaryTotal, unit: '个' },
+  ];
+  return {
+    title: `${r.year} · 我们的年`,
+    togetherDays: r.loveDays,
+    dateRange: `${r.year}.01.01 – ${r.year}.12.31`,
+    coverPhoto,
+    coverCaption: '我们这一年最爱的瞬间',
+    metrics,
+    momentPhotos: posterPhotos.value
+      .map((p) => p.url || p.imagePath)
+      .filter(Boolean) as string[],
+    footprints: posterFootprints.value
+      .slice(0, 6)
+      .map((f) => ({ city: f.title, emoji: f.emoji })),
+  };
+});
 
 function fmt(n: number): string {
   const v = Math.abs(Math.round(n * 100) / 100);
