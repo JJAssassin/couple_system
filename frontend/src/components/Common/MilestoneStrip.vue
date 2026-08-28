@@ -66,7 +66,9 @@ function go() {
   display: flex;
   gap: 10px;
   overflow-x: auto;
-  padding-bottom: 6px;
+  /* overflow-x:auto 会让 overflow-y 计算为 auto，悬停 translateY(-3px) 会被裁切；
+     顶部留出空间让抬升动效完整显示（底部留白给横向滚动条） */
+  padding: 8px 0 6px;
   scroll-snap-type: x mandatory;
 }
 .ms {

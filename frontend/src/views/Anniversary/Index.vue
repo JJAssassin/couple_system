@@ -108,14 +108,14 @@
 
           <div class="ac-actions">
             <button class="ac-btn" @click="openPoster(a)"><Palette :size="14" /> 海报</button>
-            <button class="ac-btn" @click="openEdit(a)">编辑</button>
+            <button class="ac-btn" @click="openEdit(a)"><Pencil :size="14" /> 编辑</button>
             <n-popconfirm
               positive-text="删除"
               negative-text="取消"
               @positive-click="onDelete(a)"
             >
               <template #trigger>
-                <button class="ac-btn danger">删除</button>
+                <button class="ac-btn danger"><Trash2 :size="14" /> 删除</button>
               </template>
               确定删除「{{ a.name }}」吗？相关提醒也会一并移除。
             </n-popconfirm>
@@ -172,13 +172,13 @@
     </LoveSheet>
 
     <!-- 纪念日分享海报 -->
-    <AnniversaryPoster :anniversary="selectedAnniversary" />
+    <AnniversaryPoster ref="posterRef" :anniversary="selectedAnniversary" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, type Component } from 'vue';
-import { Heart, Cake, Handshake, Sparkles, PartyPopper, Palette } from 'lucide-vue-next';
+import { Heart, Cake, Handshake, Sparkles, PartyPopper, Palette, Pencil, Trash2 } from 'lucide-vue-next';
 import { NSwitch, NTag, NPopconfirm } from 'naive-ui';
 import { LoveSheet, LoveInput, LoveSegmented, LoveDateField, LoveSaveBar } from '@/components/loveform';
 import type { AnniversaryDto, AnniversaryReq } from '@/types';
@@ -209,10 +209,11 @@ const nameInvalid = ref(false);
 const editingId = ref<number | null>(null);
 const poppingId = ref<number | null>(null);
 const selectedAnniversary = ref<AnniversaryDto | null>(null);
+const posterRef = ref<InstanceType<typeof AnniversaryPoster> | null>(null);
 
 function openPoster(a: AnniversaryDto) {
   selectedAnniversary.value = a;
-  // nextTick is handled inside AnniversaryPoster
+  posterRef.value?.open();
 }
 
 /* ---------- 实时倒计时引擎：每秒刷新 now，驱动所有倒计时 ---------- */
@@ -519,7 +520,8 @@ onUnmounted(() => { if (timer) clearInterval(timer); });
 
 .ac-actions { display: flex; gap: 10px; }
 .ac-btn {
-  flex: 1; border: 1px solid var(--color-border); cursor: pointer; padding: 8px 0; border-radius: var(--radius-md); font-size: 13px;
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  border: 1px solid var(--color-border); cursor: pointer; padding: 8px 0; border-radius: var(--radius-md); font-size: 13px;
   background: var(--color-surface-2); color: var(--color-ink-2);
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
   transition: all var(--dur-micro) var(--ease-love);

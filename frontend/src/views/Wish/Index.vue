@@ -48,6 +48,7 @@
           @end="onWishReorder"
         >
           <template #item="{ element: w }">
+           <div class="wish-cell">
             <!-- 已完成：外层 SwipeCard 向左滑「抽走」= 归档（可逆，非删除） -->
             <SwipeCard v-if="w.status === 3" class="wish-card" :threshold="90" hint="归档" hint-color="#E8A87C" @dismiss="archiveWish(w)">
             <FlipCard
@@ -136,6 +137,7 @@
               </div>
             </template>
           </FlipCard>
+           </div>
         </template>
         </draggable>
       </div>
@@ -488,6 +490,9 @@ onMounted(async () => {
   .status-select { width: 100%; }
 }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+/* vuedraggable #item 槽需单一根节点：用 .wish-cell 包裹 v-if/v-else 两分支；flex 让内部 FlipCard/SwipeCard 填满单元格并等高对齐 */
+.wish-cell { display: flex; }
+.wish-cell > .wish-card { width: 100%; }
 .wish-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 /* 拖拽手柄：内联在标题左侧，仅在手柄上按下才触发排序（@pointerdown.stop 隔离 SwipeCard 左滑 / @click.stop 隔离 FlipCard 翻面） */
 .drag-handle {
