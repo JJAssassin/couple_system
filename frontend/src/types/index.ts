@@ -279,6 +279,18 @@ export interface ImageDto {
   createTime: string;
 }
 
+// #16-c 相册照片批量导入结果
+export interface AlbumImageBatchUploadError {
+  fileName: string;
+  reason: string;
+}
+export interface AlbumImageBatchUploadResult {
+  imported: number;
+  failed: number;
+  errors: AlbumImageBatchUploadError[];
+  images: ImageDto[];
+}
+
 // ---------- 矛盾 ----------
 export interface ConflictDto {
   id: number;

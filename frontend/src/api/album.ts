@@ -1,5 +1,5 @@
 import api from '@/utils/request';
-import type { ApiResult, PagedResult, AlbumDto, AlbumReq, ImageDto } from '@/types';
+import type { ApiResult, PagedResult, AlbumDto, AlbumReq, ImageDto, AlbumImageBatchUploadResult } from '@/types';
 
 export function listAlbum(params: { page?: number; pageSize?: number }) {
   return api.get('/album/list', { params });
@@ -41,4 +41,12 @@ export function reorderImages(ids: number[]) {
   return api.post('/album/image/reorder', { ids });
 }
 
-export type { AlbumDto, AlbumReq, ImageDto, PagedResult, ApiResult };
+// #16-c 相册照片批量导入：一次请求多文件，归到指定相册
+export function batchUploadImages(albumId: number, files: File[]) {
+  const fd = new FormData();
+  files.forEach((f) => fd.append('files', f));
+  // 不手动设 Content-Type，交给 axios 自动带 boundary
+  return api.post(`/image/batch-upload?albumId=${albumId}`, fd);
+}
+
+export type { AlbumDto, AlbumReq, ImageDto, PagedResult, ApiResult, AlbumImageBatchUploadResult };

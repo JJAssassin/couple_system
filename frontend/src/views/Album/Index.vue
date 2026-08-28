@@ -101,6 +101,15 @@
           <template #icon><CheckSquare :size="14" :stroke-width="1.8" /></template>
           选择
         </NButton>
+        <NButton
+          quaternary
+          size="small"
+          class="import-toggle"
+          @click="openImport"
+        >
+          <template #icon><ImagePlus :size="14" :stroke-width="1.8" /></template>
+          批量导入
+        </NButton>
       </div>
 
       <IndSkeleton v-if="imgLoading" variant="grid" :rows="6" :columns="3" />
@@ -200,6 +209,46 @@
         </template>
       </NModal>
 
+      <!-- #16-c 相册照片批量导入 -->
+      <NModal v-model:show="showImport" title="批量导入照片到相册" preset="card" style="width:92%;max-width:460px" @after-leave="onImportClosed">
+        <div class="import-body">
+          <NFormItem label="目标相册" :show-feedback="false">
+            <NSelect v-model:value="importTarget" :options="importOptions" placeholder="选择目标相册" />
+          </NFormItem>
+          <NUpload
+            v-model:file-list="importFiles"
+            multiple
+            :max="20"
+            accept="image/*"
+            :show-file-list="true"
+            list-type="image-card"
+            class="import-upload"
+          />
+          <p class="import-hint">支持 jpg / png / gif / webp，单张 ≤ 5MB，最多 20 张；内容会自动校验并剥离位置信息。</p>
+          <div v-if="importResult" class="import-result">
+            <NTag :type="importResult.failed === 0 ? 'success' : 'warning'">
+              成功 {{ importResult.imported }} 张 / 失败 {{ importResult.failed }} 张
+            </NTag>
+            <ul v-if="importResult.errors.length" class="import-errors">
+              <li v-for="(e, i) in importResult.errors" :key="i">
+                <strong>{{ e.fileName }}</strong>：{{ e.reason }}
+              </li>
+            </ul>
+          </div>
+        </div>
+        <template #footer>
+          <div class="modal-foot">
+            <NButton @click="showImport = false">关闭</NButton>
+            <NButton
+              type="primary"
+              :disabled="!importTarget || importFiles.length === 0"
+              :loading="importing"
+              @click="confirmBatchImport"
+            >开始导入</NButton>
+          </div>
+        </template>
+      </NModal>
+
       <!-- 移动端固定底部上传 -->
       <div v-if="isMobile()" class="upload-fab">
         <NUpload
@@ -242,8 +291,8 @@ import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import {
   NButton, NModal, NForm, NFormItem, NInput, NUpload, NTag, NSelect,
 } from 'naive-ui';
-import type { UploadCustomRequestOptions } from 'naive-ui';
-import type { AlbumDto, AlbumReq, ImageDto, ApiResult, PagedResult } from '@/types';
+import type { UploadCustomRequestOptions, UploadFileInfo } from 'naive-ui';
+import type { AlbumDto, AlbumReq, ImageDto, ApiResult, PagedResult, AlbumImageBatchUploadResult } from '@/types';
 import * as albumApi from '@/api/album';
 import { isMobile } from '@/composables/useDevice';
 import { useStaggerEnter } from '@/composables/useAnimation';
@@ -252,7 +301,7 @@ import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import { feedback } from '@/utils/feedback';
-import { Heart, Search, GripVertical, Check, CheckSquare } from 'lucide-vue-next';
+import { Heart, Search, GripVertical, Check, CheckSquare, ImagePlus } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';
 import ImageField from '@/components/Common/ImageField.vue';
 import draggable from 'vuedraggable';
@@ -522,6 +571,59 @@ async function confirmBatchMove() {
   }
 }
 
+// #16-c 相册照片批量导入：选目标相册 + 多选文件，一次请求归库，自动刷新当前相册
+const showImport = ref(false);
+const importTarget = ref<number | null>(null);
+const importOptions = ref<{ label: string; value: number }[]>([]);
+const importFiles = ref<UploadFileInfo[]>([]);
+const importing = ref(false);
+const importResult = ref<AlbumImageBatchUploadResult | null>(null);
+
+async function openImport() {
+  try {
+    const res = await albumApi.listAlbum({ page: 1, pageSize: 100 });
+    const all = (res.data as ApiResult<PagedResult<AlbumDto>>).data?.items ?? [];
+    importOptions.value = all.map((a) => ({ label: a.albumName, value: a.id }));
+    importTarget.value = currentAlbum.value?.id ?? (all[0]?.id ?? null);
+    importFiles.value = [];
+    importResult.value = null;
+    showImport.value = true;
+  } catch {
+    feedback.error('获取相册列表失败');
+  }
+}
+async function confirmBatchImport() {
+  const target = importTarget.value;
+  if (!target) { feedback.error('请选择目标相册'); return; }
+  const files = importFiles.value.map((f) => f.file as File).filter(Boolean);
+  if (!files.length) { feedback.error('请先选择要导入的照片'); return; }
+  importing.value = true;
+  importResult.value = null;
+  try {
+    const res = await albumApi.batchUploadImages(target, files);
+    const r = (res.data as ApiResult<AlbumImageBatchUploadResult>).data!;
+    importResult.value = r;
+    feedback.imported(r.imported, 0, r.failed);
+    // 若导入到当前相册，刷新列表并刷新计数；否则仅累加计数
+    if (currentAlbum.value && currentAlbum.value.id === importTarget.value) {
+      const list = await albumApi.listImages(currentAlbum.value.id);
+      images.value = (list.data as ApiResult<ImageDto[]>).data ?? [];
+      currentAlbum.value.imageCount = images.value.length;
+    } else if (currentAlbum.value) {
+      currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount + r.imported);
+    }
+  } catch {
+    feedback.error('批量导入失败，请重试');
+  } finally {
+    importing.value = false;
+  }
+}
+function onImportClosed() {
+  // 关闭后清空结果与文件，避免下次打开残留
+  importResult.value = null;
+  importFiles.value = [];
+}
+
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 const { useModuleSync } = useRealtime();
@@ -643,4 +745,13 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: 0
   .album-grid { grid-template-columns: repeat(2, 1fr); }
   .img-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
 }
+
+/* #16-c 相册照片批量导入 */
+.import-toggle { flex: 0 0 auto; }
+.import-body { display: flex; flex-direction: column; gap: 12px; }
+.import-upload { :deep(.n-upload-trigger), :deep(.n-upload-file-info__thumbnail) { border-radius: 8px; } }
+.import-hint { margin: 0; font-size: 12px; color: var(--n-text-color-3, #9aa0a6); line-height: 1.5; }
+.import-result { display: flex; flex-direction: column; gap: 8px; }
+.import-errors { margin: 0; padding-left: 18px; font-size: 12px; color: #d97706; line-height: 1.6; }
+.import-errors strong { color: #b45309; }
 </style>

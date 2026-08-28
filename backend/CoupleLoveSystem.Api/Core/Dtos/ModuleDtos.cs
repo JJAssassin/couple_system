@@ -302,6 +302,20 @@ public class AlbumImageReorderReq
 {
     public List<long> Ids { get; set; } = new();
 }
+
+// 相册照片批量导入（#16-c）：一次请求多文件，归到指定相册，复用 ImageController.Upload 的内容校验/重编码
+public class AlbumImageBatchUploadResult
+{
+    public int Imported { get; set; }
+    public int Failed { get; set; }
+    public List<AlbumImageBatchUploadError> Errors { get; set; } = new();
+    public List<ImageDto> Images { get; set; } = new();
+}
+public class AlbumImageBatchUploadError
+{
+    public string FileName { get; set; } = string.Empty;
+    public string Reason { get; set; } = string.Empty;
+}
 #endregion
 
 #region 矛盾 Conflict

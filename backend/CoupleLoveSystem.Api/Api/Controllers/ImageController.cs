@@ -74,6 +74,74 @@ public class ImageController : BaseController
         return Ok(ApiResult<ImageDto>.Ok(AlbumService.MapImage(img)));
     }
 
+    /// <summary>
+    /// #16-c 相册照片批量导入：一次请求多文件，归到指定相册。复用单图上传的内容校验（Magic bytes +
+    /// ImageSharp 重编码剥离 EXIF/GPS），逐文件容错（单张失败不影响其余），一次提交后由 [Broadcast("album")]
+    /// 拦截器自动广播同步。返回成功/失败计数与逐文件错误明细。
+    /// </summary>
+    [HttpPost("batch-upload")]
+    [Consumes("multipart/form-data")]
+    public async Task<ActionResult<ApiResult<AlbumImageBatchUploadResult>>> BatchUpload(
+        IFormFileCollection files, [FromQuery] long albumId, CancellationToken ct = default)
+    {
+        if (files == null || files.Count == 0)
+            throw new ConflictException("请选择要上传的图片");
+
+        // 校验 albumId 归属当前情侣（P2-15：写入前校验，避免孤儿文件）
+        if (albumId > 0)
+        {
+            var album = await _db.Albums.FirstOrDefaultAsync(a => a.Id == albumId, ct);
+            if (album == null)
+                throw new ForbiddenException("相册不存在或无权访问");
+        }
+
+        var result = new AlbumImageBatchUploadResult();
+        foreach (var file in files)
+        {
+            var name = file?.FileName ?? "未知文件";
+            if (file == null || file.Length == 0)
+            {
+                result.Errors.Add(new AlbumImageBatchUploadError { FileName = name, Reason = "空文件" });
+                result.Failed++;
+                continue;
+            }
+            var ext = Path.GetExtension(file.FileName);
+            if (string.IsNullOrEmpty(ext) || !AllowedExt.Contains(ext))
+            {
+                result.Errors.Add(new AlbumImageBatchUploadError { FileName = name, Reason = "不支持的文件类型，仅支持 jpg/jpeg/png/gif/webp" });
+                result.Failed++;
+                continue;
+            }
+
+            string relative;
+            try
+            {
+                relative = await SaveValidatedImageAsync(file, ct);
+            }
+            catch (ConflictException ex)
+            {
+                result.Errors.Add(new AlbumImageBatchUploadError { FileName = name, Reason = ex.Message });
+                result.Failed++;
+                continue;
+            }
+
+            var img = new CoupleImage
+            {
+                AlbumId = albumId,
+                ImagePath = relative,
+                CreateUserId = CurrentUserId,
+                CreateTime = DateTime.UtcNow
+            };
+            await _repo.AddAsync(img, ct);
+            result.Images.Add(AlbumService.MapImage(img));
+            result.Imported++;
+        }
+
+        // 一次提交 → 自动广播 album 同步（全局情侣隔离过滤器保证只影响本情侣）
+        await _repo.SaveChangesAsync(ct);
+        return Ok(ApiResult<AlbumImageBatchUploadResult>.Ok(result, $"成功导入 {result.Imported} 张，失败 {result.Failed} 张"));
+    }
+
     // 通用单图上传：不归属相册，仅落盘并返回可访问路径（头像 / 封面 / 配图等复用）
     [HttpPost("upload-standalone")]
     [Consumes("multipart/form-data")]
