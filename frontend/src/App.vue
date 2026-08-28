@@ -33,8 +33,8 @@ const overrides = computed<GlobalThemeOverrides>(() => ({
     // 表面与文字（暗色下由 CSS 变量自动切换）
     bodyColor: 'var(--color-cream)',
     cardColor: 'var(--color-surface)',
-    modalColor: 'var(--color-surface)',
-    popoverColor: 'var(--color-surface)',
+    modalColor: 'var(--glass-surface-strong)',
+    popoverColor: 'var(--glass-surface-strong)',
     tableColor: 'var(--color-surface)',
     tableHeaderColor: 'var(--color-surface-2)',
     borderColor: 'var(--color-border)',
@@ -106,7 +106,7 @@ const overrides = computed<GlobalThemeOverrides>(() => ({
     titleTextColor: 'var(--color-ink)',
   },
   Drawer: {
-    color: 'var(--color-surface)',
+    color: 'var(--glass-surface-strong)',
   },
   Message: {
     color: 'var(--color-surface)',

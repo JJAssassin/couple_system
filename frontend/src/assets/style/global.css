@@ -90,6 +90,28 @@ body { font-size: 15px; }
   --ease-mech: var(--ease-love);
 }
 
+/* =====================================================================
+   玻璃拟态材质 + 弹簧动效（Glassmorphism & Spring Physics）
+   升级：卡片/弹窗由纯白实色 → 半透明毛玻璃，让全局 Aurora 光晕自然透出；
+   统一弹簧缓动曲线，按压带回弹手感。全部为新增 token，不改动既有 --color-*。
+   ===================================================================== */
+:root {
+  /* 玻璃材质（亮色：柔白半透 + 高光描边） */
+  --glass-surface: rgba(255, 255, 255, 0.72);
+  --glass-surface-strong: rgba(255, 255, 255, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.85);
+  --glass-blur: blur(16px) saturate(180%);
+
+  /* 弹簧动效曲线（带过冲回弹 / 平滑阻尼） */
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* 玻璃柔和阴影系统（多层微阴影，更自然真实） */
+  --shadow-glass-sm: 0 2px 8px -2px rgba(122, 100, 98, 0.05);
+  --shadow-glass-md: 0 8px 24px -6px rgba(122, 100, 98, 0.10), 0 2px 6px -1px rgba(0, 0, 0, 0.02);
+  --shadow-glass-lg: 0 16px 40px -8px rgba(255, 111, 125, 0.20), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
+}
+
 h1, h2, h3 { line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; }
 
 /* ====================== 暗色模式：深可可暖夜 ====================== */
@@ -113,6 +135,12 @@ html.dark {
   --color-panel: #2a2429;
   --color-recessed: #231e22;
   --color-chassis: #1f1a1f;
+  /* 暗色玻璃材质（深可可半透 + 微光描边） */
+  --glass-surface: rgba(36, 30, 30, 0.70);
+  --glass-surface-strong: rgba(36, 30, 30, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.10);
+  --shadow-glass-md: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
+  --shadow-glass-lg: 0 16px 40px -8px rgba(255, 111, 125, 0.28), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
   background:
     radial-gradient(130% 80% at 50% -12%, #2a2429 0%, var(--color-cream) 60%),
     var(--color-cream);
@@ -124,20 +152,60 @@ html.dark {
 .shadow-float { box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.20); }
 .shadow-press { box-shadow: inset 0 1px 3px rgba(122, 100, 98, 0.10); }
 
-/* 卡片：扁平柔和白卡 + hover 轻微抬升（统一取代工业 love-card） */
+/* 卡片：半透明毛玻璃 + 弹簧悬浮（让全局 Aurora 光晕自然透出，消除纯白方块感） */
 .love-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--glass-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 16px;
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
-  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
+  box-shadow: var(--shadow-glass-md);
+  transition: transform var(--dur-pop) var(--spring-smooth), box-shadow var(--dur-pop) var(--spring-smooth);
 }
 html:not(.reduce-motion) .love-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22);
+  transform: translateY(-4px) scale(1.008);
+  box-shadow: var(--shadow-glass-lg);
 }
-.love-card:active { transform: scale(0.985); background: var(--color-rose-soft); }
+.love-card:active { transform: scale(0.98); }
+
+/* 升级卡片：带顶部内高光与更强物理悬浮（用于 Hero / 焦点卡） */
+.love-card-pro {
+  background: var(--glass-surface);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-xl);
+  padding: 20px;
+  box-shadow: var(--shadow-glass-md);
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--dur-pop) var(--spring-smooth), box-shadow var(--dur-pop) var(--spring-smooth);
+}
+.love-card-pro::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
+  pointer-events: none;
+}
+html:not(.reduce-motion) .love-card-pro:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: var(--shadow-glass-lg);
+}
+.love-card-pro:active { transform: scale(0.98); }
+
+/* NaiveUI 浮层玻璃化：弹窗 / 抽屉 / 气泡透出底层柔光 */
+.n-modal .n-card,
+.n-drawer .n-drawer-content,
+.n-popover {
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+}
+
+/* 按压回弹工具类（弹簧曲线 + 0.96 微缩），用于按钮 / 图标 / 可点卡片 */
+.press-spring { transition: transform var(--dur-micro) var(--spring-bounce); }
+.press-spring:active { transform: scale(0.96); }
 
 /* 工程标签：等宽 + 大写 + 宽字距（保留作小标签样式，弱化工业感） */
 .ind-label {
@@ -274,6 +342,21 @@ p, li { text-wrap: pretty; }
 .num-display {
   font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1;
   letter-spacing: -0.02em; font-weight: 700;
+}
+
+/* 渐变大字：首页相恋天数 / 纪念日倒数 / 小金库余额等 Hero 数字。品牌色渐变 + 等宽数字 */
+.gradient-number {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 55%, var(--color-cocoa) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  display: inline-block;
 }
 
 /* =====================================================================
