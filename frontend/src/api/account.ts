@@ -7,7 +7,7 @@ export interface AccountSummary {
   balance: number;
 }
 
-export function listAccount(params: { page?: number; pageSize?: number }) {
+export function listAccount(params: { page?: number; pageSize?: number; recordType?: number }) {
   return api.get('/account/list', { params }).then((r) => (r.data as ApiResult<PagedResult<AccountRecordDto>>).data);
 }
 export function getAccount(id: number) {

@@ -96,8 +96,8 @@
         <n-tab-pane name="in" tab="收入" />
         <n-tab-pane name="out" tab="支出" />
       </n-tabs>
-      <div v-if="filtered.length" class="records">
-        <div v-for="r in filtered" :key="r.id" class="love-card rec">
+      <div v-if="list.length" class="records">
+        <div v-for="r in list" :key="r.id" class="love-card rec">
           <div class="rec-left">
             <NTag :type="r.recordType === 1 ? 'success' : 'warning'" size="small">
               {{ r.recordType === 1 ? '收入' : '支出' }}
@@ -146,7 +146,7 @@
       <template #footer>
         <div class="account-foot">
           <NButton class="account-btn-cancel" v-press-bounce @click="showModal = false">取消</NButton>
-          <NButton type="primary" :loading="loading" v-press-bounce @click="save" class="account-btn-primary">保存</NButton>
+          <NButton type="primary" :loading="saving" v-press-bounce @click="save" class="account-btn-primary">保存</NButton>
         </div>
       </template>
     </NModal>
@@ -201,7 +201,7 @@
     <NModal v-model:show="showImport" title="批量导入账单" preset="card" style="max-width: 580px" class="account-modal import-modal">
       <div class="import-body">
         <p class="import-tip">支持本系统导出的 CSV，或常见银行流水（含 日期/类型/分类/金额/备注 表头）。已存在的记录会自动跳过，可放心重复导入。</p>
-        <input type="file" accept=".csv,text/csv" class="import-file" :disabled="importing" @change="onImportFile" />
+        <input ref="fileInputRef" type="file" accept=".csv,text/csv" class="import-file" :disabled="importing" @change="onImportFile" />
         <div v-if="importRows.length" class="import-preview">
           <div class="import-summary">
             <NTag :bordered="false" type="success">有效 {{ validCount }} 行</NTag>
@@ -234,7 +234,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import {
   NButton, NModal, NForm, NFormItem, NInput, NInputNumber, NDatePicker, NSelect, NTag, NPopconfirm, NTabs, NTabPane, NDivider,
 } from 'naive-ui';
@@ -258,13 +258,21 @@ const loading = ref(true);
 const summary = ref<ac.AccountSummary>({ income: 0, expend: 0, balance: 0 });
 const showPoster = ref(false);
 const posterRef = ref<InstanceType<typeof ExpensePoster> | null>(null);
+
+// 收支类型筛选改为服务端过滤：切 Tab 时回到第 1 页重新请求，
+// 避免此前「前端对分页子集做 filter → 跨页同类记录查不到 / 加载更多拉到全局下一页」的 bug。
+const recFilter = ref<'all' | 'in' | 'out'>('all');
+const recordTypeParam = computed(() => (recFilter.value === 'all' ? undefined : recFilter.value === 'in' ? 1 : 2));
+
 const { list, page, pageSize, total, loading: listLoading, hasMore, refresh: refreshList, nextPage } = usePagedList<AccountRecordDto>(
   async (p) => {
-    const d = await ac.listAccount({ page: p.page, pageSize: p.pageSize });
+    const d = await ac.listAccount({ page: p.page, pageSize: p.pageSize, recordType: recordTypeParam.value });
     return { items: d.items, total: d.total };
   },
   { pageSize: 15, mode: 'more' }
 );
+// 切换收支 Tab：重置到第 1 页，由服务端按类型重新分页
+watch(recFilter, () => { void refreshList(); });
 
 const formRef = ref<InstanceType<typeof NForm>>();
 const amountRule: FormItemRule = {
@@ -281,12 +289,6 @@ const rules = {
   time: [dateRule('请选择记账时间')],
 };
 
-const recFilter = ref<'all' | 'in' | 'out'>('all');
-const filtered = computed(() =>
-  list.value.filter((r) =>
-    recFilter.value === 'all' ? true : recFilter.value === 'in' ? r.recordType === 1 : r.recordType === 2
-  )
-);
 const container = ref<HTMLElement>();
 useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 
@@ -297,25 +299,18 @@ const typeOptions = [
   { label: '支出', value: 2 },
 ];
 
-const pieOption = ref<EChartsOption>({
+const pieOption = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'item' },
   legend: { bottom: 0 },
   series: [{
     type: 'pie', radius: ['45%', '70%'], center: ['50%', '45%'],
     data: [
-      { name: '收入', value: 0, itemStyle: { color: '#5BB98C' } },
-      { name: '支出', value: 0, itemStyle: { color: '#ff6f7d' } },
+      { name: '收入', value: Number(summary.value.income.toFixed(2)), itemStyle: { color: '#5BB98C' } },
+      { name: '支出', value: Number(summary.value.expend.toFixed(2)), itemStyle: { color: '#ff6f7d' } },
     ],
     label: { formatter: '{b}\n¥{c}' },
   }],
-});
-
-function refreshPie() {
-  (pieOption.value.series as any)[0].data = [
-    { name: '收入', value: Number(summary.value.income.toFixed(2)), itemStyle: { color: '#5BB98C' } },
-    { name: '支出', value: Number(summary.value.expend.toFixed(2)), itemStyle: { color: '#ff6f7d' } },
-  ];
-}
+}));
 
 // —— 统计：当月消费分类 + 近 6 月趋势 ——
 const stats = ref<AccountStatisticsDto | null>(null);
@@ -393,6 +388,7 @@ async function exportCsv() {
 
 // —— 批量导入账单 ——
 const showImport = ref(false);
+const fileInputRef = ref<HTMLInputElement>();
 const importRows = ref<AccountImportRow[]>([]);
 const importing = ref(false);
 const importResult = ref<AccountImportResult | null>(null);
@@ -437,6 +433,8 @@ function closeImport() {
   importRows.value = [];
   importCsv.value = '';
   importResult.value = null;
+  // 清空文件输入，确保修正 CSV 后再次选择同名文件能重新触发 @change
+  if (fileInputRef.value) fileInputRef.value.value = '';
 }
 
 // —— 预算 ——
@@ -508,10 +506,10 @@ const editing = ref<AccountRecordDto | null>(null);
 const form = ref<{ recordType: number; category: string; amount: number | null; time: number | null; remark?: string }>({
   recordType: 2, category: '', amount: null, time: Date.now(), remark: '',
 });
+const saving = ref(false);
 
 async function loadSummary() {
   summary.value = await ac.accountSummary();
-  refreshPie();
 }
 async function refresh() {
   await Promise.all([loadSummary(), refreshList(), loadBudget(), loadStatistics()]);
@@ -520,6 +518,7 @@ async function refresh() {
 function openCreate() {
   editing.value = null;
   form.value = { recordType: 2, category: '', amount: null, time: Date.now(), remark: '' };
+  formRef.value?.restoreValidation();
   showModal.value = true;
 }
 function openEdit(r: AccountRecordDto) {
@@ -531,6 +530,7 @@ function openEdit(r: AccountRecordDto) {
     time: new Date(r.recordTime).getTime(),
     remark: r.remark,
   };
+  formRef.value?.restoreValidation();
   showModal.value = true;
 }
 async function save() {
@@ -539,34 +539,39 @@ async function save() {
   } catch {
     return;
   }
-  const req = {
-    recordType: form.value.recordType as 1 | 2,
-    category: form.value.category || '未分类',
-    amount: form.value.amount as number,
-    recordTime: new Date(form.value.time ?? Date.now()).toISOString(),
-    remark: form.value.remark,
-  };
-  if (editing.value) {
-    await ac.updateAccount(editing.value.id, req);
-    feedback.updated('记录');
-  } else {
-    await ac.createAccount(req);
-    feedback.created('一笔账');
-  }
-  showModal.value = false;
-  await refresh();
-  // 超额提醒：记了一笔支出后，若当月总预算或分类预算超支，主动提醒一次
-  if (req.recordType === 2) {
-    const b = budget.value;
-    if (b?.totalBudget != null && b.isOverspent) {
-      feedback.warn(`本月总预算超支 ¥${Math.abs(b.remaining).toFixed(2)}，和 TA 一起控制一下支出吧`);
+  saving.value = true;
+  try {
+    const req = {
+      recordType: form.value.recordType as 1 | 2,
+      category: form.value.category || '未分类',
+      amount: form.value.amount as number,
+      recordTime: new Date(form.value.time ?? Date.now()).toISOString(),
+      remark: form.value.remark,
+    };
+    if (editing.value) {
+      await ac.updateAccount(editing.value.id, req);
+      feedback.updated('记录');
     } else {
-      const over = b?.categories.filter((c) => c.isOverspent) ?? [];
-      if (over.length) {
-        const c = over[0];
-        feedback.warn(`「${c.category || '未分类'}」已超预算 ¥${Math.abs(c.amount - (c.budget ?? 0)).toFixed(2)}，注意控制哦`);
+      await ac.createAccount(req);
+      feedback.created('一笔账');
+    }
+    showModal.value = false;
+    await refresh();
+    // 超额提醒：记了一笔支出后，若当月总预算或分类预算超支，主动提醒一次
+    if (req.recordType === 2) {
+      const b = budget.value;
+      if (b?.totalBudget != null && b.isOverspent) {
+        feedback.warn(`本月总预算超支 ¥${Math.abs(b.remaining).toFixed(2)}，和 TA 一起控制一下支出吧`);
+      } else {
+        const over = b?.categories.filter((c) => c.isOverspent) ?? [];
+        if (over.length) {
+          const c = over[0];
+          feedback.warn(`「${c.category || '未分类'}」已超预算 ¥${Math.abs(c.amount - (c.budget ?? 0)).toFixed(2)}，注意控制哦`);
+        }
       }
     }
+  } finally {
+    saving.value = false;
   }
 }
 async function remove(r: AccountRecordDto) {
@@ -753,6 +758,14 @@ onMounted(async () => {
     height: 100dvh;
     margin: 0;
     border-radius: 0 !important;
+  }
+  /* 弹窗固定为整屏高度时，body 必须可滚动，否则软键盘顶起后保存按钮被裁掉/点不到 */
+  :global(.account-modal .n-modal-body),
+  :global(.budget-modal .n-modal-body),
+  :global(.poster-modal .n-modal-body) {
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

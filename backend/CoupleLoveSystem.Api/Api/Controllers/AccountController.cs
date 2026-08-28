@@ -15,8 +15,8 @@ public class AccountController : BaseController
 
     [HttpGet("list")]
     public async Task<ActionResult<ApiResult<PagedResult<AccountRecordDto>>>> List(
-        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, CancellationToken ct = default) =>
-        Ok(ApiResult<PagedResult<AccountRecordDto>>.Ok(await _svc.ListAsync(page, Math.Clamp(pageSize, 1, 100), CurrentUserId, ct)));
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] int? recordType = null, CancellationToken ct = default) =>
+        Ok(ApiResult<PagedResult<AccountRecordDto>>.Ok(await _svc.ListAsync(page, Math.Clamp(pageSize, 1, 100), CurrentUserId, recordType, ct)));
 
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ApiResult<AccountRecordDto>>> Get(long id, CancellationToken ct = default) =>

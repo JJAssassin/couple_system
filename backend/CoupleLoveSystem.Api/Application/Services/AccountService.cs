@@ -23,9 +23,12 @@ public class AccountService
     }
 
     /// <summary>记账服务：记录与管理情侣共同收支</summary>
-    public async Task<PagedResult<AccountRecordDto>> ListAsync(int page, int pageSize, long currentUserId, CancellationToken ct = default)
+    public async Task<PagedResult<AccountRecordDto>> ListAsync(int page, int pageSize, long currentUserId, int? recordType = null, CancellationToken ct = default)
     {
-        var query = _db.AccountRecords.AsNoTracking().OrderByDescending(a => a.RecordTime);
+        IQueryable<CoupleAccountRecord> query = _db.AccountRecords.AsNoTracking().OrderByDescending(a => a.RecordTime);
+        // 按收支类型服务端过滤：避免前端对分页子集做 filter 导致的「跨页同类记录查不到」问题
+        if (recordType.HasValue && Enum.IsDefined(typeof(AccountRecordType), recordType.Value))
+            query = query.Where(a => a.RecordType == (AccountRecordType)recordType.Value);
         var total = await query.CountAsync(ct);
         var list = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync(ct);
         return new PagedResult<AccountRecordDto>

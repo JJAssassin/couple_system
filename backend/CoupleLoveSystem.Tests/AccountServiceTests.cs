@@ -215,4 +215,25 @@ public class AccountServiceTests
         Assert.Equal(1250.5m, rows[1].Amount);
         Assert.Equal("午饭", rows[1].Remark);
     }
+
+    [Fact]
+    public async Task ListAsync_按收支类型过滤()
+    {
+        var svc = Build(out var db);
+        SeedRecord(db, AccountRecordType.Income, "工资", 8000, 2026, 8);
+        SeedRecord(db, AccountRecordType.Expend, "餐饮", 300, 2026, 8);
+        SeedRecord(db, AccountRecordType.Expend, "交通", 200, 2026, 8);
+
+        var all = await svc.ListAsync(1, 20, 1, null, CancellationToken.None);
+        Assert.Equal(3, all.Total);
+        Assert.Equal(3, all.Items.Count);
+
+        var income = await svc.ListAsync(1, 20, 1, (int)AccountRecordType.Income, CancellationToken.None);
+        Assert.Equal(1, income.Total);
+        Assert.All(income.Items, i => Assert.Equal(AccountRecordType.Income, i.RecordType));
+
+        var expend = await svc.ListAsync(1, 20, 1, (int)AccountRecordType.Expend, CancellationToken.None);
+        Assert.Equal(2, expend.Total);
+        Assert.All(expend.Items, i => Assert.Equal(AccountRecordType.Expend, i.RecordType));
+    }
 }
