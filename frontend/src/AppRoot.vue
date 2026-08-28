@@ -1,5 +1,6 @@
 <template>
   <router-view />
+  <GlobalLoadingBar />
   <Onboarding />
   <HeartBurstLayer />
   <PartnerActivityToast />
@@ -22,6 +23,7 @@ import FestivalEgg from '@/components/Common/FestivalEgg.vue';
 import PwaInstallPrompt from '@/components/Common/PwaInstallPrompt.vue';
 import AppUpdatePrompt from '@/components/Common/AppUpdatePrompt.vue';
 import AnniversaryReminder from '@/components/Common/AnniversaryReminder.vue';
+import GlobalLoadingBar from '@/components/Common/GlobalLoadingBar.vue';
 
 // 必须在 <n-message-provider> / <n-notification-provider> 之下调用，
 // 因此本组件作为 provider 的子节点（见 App.vue）渲染，setup 中才能拿到实例。

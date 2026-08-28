@@ -100,7 +100,7 @@
           <img class="thumb" :src="img.url || img.imagePath" :alt="img.remark || 'photo'" loading="lazy" />
           <div class="img-cap" v-if="img.remark">{{ img.remark }}</div>
           <button class="img-fav" :class="{ on: favs.has(img.id) }" @click.stop="toggleFav(img)" :aria-label="favs.has(img.id) ? '取消收藏' : '收藏'"><Heart :size="14" :fill="favs.has(img.id) ? 'currentColor' : 'none'" /></button>
-          <NButton class="img-del" size="tiny" quaternary circle @click.stop="removeImage(img)">✕</NButton>
+          <NButton class="img-del" size="tiny" quaternary circle :disabled="removingId === img.id" :aria-busy="removingId === img.id" :aria-label="removingId === img.id ? '正在删除' : '删除照片'" @click.stop="removeImage(img)">✕</NButton>
         </div>
       </div>
 
@@ -299,10 +299,25 @@ async function customRequest(opt: UploadCustomRequestOptions) {
   }
 }
 
+const removingId = ref<number | null>(null);
 async function removeImage(img: ImageDto) {
-  await albumApi.deleteImage(img.id);
-  images.value = images.value.filter((x) => x.id !== img.id);
-  if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - 1);
+  if (removingId.value === img.id) return; // 防重复点击：同一张正在删时忽略
+  removingId.value = img.id;
+  try {
+    await albumApi.deleteImage(img.id);
+    images.value = images.value.filter((x) => x.id !== img.id);
+    if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - 1);
+    feedback.deleted('照片');
+  } catch {
+    // 删除失败：不本地移除，避免 UI 与服务器不一致；重新拉取保证同步
+    feedback.error('删除失败，请重试');
+    if (currentAlbum.value) {
+      const res = await albumApi.listImages(currentAlbum.value.id);
+      images.value = (res.data as ApiResult<ImageDto[]>).data ?? [];
+    }
+  } finally {
+    removingId.value = null;
+  }
 }
 
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';

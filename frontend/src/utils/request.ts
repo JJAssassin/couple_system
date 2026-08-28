@@ -1,6 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/store/authStore';
 import { useNotifyStore } from '@/store/notifyStore';
+import { useGlobalLoading } from '@/composables/useGlobalLoading';
 import type { ApiResult, LoginResp } from '@/types';
 
 const api = axios.create({
@@ -8,10 +9,19 @@ const api = axios.create({
   timeout: 15000,
 });
 
-// 请求拦截：注入 AccessToken
+// 顶部加载条：仅在非刷新、非文件下载的请求上跟踪（其余请求自带骨架/按钮 loading）
+function shouldTrack(cfg: InternalAxiosRequestConfig): boolean {
+  const url = String(cfg.url || '').toLowerCase();
+  if (url.includes('/auth/refresh')) return false;
+  if (cfg.responseType === 'blob') return false;
+  return true;
+}
+
+// 请求拦截：注入 AccessToken + 启动全局加载反馈
 api.interceptors.request.use((cfg: InternalAxiosRequestConfig) => {
   const at = useAuthStore().accessToken;
   if (at) cfg.headers.Authorization = `Bearer ${at}`;
+  if (shouldTrack(cfg)) useGlobalLoading().start();
   return cfg;
 });
 
@@ -22,6 +32,7 @@ api.interceptors.response.use(
   (res) => {
     // 二进制下载（如 CSV/文件导出）不经过 ApiResult 包装，直接放行
     if (res.config.responseType === 'blob') return res;
+    if (shouldTrack(res.config)) useGlobalLoading().end();
     const body = res.data as ApiResult<unknown>;
     if (!body.success) {
       useNotifyStore().error(body.msg || '请求失败');
@@ -31,6 +42,7 @@ api.interceptors.response.use(
   },
   async (err: AxiosError<ApiResult<unknown>>) => {
     const cfg = err.config!;
+    if (cfg && shouldTrack(cfg)) useGlobalLoading().end();
     if (err.response?.status === 401 && !cfg.headers['X-Retry']) {
       cfg.headers['X-Retry'] = '1';
       try {
