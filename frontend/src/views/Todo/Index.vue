@@ -186,7 +186,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, watch } from 'vue';
+import { ref, reactive, computed, onMounted, watch, onUnmounted } from 'vue';
 import {
   NButton, NTag, NPopconfirm, NTabs, NTabPane, NPopselect,
 } from 'naive-ui';
@@ -208,6 +208,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import { feedback } from '@/utils/feedback';
+import { toLocalISO } from '@/utils/format';
 import {
   LoveSheet, LoveInput, LoveTextarea, LoveSegmented, LoveDateField, LoveSaveBar,
 } from '@/components/loveform';
@@ -218,6 +219,17 @@ const notify = useNotifyStore();
 const loading = ref(true);
 const container = ref<HTMLElement>();
 const listEl = ref<HTMLElement>();
+
+// 统一延时器管理：避免组件卸载后 setTimeout 仍回调（跨页已确认的真实泄漏模式）
+const pendingTimers = new Set<number>();
+function later(fn: () => void, ms: number) {
+  const id = window.setTimeout(() => { pendingTimers.delete(id); fn(); }, ms);
+  pendingTimers.add(id);
+}
+onUnmounted(() => {
+  pendingTimers.forEach((id) => clearTimeout(id));
+  pendingTimers.clear();
+});
 
 const meId = computed(() => auth.profile?.id ?? 0);
 const mateId = computed(() => partner.status?.partner?.id ?? null);
@@ -354,7 +366,7 @@ async function submitForm() {
   }
   saving.value = true;
   try {
-    form.dueTime = dueTs.value ? new Date(dueTs.value).toISOString() : undefined;
+    form.dueTime = toLocalISO(dueTs.value);
     form.assigneeUserId = formAssignee.value === -1 ? null : formAssignee.value;
     if (editing.value) {
       await updateTodo(editing.value.id, { ...form });
@@ -364,7 +376,7 @@ async function submitForm() {
       feedback.created('待办');
     }
     saved.value = true;
-    window.setTimeout(async () => {
+    later(async () => {
       showForm.value = false;
       await load();
     }, 720);
