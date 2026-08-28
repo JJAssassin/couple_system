@@ -327,6 +327,32 @@ export interface AccountRecordReq {
   remark?: string;
 }
 
+// ---------- 批量导入账单 ----------
+export interface AccountImportReq {
+  csv: string;
+}
+export interface AccountImportRow {
+  lineNo: number;
+  valid: boolean;
+  error?: string;
+  recordType: number; // 1=收入 2=支出
+  category: string;
+  amount: number;
+  recordTime: string;
+  remark?: string;
+}
+export interface AccountImportError {
+  lineNo: number;
+  reason: string;
+}
+export interface AccountImportResult {
+  total: number;
+  imported: number;
+  skipped: number;
+  failed: number;
+  errors: AccountImportError[];
+}
+
 // ---------- 预算 ----------
 export interface BudgetDto {
   id: number;

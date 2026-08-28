@@ -87,6 +87,7 @@
         <h2>账单明细</h2>
         <div class="month-pick">
           <NButton size="small" quaternary @click="exportCsv">导出 CSV</NButton>
+          <NButton size="small" quaternary @click="showImport = true">导入 CSV</NButton>
           <NButton type="primary" size="small" v-press-bounce @click="openCreate">+ 记一笔</NButton>
         </div>
       </div>
@@ -195,6 +196,40 @@
         </div>
       </template>
     </NModal>
+
+    <!-- 批量导入账单 -->
+    <NModal v-model:show="showImport" title="批量导入账单" preset="card" style="max-width: 580px" class="account-modal import-modal">
+      <div class="import-body">
+        <p class="import-tip">支持本系统导出的 CSV，或常见银行流水（含 日期/类型/分类/金额/备注 表头）。已存在的记录会自动跳过，可放心重复导入。</p>
+        <input type="file" accept=".csv,text/csv" class="import-file" :disabled="importing" @change="onImportFile" />
+        <div v-if="importRows.length" class="import-preview">
+          <div class="import-summary">
+            <NTag :bordered="false" type="success">有效 {{ validCount }} 行</NTag>
+            <NTag v-if="invalidCount" :bordered="false" type="error">无效 {{ invalidCount }} 行</NTag>
+            <NTag v-if="importResult" :bordered="false" type="info">导入 {{ importResult.imported }} · 跳过 {{ importResult.skipped }} · 失败 {{ importResult.failed }}</NTag>
+          </div>
+          <div class="import-table">
+            <div class="import-row import-head">
+              <span>行</span><span>日期</span><span>类型</span><span>分类</span><span class="import-amt">金额</span><span>备注 / 错误</span>
+            </div>
+            <div v-for="r in importRows" :key="r.lineNo" class="import-row" :class="{ 'import-bad': !r.valid }">
+              <span>{{ r.lineNo }}</span>
+              <span>{{ r.valid ? r.recordTime : '—' }}</span>
+              <span>{{ r.valid ? (r.recordType === 1 ? '收入' : '支出') : '—' }}</span>
+              <span>{{ r.valid ? r.category : '—' }}</span>
+              <span class="import-amt">{{ r.valid ? r.amount.toFixed(2) : '—' }}</span>
+              <span class="import-remark">{{ r.valid ? (r.remark || '') : r.error }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <div class="account-foot">
+          <NButton class="account-btn-cancel" v-press-bounce :disabled="importing" @click="closeImport">取消</NButton>
+          <NButton type="primary" v-press-bounce :loading="importing" :disabled="!validCount || !!importResult" @click="confirmImport">确认导入</NButton>
+        </div>
+      </template>
+    </NModal>
   </div>
 </template>
 
@@ -205,7 +240,7 @@ import {
 } from 'naive-ui';
 import type { FormItemRule } from 'naive-ui';
 import type { EChartsOption } from 'echarts';
-import type { AccountRecordDto, MonthlyBudgetDto, BudgetDto, AccountStatisticsDto } from '@/types';
+import type { AccountRecordDto, MonthlyBudgetDto, BudgetDto, AccountStatisticsDto, AccountImportRow, AccountImportResult } from '@/types';
 import * as ac from '@/api/account';
 import * as bg from '@/api/budget';
 import ChartWrap from '@/components/ChartWrap.vue';
@@ -354,6 +389,54 @@ async function exportCsv() {
   } catch {
     feedback.error('导出失败，请稍后再试');
   }
+}
+
+// —— 批量导入账单 ——
+const showImport = ref(false);
+const importRows = ref<AccountImportRow[]>([]);
+const importing = ref(false);
+const importResult = ref<AccountImportResult | null>(null);
+const importCsv = ref('');
+const validCount = computed(() => importRows.value.filter((r) => r.valid).length);
+const invalidCount = computed(() => importRows.value.length - validCount.value);
+
+async function onImportFile(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  importResult.value = null;
+  importing.value = true;
+  try {
+    const text = await file.text();
+    importCsv.value = text;
+    importRows.value = await ac.importAccountPreview({ csv: text });
+  } catch {
+    feedback.error('读取文件失败');
+  } finally {
+    importing.value = false;
+  }
+}
+
+async function confirmImport() {
+  if (!importCsv.value || !validCount.value || importResult.value) return;
+  importing.value = true;
+  try {
+    const res = await ac.importAccountCommit({ csv: importCsv.value });
+    importResult.value = res;
+    feedback.imported(res.imported, res.skipped, res.failed);
+    await Promise.all([loadSummary(), refreshList()]);
+  } catch {
+    feedback.error('导入失败，请稍后再试');
+  } finally {
+    importing.value = false;
+  }
+}
+
+function closeImport() {
+  showImport.value = false;
+  importRows.value = [];
+  importCsv.value = '';
+  importResult.value = null;
 }
 
 // —— 预算 ——
@@ -672,4 +755,31 @@ onMounted(async () => {
     border-radius: 0 !important;
   }
 }
+
+/* 批量导入账单 */
+.import-body { display: flex; flex-direction: column; gap: 14px; }
+.import-tip { font-size: 13px; color: var(--color-ink-3); margin: 0; line-height: 1.6; }
+.import-file {
+  display: block; width: 100%; padding: 10px 12px; font-size: 14px;
+  border: 1px dashed var(--color-border); border-radius: 10px;
+  background: var(--color-surface); color: var(--color-ink-2); cursor: pointer;
+}
+.import-file:hover:not(:disabled) { border-color: var(--color-income); }
+.import-preview { display: flex; flex-direction: column; gap: 10px; }
+.import-summary { display: flex; flex-wrap: wrap; gap: 8px; }
+.import-table {
+  max-height: 320px; overflow-y: auto; border: 1px solid var(--color-border);
+  border-radius: 10px; font-size: 13px;
+}
+.import-row {
+  display: grid; grid-template-columns: 36px 92px 56px 1fr 92px 1fr;
+  gap: 8px; padding: 7px 12px; align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+.import-row:last-child { border-bottom: none; }
+.import-head { position: sticky; top: 0; background: var(--color-surface-2); color: var(--color-ink-3); font-weight: 600; }
+.import-amt { text-align: right; font-variant-numeric: tabular-nums; }
+.import-remark { color: var(--color-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.import-bad { background: var(--color-rose-soft); color: var(--color-rose); }
+.import-bad .import-remark { color: var(--color-rose); }
 </style>

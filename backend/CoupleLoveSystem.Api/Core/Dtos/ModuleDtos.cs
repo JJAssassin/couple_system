@@ -380,6 +380,42 @@ public class AccountRecordReq
     public string? Remark { get; set; }
 }
 
+/// <summary>批量导入账单：请求体携带 CSV 文本（与导出格式一致，亦兼容常见银行流水表头）。</summary>
+public class AccountImportReq
+{
+    public string Csv { get; set; } = string.Empty;
+}
+
+/// <summary>单行解析结果（预览用）。Valid=false 时 Error 描述原因。</summary>
+public class AccountImportRow
+{
+    public int LineNo { get; set; }
+    public bool Valid { get; set; }
+    public string? Error { get; set; }
+    public AccountRecordType RecordType { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public decimal Amount { get; set; }
+    public DateTime RecordTime { get; set; }
+    public string? Remark { get; set; }
+}
+
+/// <summary>解析失败的行（用于回显到第几行出了什么问题）。</summary>
+public class AccountImportError
+{
+    public int LineNo { get; set; }
+    public string Reason { get; set; } = string.Empty;
+}
+
+/// <summary>导入汇总：Total 总行数 / Imported 新导入 / Skipped 重复跳过 / Failed 解析失败。</summary>
+public class AccountImportResult
+{
+    public int Total { get; set; }
+    public int Imported { get; set; }
+    public int Skipped { get; set; }
+    public int Failed { get; set; }
+    public List<AccountImportError> Errors { get; set; } = new();
+}
+
 /// <summary>预算设置项：按 年/月/分类 唯一（分类为 null 表示当月总预算）。</summary>
 public class BudgetDto
 {

@@ -55,4 +55,14 @@ public class AccountController : BaseController
         var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
         return File(bytes, "text/csv; charset=utf-8", $"couple-account-{year:D4}-{month:D2}.csv");
     }
+
+    /// <summary>批量导入预览：仅解析 CSV 返回每行解析结果（有效/无效+原因），不落库。前端据此展示将要导入的内容与错误行。</summary>
+    [HttpPost("import/preview")]
+    public ActionResult<ApiResult<List<AccountImportRow>>> ImportPreview([FromBody] AccountImportReq req) =>
+        Ok(ApiResult<List<AccountImportRow>>.Ok(AccountService.ParseCsv(req.Csv)));
+
+    /// <summary>批量导入提交：解析→去重→落库，返回导入汇总（导入/跳过/失败计数与失败行原因）。与导出格式互通，可安全重复导入同一份 CSV。</summary>
+    [HttpPost("import/commit")]
+    public async Task<ActionResult<ApiResult<AccountImportResult>>> ImportCommit([FromBody] AccountImportReq req, CancellationToken ct = default) =>
+        Ok(ApiResult<AccountImportResult>.Ok(await _svc.ImportAsync(req.Csv, CurrentUserId, ct)));
 }

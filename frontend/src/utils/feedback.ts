@@ -18,6 +18,8 @@ export const feedback = {
   bound: () => n().success('绑定成功，你们的数据现在双向同步啦'),
   unbound: () => n().success('已解除绑定'),
   exported: (name = '') => n().success(`已开始下载：${name}`),
+  imported: (imported = 0, skipped = 0, failed = 0) =>
+    n().success(`导入完成：新增 ${imported} 条${skipped ? `，跳过重复 ${skipped} 条` : ''}${failed ? `，失败 ${failed} 条` : ''}`),
   copied: (what = '已复制') => n().success(what),
 
   // —— 信息 / 提示类 ——

@@ -1,5 +1,5 @@
 import api from '@/utils/request';
-import type { ApiResult, PagedResult, AccountRecordDto, AccountRecordReq, AccountStatisticsDto } from '@/types';
+import type { ApiResult, PagedResult, AccountRecordDto, AccountRecordReq, AccountStatisticsDto, AccountImportReq, AccountImportRow, AccountImportResult } from '@/types';
 
 export interface AccountSummary {
   income: number;
@@ -33,4 +33,12 @@ export function accountStatistics(year: number, month: number) {
 export async function exportAccountCsv(year: number, month: number) {
   const resp = await api.get('/account/export', { params: { year, month }, responseType: 'blob' });
   return resp.data as Blob;
+}
+/** 批量导入预览：仅解析 CSV，返回每行解析结果（不落库） */
+export function importAccountPreview(req: AccountImportReq) {
+  return api.post('/account/import/preview', req).then((r) => (r.data as ApiResult<AccountImportRow[]>).data);
+}
+/** 批量导入提交：解析→去重→落库，返回导入汇总 */
+export function importAccountCommit(req: AccountImportReq) {
+  return api.post('/account/import/commit', req).then((r) => (r.data as ApiResult<AccountImportResult>).data);
 }
