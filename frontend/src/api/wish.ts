@@ -41,3 +41,9 @@ export async function completeWish(req: WishCompleteReq) {
   const { data } = await api.put('/wish/complete', req);
   return (data as ApiResult<WishDto>).data;
 }
+
+// 拖拽排序：传入当前可见列表的完整有序 id 列表，后端按索引重写 SortOrder
+export async function reorderWishes(ids: number[]) {
+  const { data } = await api.post('/wish/reorder', { ids });
+  return (data as ApiResult<object>).data;
+}

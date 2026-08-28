@@ -44,4 +44,11 @@ public class TodoController : BaseController
     [HttpPut("assign")]
     public async Task<ActionResult<ApiResult<TodoDto>>> Assign([FromBody] TodoAssignReq req, CancellationToken ct) =>
         Ok(ApiResult<TodoDto>.Ok(await _svc.AssignAsync(req, CurrentUserId, ct)));
+
+    [HttpPost("reorder")]
+    public async Task<ActionResult<ApiResult<object>>> Reorder([FromBody] TodoReorderReq req, CancellationToken ct)
+    {
+        await _svc.ReorderAsync(req.Ids, CurrentUserId, ct);
+        return Ok(ApiResults.Ok(new { }, "已更新顺序"));
+    }
 }

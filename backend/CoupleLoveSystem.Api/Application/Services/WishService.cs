@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CoupleLoveSystem.Api;
 using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
@@ -23,7 +24,7 @@ public class WishService
     public async Task<PagedResult<WishDto>> ListAsync(int page, int pageSize, long currentUserId, CancellationToken ct = default)
     {
         var query = _db.Wishes.AsNoTracking()
-            .OrderBy(w => w.Status).ThenBy(w => w.Priority).ThenByDescending(w => w.CreateTime);
+            .OrderBy(w => w.Status).ThenBy(w => w.SortOrder).ThenByDescending(w => w.CreateTime);
 
         var total = await query.CountAsync(ct);
 
@@ -126,6 +127,24 @@ public class WishService
         _repo.Update(w);
         await _repo.SaveChangesAsync(ct);
         return Map(w, await ResolveNameAsync(w.ClaimUserId, ct));
+    }
+
+    /// <summary>拖拽排序：按传入的 id 顺序写入 SortOrder（只更新传入项；其余项顺序由列表查询的 SortOrder/CreateTime 兜底）。</summary>
+    public async Task ReorderAsync(List<long> ids, long currentUserId, CancellationToken ct = default)
+    {
+        if (ids == null || ids.Count == 0) return;
+        var items = await _repo.Query().Where(w => ids.Contains(w.Id)).ToListAsync(ct);
+        var map = items.ToDictionary(w => w.Id);
+        for (int i = 0; i < ids.Count; i++)
+        {
+            if (map.TryGetValue(ids[i], out var w))
+            {
+                w.SortOrder = i;
+                w.UpdateUserId = currentUserId;
+                _repo.Update(w);
+            }
+        }
+        await _repo.SaveChangesAsync(ct);
     }
 
     private async Task<string?> ResolveNameAsync(long? userId, CancellationToken ct)

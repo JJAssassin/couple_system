@@ -36,10 +36,20 @@
         actionText="加个愿望"
         @action="openAdd"
       />
-      <div v-else class="cards" ref="listEl">
-        <template v-for="w in displayList" :key="w.id">
-          <!-- 已完成：外层 SwipeCard 向左滑「抽走」= 归档（可逆，非删除） -->
-          <SwipeCard v-if="w.status === 3" class="wish-card" :threshold="90" hint="归档" hint-color="#E8A87C" @dismiss="archiveWish(w)">
+      <div v-else ref="listEl">
+        <draggable
+          v-model="wishDrag"
+          item-key="id"
+          class="cards"
+          handle=".drag-handle"
+          :animation="180"
+          :force-fallback="true"
+          ghost-class="drag-ghost"
+          @end="onWishReorder"
+        >
+          <template #item="{ element: w }">
+            <!-- 已完成：外层 SwipeCard 向左滑「抽走」= 归档（可逆，非删除） -->
+            <SwipeCard v-if="w.status === 3" class="wish-card" :threshold="90" hint="归档" hint-color="#E8A87C" @dismiss="archiveWish(w)">
             <FlipCard
               :model-value="!!flips[w.id]"
               @update:model-value="(v) => setFlip(w.id, v)"
@@ -49,6 +59,9 @@
               <template #front>
                 <div class="wish-face">
                   <div class="wish-top">
+                    <button class="drag-handle" type="button" aria-label="拖动排序" @pointerdown.stop @click.stop>
+                      <GripVertical :size="16" />
+                    </button>
                     <span class="wish-title title-clamp">{{ w.title }}</span>
                     <n-tag :type="statusMap[w.status]?.type ?? 'default'" size="small" round>{{ statusMap[w.status]?.label ?? '未知' }}</n-tag>
                   </div>
@@ -124,6 +137,7 @@
             </template>
           </FlipCard>
         </template>
+        </draggable>
       </div>
     </SkeletonSettle>
 
@@ -211,7 +225,7 @@ import {
 } from 'naive-ui';
 import type { WishDto, WishReq } from '@/types';
 import {
-  listWish, createWish, updateWish, deleteWish, claimWish, completeWish,
+  listWish, createWish, updateWish, deleteWish, claimWish, completeWish, reorderWishes,
 } from '@/api/wish';
 import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
@@ -222,6 +236,8 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import ImageField from '@/components/Common/ImageField.vue';
 import { SkeletonSettle, FlipCard, SwipeCard } from '@/interactions';
+import draggable from 'vuedraggable';
+import { GripVertical } from 'lucide-vue-next';
 import {
   LoveSheet, LoveInput, LoveTextarea, LoveSegmented, LoveDateField, LoveSaveBar,
 } from '@/components/loveform';
@@ -266,6 +282,23 @@ function loadMore() {
 watch(filtered, () => {
   displayCount.value = 12;
 });
+
+// 拖拽排序：维护一份可被 vuedraggable 直接改写的本地列表，@end 时把当前可见顺序回写后端；
+// 与后端「按 Status 分组、组内按 SortOrder」一致，跨状态拖拽会在各自分组内重排。
+const wishDrag = ref<WishDto[]>([]);
+watch(displayList, (v) => { wishDrag.value = [...v]; }, { immediate: true });
+
+async function onWishReorder() {
+  const ids = wishDrag.value.map((w) => w.id);
+  if (ids.length < 2) return;
+  try {
+    await reorderWishes(ids);
+  } catch {
+    feedback.warn('排序保存失败，已恢复顺序');
+  } finally {
+    await load();
+  }
+}
 
 const typeOptions = [
   { label: '共同心愿', value: 1 },
@@ -456,6 +489,18 @@ onMounted(async () => {
 }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .wish-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+/* 拖拽手柄：内联在标题左侧，仅在手柄上按下才触发排序（@pointerdown.stop 隔离 SwipeCard 左滑 / @click.stop 隔离 FlipCard 翻面） */
+.drag-handle {
+  flex: 0 0 auto;
+  width: 24px; height: 24px; margin-top: 1px;
+  display: grid; place-items: center;
+  border: none; background: transparent; color: var(--color-ink-3);
+  cursor: grab; border-radius: 7px; touch-action: none;
+  opacity: 0.5; transition: opacity var(--dur-micro), background var(--dur-micro);
+}
+.drag-handle:hover { opacity: 1; background: var(--color-ink-soft); }
+.drag-handle:active { cursor: grabbing; }
+.drag-ghost { opacity: 0.35; }
 .wish-title { font-size: 16px; font-weight: 500; color: var(--color-ink); }
 .wish.done .wish-title { color: var(--color-ink-3); text-decoration: line-through; }
 .wish-desc { margin: 8px 0 0; }

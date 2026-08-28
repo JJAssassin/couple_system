@@ -31,85 +31,114 @@
       actionText="加个待办"
       @action="openAdd"
     />
-    <div v-else class="cards" ref="listEl">
-      <!-- 未完成：外层 SwipeCard 向左滑「抽走」= 标记完成（划掉即了结，可逆非删除） -->
-      <SwipeCard
-        v-for="t in activeList"
-        :key="t.id"
-        :threshold="90"
-        hint="完成"
-        hint-color="#7BC47F"
-        @dismiss="onSwipeDone(t)"
+    <!-- 列表：未完成 / 已完成 两组分别可拖拽排序（组内按手动顺序）。拖拽手柄带 @pointerdown.stop，
+         与 SwipeCard 的左滑「完成」手势彻底隔离；force-fallback 保证触屏拖拽一致。 -->
+    <div v-else ref="listEl">
+      <draggable
+        v-if="statusFilter !== 'done'"
+        v-model="activeDrag"
+        item-key="id"
+        class="cards"
+        handle=".drag-handle"
+        :animation="180"
+        :force-fallback="true"
+        fallback-class="drag-fallback"
+        ghost-class="drag-ghost"
+        @end="onTodoReorder('active')"
       >
-        <div class="love-card todo">
-          <div class="todo-top">
-            <button class="check" :aria-label="'标记完成'" @click="onToggle(t)"></button>
-            <span class="todo-title title-clamp">{{ t.title }}</span>
-            <n-tag v-if="t.category" size="small" round type="info" class="cat-tag">{{ t.category }}</n-tag>
-          </div>
+        <template #item="{ element: t }">
+          <SwipeCard
+            :threshold="90"
+            hint="完成"
+            hint-color="#7BC47F"
+            @dismiss="onSwipeDone(t)"
+          >
+            <div class="love-card todo">
+              <button class="drag-handle" type="button" aria-label="拖动排序" @pointerdown.stop @click.stop>
+                <GripVertical :size="16" />
+              </button>
+              <div class="todo-top">
+                <button class="check" :aria-label="'标记完成'" @click="onToggle(t)"></button>
+                <span class="todo-title title-clamp">{{ t.title }}</span>
+                <n-tag v-if="t.category" size="small" round type="info" class="cat-tag">{{ t.category }}</n-tag>
+              </div>
 
-          <p v-if="t.description" class="todo-desc sub-text title-clamp">{{ t.description }}</p>
+              <p v-if="t.description" class="todo-desc sub-text title-clamp">{{ t.description }}</p>
 
-          <div class="todo-meta sub-text">
-            <span>优先级 {{ '★'.repeat(t.priority) || '—' }}</span>
-            <span v-if="t.dueTime">期限 {{ fmt(t.dueTime) }}</span>
-            <span v-if="t.assigneeName">负责人：{{ t.assigneeName }}</span>
-          </div>
+              <div class="todo-meta sub-text">
+                <span>优先级 {{ '★'.repeat(t.priority) || '—' }}</span>
+                <span v-if="t.dueTime">期限 {{ fmt(t.dueTime) }}</span>
+                <span v-if="t.assigneeName">负责人：{{ t.assigneeName }}</span>
+              </div>
 
-          <div class="todo-actions">
-            <n-popselect
-              :value="t.assigneeUserId ?? -1"
-              :options="assignOptions"
-              size="small"
-              trigger="click"
-              @update:value="(v: number) => onAssign(t, v)"
-            >
-              <n-button size="small" tertiary>指派</n-button>
-            </n-popselect>
-            <n-button size="small" tertiary @click="openEdit(t)">编辑</n-button>
-            <n-popconfirm @positive-click="onDelete(t.id)">
-              <template #trigger>
-                <n-button size="small" tertiary type="error">删除</n-button>
-              </template>
-              确定删除这个待办吗？
-            </n-popconfirm>
-          </div>
-        </div>
-      </SwipeCard>
+              <div class="todo-actions">
+                <n-popselect
+                  :value="t.assigneeUserId ?? -1"
+                  :options="assignOptions"
+                  size="small"
+                  trigger="click"
+                  @update:value="(v: number) => onAssign(t, v)"
+                >
+                  <n-button size="small" tertiary>指派</n-button>
+                </n-popselect>
+                <n-button size="small" tertiary @click="openEdit(t)">编辑</n-button>
+                <n-popconfirm @positive-click="onDelete(t.id)">
+                  <template #trigger>
+                    <n-button size="small" tertiary type="error">删除</n-button>
+                  </template>
+                  确定删除这个待办吗？
+                </n-popconfirm>
+              </div>
+            </div>
+          </SwipeCard>
+        </template>
+      </draggable>
 
-      <!-- 已完成：普通卡片，点击勾选可取消完成 -->
-      <div
-        v-for="t in doneList"
-        :key="t.id"
-        class="love-card todo done"
+      <draggable
+        v-if="statusFilter !== 'active'"
+        v-model="doneDrag"
+        item-key="id"
+        class="cards done-cards"
+        handle=".drag-handle"
+        :animation="180"
+        :force-fallback="true"
+        ghost-class="drag-ghost"
+        @end="onTodoReorder('done')"
       >
-        <div class="todo-top">
-          <button class="check on" :aria-label="'标记未完成'" @click="onToggle(t)">
-            <SuccessCheck :active="true" :size="16" :show-circle="false" color="#fff" />
-          </button>
-          <span class="todo-title title-clamp">{{ t.title }}</span>
-          <n-tag v-if="t.category" size="small" round type="info" class="cat-tag">{{ t.category }}</n-tag>
-        </div>
+        <template #item="{ element: t }">
+          <div class="love-card todo done">
+            <button class="drag-handle" type="button" aria-label="拖动排序" @pointerdown.stop @click.stop>
+              <GripVertical :size="16" />
+            </button>
+            <div class="todo-top">
+              <button class="check on" :aria-label="'标记未完成'" @click="onToggle(t)">
+                <SuccessCheck :active="true" :size="16" :show-circle="false" color="#fff" />
+              </button>
+              <span class="todo-title title-clamp">{{ t.title }}</span>
+              <n-tag v-if="t.category" size="small" round type="info" class="cat-tag">{{ t.category }}</n-tag>
+            </div>
 
-        <p v-if="t.description" class="todo-desc sub-text title-clamp">{{ t.description }}</p>
+            <p v-if="t.description" class="todo-desc sub-text title-clamp">{{ t.description }}</p>
 
-        <div class="todo-meta sub-text">
-          <span>优先级 {{ '★'.repeat(t.priority) || '—' }}</span>
-          <span v-if="t.dueTime">期限 {{ fmt(t.dueTime) }}</span>
-          <span v-if="t.assigneeName">负责人：{{ t.assigneeName }}</span>
-          <span v-if="t.doneUserName">完成者：{{ t.doneUserName }}</span>
-        </div>
+            <div class="todo-meta sub-text">
+              <span>优先级 {{ '★'.repeat(t.priority) || '—' }}</span>
+              <span v-if="t.dueTime">期限 {{ fmt(t.dueTime) }}</span>
+              <span v-if="t.assigneeName">负责人：{{ t.assigneeName }}</span>
+              <span v-if="t.doneUserName">完成者：{{ t.doneUserName }}</span>
+            </div>
 
-        <div class="todo-actions">
-          <n-button size="small" tertiary @click="openEdit(t)">编辑</n-button>
-          <n-popconfirm @positive-click="onDelete(t.id)">
-            <template #trigger>
-              <n-button size="small" tertiary type="error">删除</n-button>
-            </template>
-            确定删除这个待办吗？
-          </n-popconfirm>
-        </div>
-      </div>
+            <div class="todo-actions">
+              <n-button size="small" tertiary @click="openEdit(t)">编辑</n-button>
+              <n-popconfirm @positive-click="onDelete(t.id)">
+                <template #trigger>
+                  <n-button size="small" tertiary type="error">删除</n-button>
+                </template>
+                确定删除这个待办吗？
+              </n-popconfirm>
+            </div>
+          </div>
+        </template>
+      </draggable>
     </div>
 
     <IndPager
@@ -162,9 +191,11 @@ import {
   NButton, NTag, NPopconfirm, NTabs, NTabPane, NPopselect,
 } from 'naive-ui';
 import { SuccessCheck, SwipeCard } from '@/interactions';
+import draggable from 'vuedraggable';
+import { GripVertical } from 'lucide-vue-next';
 import type { TodoDto, TodoReq } from '@/types';
 import {
-  listTodo, createTodo, updateTodo, deleteTodo, toggleTodo, assignTodo,
+  listTodo, createTodo, updateTodo, deleteTodo, toggleTodo, assignTodo, reorderTodos,
 } from '@/api/todo';
 import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
@@ -230,6 +261,25 @@ const doneList = computed(() => displayList.value.filter((t) => t.isDone));
 const hasMore = computed(() => displayCount.value < filtered.value.length);
 function loadMore() { displayCount.value += 12; }
 watch(filtered, () => { displayCount.value = 12; });
+
+// 拖拽排序：active / done 各维护一份可被 vuedraggable 直接改写的本地数组，
+// 与后端「按 IsDone 分组、组内按 SortOrder」的语义一一对应；@end 时把当前顺序回写后端。
+const activeDrag = ref<TodoDto[]>([]);
+const doneDrag = ref<TodoDto[]>([]);
+watch(activeList, (v) => { activeDrag.value = [...v]; }, { immediate: true });
+watch(doneList, (v) => { doneDrag.value = [...v]; }, { immediate: true });
+
+async function onTodoReorder(group: 'active' | 'done') {
+  const ids = (group === 'active' ? activeDrag.value : doneDrag.value).map((t) => t.id);
+  if (ids.length < 2) return;
+  try {
+    await reorderTodos(ids);
+  } catch {
+    feedback.warn('排序保存失败，已恢复顺序');
+  } finally {
+    await load();
+  }
+}
 
 const statusFilterOptions = [
   { label: '进行中', value: 'active' },
@@ -375,6 +425,20 @@ onMounted(async () => {
 @media (max-width: 520px) { .cat-tabs { flex: 1 1 100%; } .status-select { width: 100%; } }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+/* 拖拽手柄：绝对定位在卡片右上角，仅在手柄上按下才触发排序（@pointerdown.stop 隔离 SwipeCard 左滑） */
+.todo { position: relative; }
+.drag-handle {
+  position: absolute; top: 8px; right: 8px; z-index: 3;
+  width: 26px; height: 26px; display: grid; place-items: center;
+  border: none; background: transparent; color: var(--color-ink-3);
+  cursor: grab; border-radius: 8px; touch-action: none;
+  opacity: 0.45; transition: opacity var(--dur-micro), background var(--dur-micro);
+}
+.drag-handle:hover { opacity: 1; background: var(--color-ink-soft); }
+.drag-handle:active { cursor: grabbing; }
+.drag-ghost { opacity: 0.35; }
+.drag-fallback { transform: rotate(2deg); box-shadow: var(--shadow-float); }
+.done-cards { margin-top: 18px; }
 .todo-top { display: flex; align-items: flex-start; gap: 10px; }
 .check {
   flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; cursor: pointer;

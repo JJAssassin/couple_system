@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using CoupleLoveSystem.Core.Entities;
 using CoupleLoveSystem.Core.Enums;
@@ -106,6 +107,7 @@ public class WishCompleteReq
     [StringLength(FieldLimits.Url, ErrorMessage = "完成图片路径过长")]
     public string? CompleteImage { get; set; }
 }
+public class WishReorderReq { public List<long> Ids { get; set; } = new(); }
 #endregion
 
 #region 待办 Todo
@@ -147,6 +149,7 @@ public class TodoReq
 }
 public class TodoIdReq { public long Id { get; set; } }
 public class TodoAssignReq { public long Id { get; set; } public long? AssigneeUserId { get; set; } }
+public class TodoReorderReq { public List<long> Ids { get; set; } = new(); }
 #endregion
 
 #region 留言板 Board

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CoupleLoveSystem.Api;
 using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Core.Entities;
@@ -20,7 +21,7 @@ public class TodoService
     public async Task<PagedResult<TodoDto>> ListAsync(int page, int pageSize, long currentUserId, CancellationToken ct = default)
     {
         var all = await _repo.Query()
-            .OrderBy(t => t.IsDone).ThenByDescending(t => t.Priority).ThenByDescending(t => t.CreateTime)
+            .OrderBy(t => t.IsDone).ThenBy(t => t.SortOrder).ThenByDescending(t => t.CreateTime)
             .ToListAsync(ct);
 
         var nameOf = (await _userRepo.Query().ToListAsync(ct))
@@ -104,6 +105,24 @@ public class TodoService
         _repo.Update(t);
         await _repo.SaveChangesAsync(ct);
         return Map(t, await ResolveNameAsync(t.DoneUserId, ct), await ResolveNameAsync(t.AssigneeUserId, ct));
+    }
+
+    /// <summary>拖拽排序：按传入的 id 顺序写入 SortOrder（只更新传入项；其余项顺序由列表查询的 SortOrder/CreateTime 兜底）。</summary>
+    public async Task ReorderAsync(List<long> ids, long currentUserId, CancellationToken ct = default)
+    {
+        if (ids == null || ids.Count == 0) return;
+        var items = await _repo.Query().Where(t => ids.Contains(t.Id)).ToListAsync(ct);
+        var map = items.ToDictionary(t => t.Id);
+        for (int i = 0; i < ids.Count; i++)
+        {
+            if (map.TryGetValue(ids[i], out var t))
+            {
+                t.SortOrder = i;
+                t.UpdateUserId = currentUserId;
+                _repo.Update(t);
+            }
+        }
+        await _repo.SaveChangesAsync(ct);
     }
 
     private async Task<string?> ResolveNameAsync(long? userId, CancellationToken ct)

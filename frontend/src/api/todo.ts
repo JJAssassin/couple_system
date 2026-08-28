@@ -32,3 +32,9 @@ export async function assignTodo(req: TodoAssignReq) {
   const { data } = await api.put('/todo/assign', req);
   return (data as ApiResult<TodoDto>).data;
 }
+
+// 拖拽排序：传入当前分组（未完成/已完成）的完整有序 id 列表，后端按索引重写 SortOrder
+export async function reorderTodos(ids: number[]) {
+  const { data } = await api.post('/todo/reorder', { ids });
+  return (data as ApiResult<object>).data;
+}

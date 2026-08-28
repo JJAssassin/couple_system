@@ -108,6 +108,7 @@ public class CoupleWish : BaseEntity, ICoupleScoped
     public DateTime? CompleteTime { get; set; }
     public string? CompleteRemark { get; set; }
     public string? CompleteImage { get; set; }
+    public int SortOrder { get; set; } = 0;
 }
 
 /// <summary>情侣共享待办清单：双方可添加、勾选完成、指派给对方，实时同步。整库即一对情侣，数据双方互通。</summary>
@@ -125,6 +126,7 @@ public class CoupleTodo : BaseEntity, ICoupleScoped
     public string? Category { get; set; } // 分类标签（购物/家务/出行…），可选
     public long? AssigneeUserId { get; set; } // 责任人；null=双方共同
     public string? AssigneeName { get; set; }
+    public int SortOrder { get; set; } = 0;
 }
 
 /// <summary>私密留言板：仅两人可见的情话 / 留言墙，可置顶。实时同步，数据双方互通。

@@ -44,4 +44,11 @@ public class WishController : BaseController
     [HttpPut("complete")]
     public async Task<ActionResult<ApiResult<WishDto>>> Complete([FromBody] WishCompleteReq req, CancellationToken ct) =>
         Ok(ApiResult<WishDto>.Ok(await _svc.CompleteAsync(req, CurrentUserId, ct)));
+
+    [HttpPost("reorder")]
+    public async Task<ActionResult<ApiResult<object>>> Reorder([FromBody] WishReorderReq req, CancellationToken ct)
+    {
+        await _svc.ReorderAsync(req.Ids, CurrentUserId, ct);
+        return Ok(ApiResults.Ok(new { }, "已更新顺序"));
+    }
 }
