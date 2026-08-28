@@ -219,20 +219,24 @@ async function renderCanvas(): Promise<HTMLCanvasElement | null> {
   off.style.left = '-9999px';
   off.style.top = '0';
   off.style.width = '1080px';
-  off.style.height = '1600px';
+  off.style.height = 'auto';
   off.style.zIndex = '-1';
   off.style.overflow = 'visible';
   document.body.appendChild(off);
   const clone = dom.value.cloneNode(true) as HTMLElement;
-  clone.style.transform = 'none';
+  clone.style.zoom = '1'; // 导出时用 1:1 原始尺寸（预览为了缩放用的是 zoom: 0.398）
   clone.style.borderRadius = '0';
   clone.style.position = 'relative';
   off.appendChild(clone);
   try {
     await waitImages(clone);
+    // 海报高度自适应内容（min-height 1600，实际可能更高），按克隆 DOM 的真实高度导出，
+    // 避免固定 1600 把照片墙/足迹/财务等底部板块从导出图里裁掉
+    const h = Math.max(clone.scrollHeight, 1600);
+    off.style.height = `${h}px`;
     const canvas = await html2canvas(clone, {
       width: 1080,
-      height: 1600,
+      height: h,
       scale: 2,
       useCORS: true,
       allowTaint: false,
@@ -302,19 +306,23 @@ async function share() {
   max-height: 92vh; overflow-y: auto;
 }
 .poster-stage {
-  /* 固定预览尺寸 430px 宽，对应 1080 缩放 0.398 */
-  width: 430px; height: 637px; overflow: hidden;
+  /* 预览视窗固定 430px 宽（对应 1080 缩放 0.398）；高度不再写死，
+     由内部 zoom 后的海报真实撑开，滚动交给外层 .poster-wrap，
+     避免固定 637px 把照片墙/足迹等底部板块裁掉 */
+  width: 430px; overflow: hidden;
   border-radius: 18px; box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.45);
   background: #fdf6f0;
   position: relative;
 }
 .poster-dom {
-  width: 1080px; height: 1600px;
-  transform-origin: 0 0;
-  transform: scale(0.398148); /* 430/1080 */
+  /* 高度改为自适应内容（min-height 1600），并去掉 overflow:hidden，
+     否则内容超过 1600px 时底部的照片墙/足迹/财务等板块会被整条裁掉 */
+  width: 1080px; min-height: 1600px;
+  /* 用 zoom 而非 transform: scale —— zoom 会同步缩放布局尺寸，容器高度才正确；
+     transform 不改变布局占位，会让外层出现大片空白 */
+  zoom: 0.398148; /* 430/1080 */
   position: relative;
   background: #fdf6f0;
-  overflow: hidden;
   box-sizing: border-box;
   color: #5d3a3f;
   font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
