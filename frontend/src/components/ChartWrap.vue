@@ -114,20 +114,33 @@ function render() {
   chart.resize();
 }
 
+let resizeTimer: number | null = null;
+let ro: ResizeObserver | null = null;
+
 onMounted(() => {
   render();
   window.addEventListener('resize', onResize);
+  // 容器尺寸变化（如侧栏折叠）window.resize 捕获不到，用 ResizeObserver 兜底
+  if (el.value && 'ResizeObserver' in window) {
+    ro = new ResizeObserver(() => onResize());
+    ro.observe(el.value);
+  }
 });
 watch(() => props.option, render, { deep: true });
 // 暗色切换时重绘（重新取色）
 watch(() => setting.dark, render);
 onUnmounted(() => {
+  if (resizeTimer !== null) clearTimeout(resizeTimer);
+  ro?.disconnect();
+  ro = null;
   window.removeEventListener('resize', onResize);
   chart?.dispose();
   chart = null;
 });
 
+// 防抖 resize：4 个图表实例同时 resize 时避免重复重算风暴
 function onResize() {
-  chart?.resize();
+  if (resizeTimer !== null) clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => { chart?.resize(); }, 120);
 }
 </script>

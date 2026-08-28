@@ -23,25 +23,21 @@
         <div class="hero-lovedate">
           <Heart :size="14" />
           <span>{{ fmtDate(loveInfo.loveStartTime) }}</span>
-          <span class="hero-edit" role="button" tabindex="0" @click="openLoveEditor" @keydown.enter.prevent="openLoveEditor" @keydown.space.prevent="openLoveEditor">修改</span>
-        </div>
-        <div v-if="showLoveEditor" class="hero-set-form">
-          <input type="date" v-model="loveStartInput" class="love-input" :max="todayStr" />
-          <NButton size="small" type="primary" :loading="savingLove" v-press-bounce @click="saveLoveStart">保存</NButton>
-          <NButton size="small" quaternary @click="showLoveEditor = false">取消</NButton>
+          <button class="hero-edit" type="button" @click="openLoveEditor">修改</button>
         </div>
       </template>
       <template v-else>
         <div class="hero-set">
           <div class="hero-set-tip">还没有记录你们的相恋纪念日</div>
-          <div v-if="!showLoveEditor" class="hero-set-cta" @click="openLoveEditor">＋ 设置相恋纪念日</div>
-          <div v-else class="hero-set-form">
-            <input type="date" v-model="loveStartInput" class="love-input" :max="todayStr" />
-            <NButton size="small" type="primary" :loading="savingLove" v-press-bounce @click="saveLoveStart">保存</NButton>
-            <NButton size="small" quaternary @click="showLoveEditor = false">取消</NButton>
-          </div>
+          <button v-if="!showLoveEditor" class="hero-set-cta" type="button" @click="openLoveEditor">＋ 设置相恋纪念日</button>
         </div>
       </template>
+      <!-- 相恋纪念日编辑表单：v-if / v-else 两分支共用，仅渲染一次，消除重复 -->
+      <div v-if="showLoveEditor" class="hero-set-form">
+        <input type="date" v-model="loveStartInput" class="love-input" :max="todayStr" />
+        <NButton size="small" type="primary" :loading="savingLove" v-press-bounce @click="saveLoveStart">保存</NButton>
+        <NButton size="small" quaternary @click="showLoveEditor = false">取消</NButton>
+      </div>
     </section>
 
     <!-- 恋爱里程碑 -->
@@ -69,7 +65,7 @@
     <section class="block">
       <IndSectionTitle label="今日与你" :led="true" />
       <div class="today-grid">
-        <div class="today-card" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" @click="go('anniversary')">
+        <button class="today-card" type="button" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" aria-label="查看最近纪念日" @click="go('anniversary')">
           <span class="tc-ico"><component :is="icAnniversary" :size="22" /></span>
           <div class="tc-label">最近纪念日</div>
           <div v-if="nearest.length" class="tc-val" :class="{ 'tc-big': nearest[0].daysLeft <= 7 }">
@@ -77,12 +73,12 @@
             <template v-else>还有 {{ nearest[0].daysLeft }} 天 · {{ nearest[0].name }}</template>
           </div>
           <div v-else class="tc-val">未设置</div>
-        </div>
-        <div class="today-card" :class="{ ok: unread > 0 }" @click="go('message')">
+        </button>
+        <button class="today-card" type="button" :class="{ ok: unread > 0 }" aria-label="查看未读消息" @click="go('message')">
           <span class="tc-ico"><component :is="icMessage" :size="22" /></span>
           <div class="tc-label">未读消息</div>
           <div class="tc-val">{{ unread > 0 ? unread + ' 条' : '暂无' }}</div>
-        </div>
+        </button>
       </div>
     </section>
 
@@ -90,11 +86,11 @@
     <section class="block" v-if="albums.length">
       <IndSectionTitle label="回忆胶片" :led="true" />
       <div class="film">
-        <div v-for="a in albums" :key="a.id" class="film-cell" @click="go('album')">
-          <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" />
+        <button v-for="a in albums" :key="a.id" class="film-cell" type="button" :aria-label="'查看相册 ' + a.albumName" @click="go('album')">
+          <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" @error="onAlbumCoverError(a)" />
           <div v-else class="film-ph">{{ a.albumName.slice(0, 1) }}</div>
           <div class="film-cap">{{ a.albumName }} · {{ a.imageCount }}张</div>
-        </div>
+        </button>
       </div>
     </section>
 
@@ -136,26 +132,26 @@
 
     <!-- 关键指标 -->
     <section class="block stat-row">
-      <div class="stat-link" role="button" tabindex="0" aria-label="查看愿望完成率" @click="go('wish')" @keydown.enter.prevent="go('wish')" @keydown.space.prevent="go('wish')">
+      <button class="stat-link" type="button" aria-label="查看愿望完成率" @click="go('wish')">
         <IndStatCard label="愿望完成率" :value="dashboard.wishCompleteRate + '%'" />
-      </div>
-      <div class="stat-link" role="button" tabindex="0" aria-label="查看共同余额" @click="go('account')" @keydown.enter.prevent="go('account')" @keydown.space.prevent="go('account')">
-        <IndStatCard label="共同余额" :value="'¥' + dashboard.accountSummary.balance.toFixed(2)" />
-      </div>
-      <div class="stat-link" role="button" tabindex="0" aria-label="查看连续互动" @click="go('diary')" @keydown.enter.prevent="go('diary')" @keydown.space.prevent="go('diary')">
+      </button>
+      <button class="stat-link" type="button" aria-label="查看共同余额" @click="go('account')">
+        <IndStatCard label="共同余额" :value="'¥' + (dashboard.accountSummary?.balance ?? 0).toFixed(2)" />
+      </button>
+      <button class="stat-link" type="button" aria-label="查看连续互动" @click="go('diary')">
         <IndStatCard label="连续互动" :value="dashboard.activeStreakDays + ' 天'" />
-      </div>
+      </button>
     </section>
 
     <!-- 数据可视化大屏：愿望完成率仪表盘 + 共同收支环形图 -->
     <section class="block">
       <IndSectionTitle label="关系数据 · 一目了然" :led="true" />
       <div class="viz-grid">
-        <IndCard class="viz-card" role="button" tabindex="0" aria-label="查看愿望完成率" @click="go('wish')" @keydown.enter.prevent="go('wish')" @keydown.space.prevent="go('wish')">
+        <IndCard as="button" type="button" class="viz-card" aria-label="查看愿望完成率" @click="go('wish')">
           <div class="viz-title">愿望完成率</div>
           <ChartWrap :option="wishGaugeOption" height="210px" />
         </IndCard>
-        <IndCard class="viz-card" role="button" tabindex="0" aria-label="查看共同收支" @click="go('account')" @keydown.enter.prevent="go('account')" @keydown.space.prevent="go('account')">
+        <IndCard as="button" type="button" class="viz-card" aria-label="查看共同收支" @click="go('account')">
           <div class="viz-title">共同收支</div>
           <ChartWrap :option="accountDonutOption" height="210px" />
         </IndCard>
@@ -182,7 +178,7 @@
   </PullRefresh>
 </template>
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { NButton } from 'naive-ui';
 import {
@@ -239,7 +235,7 @@ function checkMilestone() {
   const d = loveInfo.value.totalDays;
   const label = milestoneLabel(d);
   if (!label) return;
-  const today = new Date().toLocaleDateString('en-CA');
+  const today = toDateStr();
   const key = `cl_cele_${d}_${today}`;
   if (localStorage.getItem(key)) return; // 当天已庆祝过
   localStorage.setItem(key, '1');
@@ -251,7 +247,15 @@ function checkMilestone() {
 const showLoveEditor = ref(false);
 const loveStartInput = ref('');
 const savingLove = ref(false);
-const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD（本地），防止选到未来日期
+const todayStr = toDateStr(); // YYYY-MM-DD（本地），防止选到未来日期
+
+/** 本地时区稳定的 YYYY-MM-DD，避免 toLocaleDateString 依赖区域数据/时区漂移 */
+function toDateStr(d: Date = new Date()): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 const icAnniversary = CalendarHeart;
 const icMessage = Mail;
@@ -309,6 +313,7 @@ const extraQuotes = [
   '你是我的意外之喜，也是命中注定。',
   '无论晴雨，有你在就是好天气。',
 ];
+let quoteTimer: number | null = null;
 function shuffleQuote() {
   if (extraQuotes.length === 0) return;
   hapticForAction('tap');
@@ -320,7 +325,14 @@ function shuffleQuote() {
   quote.value = { content: q, author: '' };
   quoteBeat.value = false;
   requestAnimationFrame(() => { quoteBeat.value = true; });
-  window.setTimeout(() => { quoteBeat.value = false; }, 650);
+  // 保存句柄并在下次进入/卸载时清理，避免切换页面后产生悬空调用
+  if (quoteTimer !== null) clearTimeout(quoteTimer);
+  quoteTimer = window.setTimeout(() => { quoteBeat.value = false; }, 650);
+}
+
+/** 相册封面加载失败：清除 cover 回退到首字母占位，避免裂图 */
+function onAlbumCoverError(a: AlbumDto) {
+  a.cover = '';
 }
 
 const hour = new Date().getHours();
@@ -374,7 +386,7 @@ const wishGaugeOption = computed<EChartsOption>(() => ({
 
 // 共同收支环形图（收入 vs 支出）
 const accountDonutOption = computed<EChartsOption>(() => {
-  const a = dashboard.value.accountSummary;
+  const a = dashboard.value.accountSummary ?? { income: 0, expend: 0, balance: 0 };
   const empty = (a.income <= 0 && a.expend <= 0);
   return {
     tooltip: { trigger: 'item', valueFormatter: (v: unknown) => '¥' + Math.round(Number(v)).toLocaleString('zh-CN') },
@@ -399,7 +411,19 @@ async function loadLoveInfo() {
   try { const { data } = await api.get('/home/loveinfo'); loveInfo.value = (data as ApiResult<LoveInfo>).data; } catch { /* 拦截器已提示 */ }
 }
 async function loadDashboard() {
-  try { const { data } = await api.get('/home/dashboard'); dashboard.value = (data as ApiResult<DashboardData>).data; } catch { /* 拦截器已提示 */ }
+  try {
+    const { data } = await api.get('/home/dashboard');
+    const d = (data as ApiResult<DashboardData>).data;
+    // 归一化：以默认值打底，后端数据覆盖；兜底 accountSummary 为 null，防止 .balance 抛 TypeError 白屏
+    const base: DashboardData = {
+      moodTrend: [], conflictTrend: [], wishCompleteRate: 0,
+      accountSummary: { income: 0, expend: 0, balance: 0 }, activeStreakDays: 0,
+    };
+    dashboard.value = d ? { ...base, ...d } : base;
+    if (!dashboard.value.accountSummary) {
+      dashboard.value.accountSummary = { income: 0, expend: 0, balance: 0 };
+    }
+  } catch { /* 拦截器已提示 */ }
 }
 async function loadNearest() {
   try { const { data } = await api.get('/home/nearestanniversary', { params: { take: 3 } }); nearest.value = (data as ApiResult<AnniversaryDto[]>).data; } catch { /* 拦截器已提示 */ }
@@ -417,15 +441,19 @@ async function loadQuote() {
   try { const { data } = await api.get('/quote/today'); quote.value = (data as ApiResult<DailyQuoteDto>).data ?? { content: '' }; } catch { /* 拦截器已提示 */ }
 }
 
-/** 下拉刷新：重载首页所有数据 */
-async function onRefresh() {
+/** 下拉刷新：重载首页所有数据。done 由 PullRefresh 传入，必须调用以收起指示器 */
+async function onRefresh(done?: () => void) {
   refreshing.value = true;
-  await Promise.all([
-    loadLoveInfo(), loadDashboard(), loadNearest(), loadUnread(),
-    loadAlbums(), loadFeed(), loadQuote(),
-  ]);
-  checkMilestone();
-  refreshing.value = false;
+  try {
+    await Promise.all([
+      loadLoveInfo(), loadDashboard(), loadNearest(), loadUnread(),
+      loadAlbums(), loadFeed(), loadQuote(),
+    ]);
+    checkMilestone();
+  } finally {
+    refreshing.value = false;
+    done?.();
+  }
 }
 
 onMounted(async () => {
@@ -438,6 +466,10 @@ onMounted(async () => {
   checkMilestone(); // 数据就绪后判断是否需要展示圆整节点彩蛋
   onSync('setting', reloadLoveInfo);
   onSync('message', loadUnread); // 服务端提醒实时推送：即时刷新未读角标，不再依赖被动轮询
+});
+
+onUnmounted(() => {
+  if (quoteTimer !== null) clearTimeout(quoteTimer);
 });
 </script>
 <style scoped>
@@ -624,4 +656,22 @@ onMounted(async () => {
   60% { transform: scale(0.92); }
 }
 .reduce-motion .quote-shuffle.beat { animation: none; }
+
+/* 无障碍：将原 div/span 点击区改为原生 button，统一重置 + 键盘焦点环 */
+button.hero-edit, button.hero-set-cta, button.today-card, button.film-cell, button.stat-link, .viz-card.ind-card-shell {
+  font: inherit; color: inherit; text-align: left; cursor: pointer;
+}
+button.hero-edit, button.hero-set-cta, button.film-cell, button.stat-link {
+  background: none; border: none; padding: 0;
+}
+button.stat-link, button.today-card, button.film-cell { display: block; width: 100%; }
+button.film-cell { border: none; }
+button.today-card { border: 1px solid var(--color-border); }
+button.hero-edit { border-bottom: 1px dashed var(--color-rose); }
+/* 键盘可达性：焦点环仅对键盘用户可见 */
+button.hero-edit:focus-visible, button.hero-set-cta:focus-visible, button.today-card:focus-visible,
+button.film-cell:focus-visible, button.stat-link:focus-visible, .viz-card.ind-card-shell:focus-visible {
+  outline: 2px solid var(--color-accent, var(--color-rose));
+  outline-offset: 2px;
+}
 </style>

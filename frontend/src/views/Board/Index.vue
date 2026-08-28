@@ -254,8 +254,13 @@ async function load() {
   } finally { loading.value = false; }
 }
 
-async function onRefresh() {
-  await load();
+/** 下拉刷新：done 由 PullRefresh 传入，必须调用以收起指示器 */
+async function onRefresh(done?: () => void) {
+  try {
+    await load();
+  } finally {
+    done?.();
+  }
 }
 
 useStaggerEnter(container, '.love-card', { stagger: 0.05, y: 12 });
