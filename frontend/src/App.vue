@@ -46,9 +46,14 @@ const overrides = computed<GlobalThemeOverrides>(() => ({
     placeholderColorDisabled: 'var(--color-ink-3)',
     iconColor: 'var(--color-ink-2)',
     iconColorHover: 'var(--color-rose)',
-    boxShadow1: '0 1px 2px rgba(31,41,55,0.04), 0 10px 28px -10px rgba(122,100,98,0.16)',
-    boxShadow2: '0 4px 12px rgba(31,41,55,0.06), 0 18px 44px -12px rgba(122,100,98,0.20)',
-    boxShadow3: '0 4px 12px rgba(31,41,55,0.06), 0 18px 44px -12px rgba(122,100,98,0.20)',
+    // 改引用令牌：--shadow-card / --shadow-float 指向 --shadow-glass-md / --shadow-glass-lg，
+    // 后者在 global.css 的 html.dark 内有专门的暗色重定义（深色底改用 rgba(0,0,0,.45)）。
+    // 原先这里的字面量是近黑阴影，在暗色 #2a2429 上完全不可见 —— 导致全站所有
+    // naive-ui 浮层（NModal / NPopover / NSelect 下拉 / NDatePicker 面板 /
+    // NPopconfirm / NDrawer / NMessage）在暗色下没有投影。
+    boxShadow1: 'var(--shadow-card)',
+    boxShadow2: 'var(--shadow-float)',
+    boxShadow3: 'var(--shadow-float)',
   },
   Button: {
     borderRadius: '10',
@@ -58,7 +63,10 @@ const overrides = computed<GlobalThemeOverrides>(() => ({
     colorHoverPrimary: acc.value.h,
     colorPressedPrimary: acc.value.pr,
     colorFocusPrimary: acc.value.h,
-    textColorPrimary: '#ffffff',
+    // 白字 on 亮主色实测仅 2.15~3.26:1（5 套主题色全部不达 AA 4.5:1，樱花粉最差）。
+    // 改用暖近黑 --color-on-primary(#2b1416)：实测 5.30~8.04:1 全部达标，
+    // 且品牌色一个像素都不用改、明暗模式通用（对比度只取决于底与字）。
+    textColorPrimary: 'var(--color-on-primary)',
     borderColorPrimary: acc.value.p,
   },
   Input: {
@@ -88,9 +96,13 @@ const overrides = computed<GlobalThemeOverrides>(() => ({
     borderRadius: '10',
   },
   Tabs: {
+    // 指示条与 hover 属装饰，继续用亮主色；
+    // 但「激活态文字」是文字 —— 实测主色作文字仅 2.68:1（樱花粉 2.15:1），
+    // 改用按模式切换的文字安全色（浅色用加深版、暗色用亮主色，见 applyAccent 注释）。
+    // 影响 Wish / Todo 的页面主筛选控件 <n-tabs type="segment">。
     tabTextColorActiveBar: acc.value.p,
-    tabTextColorActive: acc.value.p,
-    tabTextColorHover: acc.value.p,
+    tabTextColorActive: 'var(--color-rose-text)',
+    tabTextColorHover: 'var(--color-rose-text)',
     tabTextColor: 'var(--color-ink-2)',
     barColor: acc.value.p,
     paneTextColor: 'var(--color-ink)',
