@@ -3,14 +3,14 @@
 import { ref, onMounted, onUnmounted, watch } from 'vue';
 // 按需引入：只打包实际用到的图表与组件，砍掉全量 echarts 的 ~60% 体积（消除 >900kB 构建告警）
 import { use, init, type EChartsType } from 'echarts/core';
-import { PieChart, LineChart, BarChart } from 'echarts/charts';
+import { PieChart, LineChart, BarChart, GaugeChart } from 'echarts/charts';
 import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
 import type { EChartsOption } from 'echarts';
 import { useSettingStore } from '@/store/settingStore';
 
-// 运行期只用到 line/bar/pie 三类图 + 网格/提示/图例 + Canvas 渲染器（来自 Home/Account 的真实 option）
-use([PieChart, LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
+// 运行期用到 line/bar/pie/gauge 四类图 + 网格/提示/图例 + Canvas 渲染器
+use([PieChart, LineChart, BarChart, GaugeChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
 // 选项类型放宽，避免 ECharts 严格的字面量类型在各页面反复报错；内部统一 cast。
 const props = withDefaults(defineProps<{ option: any; height?: string }>(), { height: '240px' });

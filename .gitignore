@@ -11,6 +11,7 @@ logs/
 # ===== Node / Vite (frontend) =====
 node_modules/
 dist/
+dist_build/
 dist-ssr/
 dist.del.*
 dist.trash
