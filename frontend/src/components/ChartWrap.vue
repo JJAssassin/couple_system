@@ -19,13 +19,17 @@ let chart: EChartsType | null = null;
 
 const setting = useSettingStore();
 
-// 浪漫柔光统一调色板（与设计 Token 一致）
-const PALETTE = ['#ff6f7d', '#D88593', '#E8EEF2', '#7A6462', '#F4A9B8', '#9DB4C0'];
+// 浪漫柔光统一调色板（与设计 Token 一致，全部走语义变量 → 暗色模式自动跟随）
+const PALETTE = ['var(--color-rose)', 'var(--color-rose-deep)', 'var(--color-mist)', 'var(--color-cocoa)', 'var(--color-rose-hover)', 'var(--color-semantic-diary)'];
 
 function themeColors() {
-  return setting.dark
-    ? { text: '#cabdc1', ink: '#f3ecee', surface: '#2a2429', border: 'rgba(255,255,255,0.09)' }
-    : { text: '#4B5563', ink: '#1F2937', surface: '#ffffff', border: 'rgba(122,100,98,0.14)' };
+  // 返回语义变量字符串，由 resolveCssVars 在渲染时解析为当前主题实际色值（明/暗自动跟随）
+  return {
+    text: 'var(--color-ink-2)',
+    ink: 'var(--color-ink)',
+    surface: 'var(--color-surface-glass)',
+    border: 'var(--color-border)',
+  };
 }
 
 function baseOption(): any {
@@ -72,6 +76,19 @@ function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// 把 "var(--token)" 或 hex 统一解析为图表可用的实际色值（hex/rgba）。
+// 线图发光/渐变需用真实色值计算，故在 seriesDefaults 阶段即解析，避免拿到 "var(...)" 这类非法色。
+function resolveColor(c: unknown): string {
+  if (typeof c !== 'string') return '#ff6f7d';
+  if (c.startsWith('#')) return c;
+  const m = c.match(/^var\((--[\w-]+)\)$/);
+  if (m) {
+    const v = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
+    return v || '#ff6f7d';
+  }
+  return c;
+}
+
 // 柱状图默认圆角；折线图默认发光曲线 + 渐变区域填充（除非调用方已自定义）
 function seriesDefaults(series: any): any {
   if (!series) return series;
@@ -83,11 +100,11 @@ function seriesDefaults(series: any): any {
     if (s.type === 'line') {
       if (s.smooth === undefined) s.smooth = 0.4;
       if (s.showSymbol === undefined) s.showSymbol = false;
-      const colorStr =
-        (typeof s.color === 'string' && s.color.startsWith('#')) ? s.color :
-        (s.itemStyle && typeof s.itemStyle.color === 'string' && s.itemStyle.color.startsWith('#')) ? s.itemStyle.color :
+      const rawColor =
+        (typeof s.color === 'string') ? s.color :
+        (s.itemStyle && typeof s.itemStyle.color === 'string') ? s.itemStyle.color :
         PALETTE[i % PALETTE.length];
-      const lineColor = colorStr.startsWith('#') ? colorStr : `#${colorStr}`;
+      const lineColor = resolveColor(rawColor);
       if (!s.lineStyle) s.lineStyle = {};
       if (s.lineStyle.width === undefined) s.lineStyle.width = 3.5;
       if (s.lineStyle.color === undefined) s.lineStyle.color = lineColor;

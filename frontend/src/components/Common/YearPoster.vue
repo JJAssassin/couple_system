@@ -361,7 +361,7 @@ async function share() {
 .sub { font-size: 30px; color: #9a6b72; letter-spacing: 0.12em; margin-bottom: 10px; }
 .title {
   font-size: 108px; font-weight: 800; margin: 0;
-  color: #ff6f7d;
+  color: var(--color-rose);
   font-family: Georgia, "STKaiti", "KaiTi", "PingFang SC", serif;
   letter-spacing: -0.02em;
   text-shadow: 2px 2px 0 rgba(216, 133, 147, 0.18);
@@ -401,7 +401,7 @@ async function share() {
 }
 .dn-ico { font-size: 44px; margin-bottom: 4px; }
 .dn-label { font-size: 26px; color: #9a6b72; }
-.dn-num { font-size: 130px; font-weight: 800; color: #ff6f7d; line-height: 1; margin: 6px 0; }
+.dn-num { font-size: 130px; font-weight: 800; color: var(--color-rose); line-height: 1; margin: 6px 0; }
 .dn-unit { font-size: 34px; color: #d88593; margin-top: -8px; }
 .dn-sub { font-size: 24px; color: #9a6b72; margin-top: 10px; }
 
@@ -431,7 +431,7 @@ async function share() {
   font-size: 32px; font-weight: 700; color: #5d3a3f; margin-bottom: 18px;
   font-family: "STKaiti", "KaiTi", Georgia, serif;
 }
-.dot { width: 12px; height: 12px; border-radius: 50%; background: #ff6f7d; }
+.dot { width: 12px; height: 12px; border-radius: 50%; background: var(--color-rose); }
 
 /* 照片墙 */
 .photo-wall {
@@ -482,7 +482,7 @@ async function share() {
 .fin-val { font-size: 34px; font-weight: 800; margin-top: 6px; }
 .fin-val.inc { color: #16a34a; }
 .fin-val.exp { color: #dc2626; }
-.fin-val.bal { color: #ff6f7d; }
+.fin-val.bal { color: var(--color-rose); }
 
 /* 给彼此的话 */
 .letter {
@@ -503,7 +503,7 @@ async function share() {
 /* 底部 */
 .footer { position: relative; z-index: 1; text-align: center; margin-top: 44px; padding-bottom: 50px; }
 .love-you {
-  font-size: 80px; font-weight: 800; color: #ff6f7d;
+  font-size: 80px; font-weight: 800; color: var(--color-rose);
   font-family: Georgia, serif; letter-spacing: 0.08em;
   text-decoration: underline wavy rgba(255, 111, 125, 0.4);
 }

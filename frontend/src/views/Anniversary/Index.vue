@@ -487,10 +487,10 @@ onUnmounted(() => {
 .hero-ico { color: var(--color-rose); flex: 0 0 auto; }
 .hero-occ { font-size: 12px; font-weight: 600; color: var(--color-rose); background: var(--color-surface); border: 1px solid var(--color-rose-soft); padding: 2px 10px; border-radius: 999px; }
 .hero-count { display: flex; align-items: baseline; gap: 6px; }
-.hero-days { font-weight: 900; font-size: 44px; line-height: 1; }
+.hero-days { font-weight: 900; font-size: 44px; line-height: 1; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; letter-spacing: -0.03em; }
 .hero-unit { font-size: 16px; color: var(--color-ink-2); font-weight: 600; }
 .hero-hms { margin-left: 8px; font-family: var(--font-mono); font-size: 18px; font-weight: 600; color: var(--color-accent); letter-spacing: 0.02em; }
-.hero-today { font-size: 30px; font-weight: 900; color: var(--color-rose); }
+.hero-today { font-size: 30px; font-weight: 900; color: var(--color-rose); font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; letter-spacing: -0.02em; }
 .hero-past { font-size: 14px; color: var(--color-ink-2); margin-right: 4px; }
 .hero-sub { margin-top: 10px; font-size: 13px; color: var(--color-ink-2); }
 .hero-sub b { color: var(--color-ink); }

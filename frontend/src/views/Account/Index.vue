@@ -305,8 +305,8 @@ const pieOption = computed<EChartsOption>(() => ({
   series: [{
     type: 'pie', radius: ['45%', '70%'], center: ['50%', '45%'],
     data: [
-      { name: '收入', value: Number(summary.value.income.toFixed(2)), itemStyle: { color: '#5BB98C' } },
-      { name: '支出', value: Number(summary.value.expend.toFixed(2)), itemStyle: { color: '#ff6f7d' } },
+      { name: '收入', value: Number(summary.value.income.toFixed(2)), itemStyle: { color: 'var(--color-income)' } },
+      { name: '支出', value: Number(summary.value.expend.toFixed(2)), itemStyle: { color: 'var(--color-expend)' } },
     ],
     label: { formatter: '{b}\n¥{c}' },
   }],
@@ -351,12 +351,12 @@ const trendOption = computed<EChartsOption>(() => {
       {
         name: '收入', type: 'bar', barMaxWidth: 20,
         data: t.map((x) => Number(x.income.toFixed(2))),
-        itemStyle: { color: '#5BB98C', borderRadius: [4, 4, 0, 0] },
+        itemStyle: { color: 'var(--color-income)', borderRadius: [4, 4, 0, 0] },
       },
       {
         name: '支出', type: 'bar', barMaxWidth: 20,
         data: t.map((x) => Number(x.expense.toFixed(2))),
-        itemStyle: { color: '#ff6f7d', borderRadius: [4, 4, 0, 0] },
+        itemStyle: { color: 'var(--color-expend)', borderRadius: [4, 4, 0, 0] },
       },
     ],
   };
@@ -603,6 +603,7 @@ onMounted(async () => {
   color: transparent;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
+  letter-spacing: -0.03em;
 }
 .hero-sub { color: var(--color-ink-3); font-size: 13px; display: flex; gap: 18px; justify-content: center; }
 .block { margin: 22px 0; }

@@ -523,6 +523,7 @@ onUnmounted(() => {
   color: transparent;
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
+  letter-spacing: -0.03em;
   animation: heartbeat 2.6s var(--ease-love) infinite;
 }
 @keyframes heartbeat {

@@ -183,12 +183,14 @@ html.dark {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
   padding: 16px;
-  box-shadow: var(--shadow-glass-md);
-  transition: transform var(--dur-pop) var(--spring-smooth), box-shadow var(--dur-pop) var(--spring-smooth);
+  /* 顶部内高光（不依赖 overflow:hidden，避免裁切卡片内浮层/角标）+ 玻璃悬浮阴影 */
+  box-shadow: var(--shadow-glass-md), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition: transform var(--dur-pop) var(--spring-smooth), box-shadow var(--dur-pop) var(--spring-smooth), border-color var(--dur-pop) var(--spring-smooth);
 }
 html:not(.reduce-motion) .love-card:hover {
   transform: translateY(-4px) scale(1.008);
-  box-shadow: var(--shadow-glass-lg);
+  box-shadow: var(--shadow-glass-lg), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: var(--color-rose-soft);
 }
 .love-card:active { transform: scale(0.98); }
 

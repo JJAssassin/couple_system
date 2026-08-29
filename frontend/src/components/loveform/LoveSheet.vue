@@ -176,9 +176,9 @@ function onGrabUp() {
 .lsheet-mask {
   position: absolute;
   inset: 0;
-  background: rgba(28, 22, 24, 0.42);
-  backdrop-filter: blur(6px) saturate(115%);
-  -webkit-backdrop-filter: blur(6px) saturate(115%);
+  background: rgba(20, 16, 18, 0.48);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
 }
 .lsheet-mask.is-closable { cursor: pointer; }
 
@@ -187,8 +187,12 @@ function onGrabUp() {
   display: flex;
   flex-direction: column;
   max-height: 92vh;
-  background: var(--color-surface);
-  box-shadow: 0 24px 60px -18px rgba(60, 40, 45, 0.45);
+  /* 玻璃抽屉：透出底层极光柔光，顶边高光 + 玫瑰描边语言统一 */
+  background: var(--color-surface-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--color-border-glass);
+  box-shadow: 0 24px 60px -18px rgba(40, 28, 30, 0.5);
   z-index: 1;
 }
 .lsheet-root.is-bottom .lsheet-panel {

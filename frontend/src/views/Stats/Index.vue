@@ -194,8 +194,8 @@ const financeOption = computed(() => {
     xAxis: { type: 'category', data: m.map((x) => x.month.slice(5)) },
     yAxis: { type: 'value' },
     series: [
-      { name: '收入', type: 'bar', data: m.map((x) => x.income), itemStyle: { color: '#ff9fb0', borderRadius: [6, 6, 0, 0] } },
-      { name: '支出', type: 'bar', data: m.map((x) => x.expense), itemStyle: { color: '#7A6462', borderRadius: [6, 6, 0, 0] } },
+      { name: '收入', type: 'bar', data: m.map((x) => x.income), itemStyle: { color: 'var(--color-income)', borderRadius: [6, 6, 0, 0] } },
+      { name: '支出', type: 'bar', data: m.map((x) => x.expense), itemStyle: { color: 'var(--color-expend)', borderRadius: [6, 6, 0, 0] } },
     ],
   };
 });
@@ -218,7 +218,7 @@ const moodOption = computed(() => ({
   series: [{
     type: 'line', smooth: true, symbol: 'circle', symbolSize: 7,
     data: (report.value?.moodTrend ?? []).map((x) => x.value),
-    lineStyle: { width: 3, color: '#ff6f7d' }, itemStyle: { color: '#ff6f7d' },
+    lineStyle: { width: 3, color: 'var(--color-rose)' }, itemStyle: { color: 'var(--color-rose)' },
     areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,111,125,.28)' }, { offset: 1, color: 'rgba(255,111,125,0)' }] } },
   }],
 }));
@@ -229,7 +229,7 @@ const conflictOption = computed(() => ({
   yAxis: { type: 'value', minInterval: 1 },
   series: [{
     type: 'bar', data: (report.value?.conflictTrend ?? []).map((x) => x.value),
-    itemStyle: { color: '#D88593', borderRadius: [6, 6, 0, 0] },
+    itemStyle: { color: 'var(--color-semantic-anniv)', borderRadius: [6, 6, 0, 0] },
   }],
 }));
 </script>
@@ -257,7 +257,7 @@ const conflictOption = computed(() => ({
   border: 1px solid var(--color-border); border-radius: var(--radius-lg);
 }
 .hero-aurora { opacity: 0.5; }
-.hero-num { position: relative; font-size: 52px; line-height: 1; }
+.hero-num { position: relative; font-size: 52px; line-height: 1; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; letter-spacing: -0.03em; }
 .hero-unit { font-size: 20px; margin-left: 6px; color: var(--color-ink-2); }
 .hero-txt { position: relative; margin-top: 10px; font-size: 13px; color: var(--color-ink-2); }
 .poster-btn {

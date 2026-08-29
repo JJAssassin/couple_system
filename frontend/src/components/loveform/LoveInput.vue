@@ -77,8 +77,9 @@ function clear() {
     background var(--dur-micro) var(--ease-love);
 }
 .lf-input-wrap.is-focused {
-  background: var(--color-surface);
-  box-shadow: 0 0 0 3px var(--color-rose-soft);
+  background: var(--color-surface-glass);
+  /* 聚焦光晕环：玫瑰柔光外扩 + 微投影，呼应全局玻璃质感 */
+  box-shadow: 0 0 0 4px var(--color-rose-soft), 0 6px 18px -6px rgba(255, 111, 125, 0.35);
 }
 .lf-input-wrap.is-invalid {
   box-shadow: 0 0 0 3px rgba(229, 90, 104, 0.18);
