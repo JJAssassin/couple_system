@@ -1,21 +1,23 @@
 <template>
   <div class="lf-field">
     <label v-if="label" class="lf-label">{{ label }}</label>
-    <button type="button" class="lf-date" :class="{ 'is-empty': !modelValue }" @click="open">
-      <Calendar :size="16" :stroke-width="2" class="lf-date-ico" />
-      <span class="lf-date-text">{{ display || placeholder }}</span>
-      <span v-if="modelValue" class="lf-date-clear" role="button" aria-label="清除" @click.stop="clear">
-        <svg viewBox="0 0 24 24" width="13" height="13"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
-      </span>
-      <input
-        ref="picker"
-        class="lf-date-native"
-        :type="mode === 'datetime' ? 'datetime-local' : 'date'"
-        :value="nativeValue"
-        :aria-label="label || placeholder"
-        @change="onChange"
-      />
-    </button>
+    <div class="lf-date-row">
+      <button type="button" class="lf-date" :class="{ 'is-empty': !modelValue }" @click="open">
+        <Calendar :size="16" :stroke-width="2" class="lf-date-ico" />
+        <span class="lf-date-text">{{ display || placeholder }}</span>
+        <input
+          ref="picker"
+          class="lf-date-native"
+          :type="mode === 'datetime' ? 'datetime-local' : 'date'"
+          :value="nativeValue"
+          :aria-label="label || placeholder"
+          @change="onChange"
+        />
+      </button>
+      <button v-if="modelValue" type="button" class="lf-date-clear" aria-label="清除" @click="clear">
+        <svg viewBox="0 0 24 24" width="14" height="14"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+      </button>
+    </div>
   </div>
 </template>
 
@@ -86,18 +88,24 @@ function clear() {
 .lf-date.is-empty { color: var(--color-ink-3); }
 .lf-date:hover { background: var(--color-rose-soft); }
 .lf-date:active { transform: scale(0.99); }
-.lf-date-ico { color: var(--color-rose); flex: 0 0 auto; }
+.lf-date-ico { color: var(--color-rose-text); flex: 0 0 auto; }
 .lf-date-text { flex: 1; text-align: left; }
+.lf-date-row { display: flex; align-items: center; gap: 6px; }
 .lf-date-clear {
+  position: relative;
   flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
+  border: none;
   border-radius: 50%;
   background: var(--color-ink-soft);
   color: var(--color-ink-3);
+  cursor: pointer;
 }
+.lf-date-clear::before { content: ''; position: absolute; inset: -7px; border-radius: 50%; }
+.lf-date-clear:hover { color: var(--color-ink-2); }
 .lf-date-native {
   position: absolute;
   inset: 0;

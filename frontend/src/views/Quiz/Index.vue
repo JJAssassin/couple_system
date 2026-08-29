@@ -365,7 +365,7 @@ onMounted(async () => {
 .stat-nums { display: flex; gap: 22px; }
 .stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .stat-item .n { font-size: 22px; font-weight: 700; font-family: var(--font-mono); color: var(--color-ink); }
-.stat-item .n.hit { color: var(--color-rose); }
+.stat-item .n.hit { color: var(--color-rose-text); }
 .stat-item .l { font-size: 11px; }
 .stat-tip { flex: 1 1 180px; font-size: 12px; line-height: 1.5; text-align: right; }
 
@@ -373,7 +373,7 @@ onMounted(async () => {
 .active-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .badge {
   display: inline-flex; align-items: center; gap: 4px; font-size: 11px;
-  color: var(--color-rose); background: var(--color-rose-soft);
+  color: var(--color-rose-text); background: var(--color-rose-soft);
   padding: 2px 8px; border-radius: 999px;
 }
 .cat {
@@ -395,7 +395,7 @@ onMounted(async () => {
 .opt:disabled { opacity: .6; cursor: not-allowed; }
 .opt-idx {
   flex: 0 0 26px; height: 26px; display: grid; place-items: center; border-radius: 50%;
-  background: var(--color-rose-soft); color: var(--color-rose);
+  background: var(--color-rose-soft); color: var(--color-rose-text);
   font-size: 12px; font-weight: 700; font-family: var(--font-mono);
 }
 .opt-idx.small { flex-basis: 22px; height: 22px; font-size: 11px; }
@@ -421,7 +421,7 @@ onMounted(async () => {
   padding: 2px 8px; border-radius: 999px;
   color: var(--color-ink-3); background: var(--color-surface-2);
 }
-.result.hit { color: var(--color-rose); background: var(--color-rose-soft); }
+.result.hit { color: var(--color-rose-text); background: var(--color-rose-soft); }
 .round-top .time { margin-left: auto; font-size: 11px; font-family: var(--font-mono); }
 .round-q { margin: 8px 0 10px; font-size: 14px; color: var(--color-ink); line-height: 1.5; }
 .picks { display: flex; gap: 12px; flex-wrap: wrap; }

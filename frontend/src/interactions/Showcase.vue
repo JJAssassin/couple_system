@@ -159,7 +159,7 @@ function noop() {}
   border-radius: var(--radius-lg); padding: 16px; display: flex; flex-direction: column; gap: 10px;
   box-shadow: 0 1px 2px rgba(31,41,55,0.04), 0 10px 28px -10px rgba(122,100,98,0.14);
 }
-.tag { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--color-rose); font-weight: 600; }
+.tag { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--color-rose-text); font-weight: 600; }
 .desc { color: var(--color-ink-2); font-size: 13px; margin: 0; line-height: 1.6; min-height: 38px; }
 .state { font-size: 13px; color: var(--color-ink-3); }
 .demo-btn {
@@ -167,24 +167,24 @@ function noop() {}
   padding: 10px 18px; border-radius: var(--radius-md); cursor: pointer; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink); transition: all var(--fx-dur-micro, 140ms) var(--fx-ease-soft, ease);
 }
-.demo-btn.rose { background: var(--color-rose); color: #fff; border-color: var(--color-rose); }
+.demo-btn.rose { background: var(--color-rose); color: var(--color-on-primary); border-color: var(--color-rose); }
 .demo-btn.ghost { display: inline-flex; align-items: center; gap: 8px; }
 .demo-btn.sm { padding: 7px 12px; font-size: 13px; }
 .demo-btn.w-full { width: 100%; align-self: stretch; }
 .demo-btn:active { transform: scale(0.97); }
-.big { font-size: 40px; font-weight: 800; color: var(--color-rose); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.big { font-size: 40px; font-weight: 800; color: var(--color-rose-text); font-variant-numeric: tabular-nums; line-height: 1.1; }
 .sk-demo { width: 100%; }
 .real { display: flex; flex-direction: column; gap: 4px; }
 .real b { color: var(--color-ink); }
 .real span { color: var(--color-ink-2); font-size: 13px; }
-.face { width: 100%; height: 100%; display: grid; place-items: center; border-radius: var(--radius-lg); font-weight: 600; color: #fff; }
+.face { width: 100%; height: 100%; display: grid; place-items: center; border-radius: var(--radius-lg); font-weight: 600; color: var(--color-on-primary); }
 .face.front { background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep)); }
 .face.back { background: linear-gradient(135deg, var(--color-cocoa), var(--color-ink-2)); }
 .burger-demo { border: none; background: none; cursor: pointer; color: var(--color-ink); padding: 8px; }
 .stack { position: relative; height: 120px; }
 .stack-base, .stack-top {
   position: absolute; inset: 0; border-radius: var(--radius-lg); display: grid; place-items: center;
-  font-weight: 600; color: #fff;
+  font-weight: 600; color: var(--color-on-primary);
 }
 .stack-base { background: linear-gradient(135deg, var(--color-cocoa), var(--color-ink-2)); }
 .stack-top { background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep)); box-shadow: 0 10px 30px -8px rgba(255,111,125,0.5); z-index: 2; }

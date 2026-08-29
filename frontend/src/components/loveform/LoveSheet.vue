@@ -8,8 +8,7 @@
           class="lsheet-panel"
           :class="[{ 'is-bottom': isBottom, 'is-dragging': dragging }, reduceClass ]"
           :style="panelStyle"
-          role="dialog"
-          aria-modal="true"
+          v-bind="dialogAttrs"
         >
           <div class="lsheet-grab" @pointerdown="onGrabDown">
             <span v-if="isBottom" class="lsheet-handle" />
@@ -40,6 +39,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { isMobile } from '@/composables/useDevice';
+import { useDialogA11y } from '@/composables/useDialogA11y';
 
 const props = withDefaults(
   defineProps<{
@@ -124,6 +124,14 @@ onBeforeUnmount(() => {
 // —— 拖拽关闭（仅 bottom 变体）——
 const panel = ref<HTMLElement>();
 const dragging = ref(false);
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen: show,
+  close,
+  dialogRef: panel,
+  ariaLabel: () => props.title || '操作面板',
+});
 const dragY = ref(0);
 let startY = 0;
 let startT = 0;
@@ -248,7 +256,7 @@ function onGrabUp() {
   cursor: pointer;
   transition: all var(--dur-micro) var(--ease-love);
 }
-.lsheet-x:hover { background: var(--color-rose-soft); color: var(--color-rose); }
+.lsheet-x:hover { background: var(--color-rose-soft); color: var(--color-rose-text); }
 .lsheet-x:active { transform: scale(0.92); }
 
 .lsheet-body {

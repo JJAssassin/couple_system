@@ -50,12 +50,12 @@ function toggle(opt: string) {
     border-color var(--dur-micro) var(--ease-love),
     box-shadow var(--dur-micro) var(--ease-love);
 }
-.lf-chip:hover { border-color: var(--color-rose-soft); color: var(--color-rose); }
+.lf-chip:hover { border-color: var(--color-rose-soft); color: var(--color-rose-text); }
 .lf-chip:active { transform: scale(0.94); }
 .lf-chip.active {
   background: var(--color-rose);
   border-color: var(--color-rose);
-  color: #fff;
+  color: var(--color-on-primary);
   box-shadow: 0 4px 12px rgba(255, 111, 125, 0.28);
 }
 </style>

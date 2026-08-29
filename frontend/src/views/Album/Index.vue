@@ -34,7 +34,11 @@
           v-for="a in filteredAlbums"
           :key="a.id"
           class="love-card album-card stagger-item"
+          role="button"
+          tabindex="0"
           @click="openAlbum(a)"
+          @keydown.enter.prevent="openAlbum(a)"
+          @keydown.space.prevent="openAlbum(a)"
         >
           <div class="album-cover">
             <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" />
@@ -169,7 +173,11 @@
               class="img-cell love-card"
               :class="{ selected: selectMode && selectedIds.has(img.id) }"
               v-show="matchesFilter(img)"
+              role="button"
+              tabindex="0"
               @click="onCellClick(img)"
+              @keydown.enter.prevent="onCellClick(img)"
+              @keydown.space.prevent="onCellClick(img)"
             >
               <img class="thumb" :src="img.url || img.imagePath" :alt="img.remark || 'photo'" loading="lazy" />
               <div class="img-cap" v-if="img.remark" v-show="!selectMode">{{ img.remark }}</div>
@@ -712,7 +720,7 @@ html:not(.reduce-motion) .img-cell:hover .drag-handle, .drag-handle:active { opa
   position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
   background: rgba(0, 0, 0, 0.38); border: 2px solid transparent; box-sizing: border-box; z-index: 2;
 }
-.img-cell.selected .select-overlay { background: rgba(var(--color-accent-rgb, 122, 100, 98), 0.28); border-color: var(--color-accent); }
+.img-cell.selected .select-overlay { background: rgb(var(--color-rose-rgb, 255 111 125) / 0.28); border-color: var(--color-rose); }
 .sel-toggle { flex: 0 0 auto; }
 .batch-bar {
   position: fixed; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 16px);
@@ -724,7 +732,7 @@ html:not(.reduce-motion) .img-cell:hover .drag-handle, .drag-handle:active { opa
   width: 100%; aspect-ratio: 1 / 1; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 6px; cursor: pointer;
   border: 2px dashed var(--color-accent-soft); border-radius: var(--radius-md);
-  color: var(--color-accent); background: var(--color-accent-soft);
+  color: var(--color-accent-text); background: var(--color-accent-soft);
   transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
 html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }

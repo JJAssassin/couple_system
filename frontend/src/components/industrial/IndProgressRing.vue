@@ -12,7 +12,7 @@
     </svg>
     <div class="center">
       <Flame v-if="flame" class="flame" :size="Math.max(16, Math.round(size * 0.2))" />
-      <span class="val" :style="{ color, fontSize }">{{ display }}</span>
+      <span class="val" :style="{ color: 'var(--color-rose-text)', fontSize }">{{ display }}</span>
       <span v-if="sublabel" class="sub">{{ sublabel }}</span>
     </div>
   </div>

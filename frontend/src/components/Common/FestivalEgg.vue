@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useDialogA11y } from '@/composables/useDialogA11y'
 import { listAnniversaries } from '@/api/anniversary'
 import { useSettingStore } from '@/store/settingStore'
 
@@ -34,6 +35,16 @@ const hearts = Array.from({ length: 20 }, (_, i) => ({
 function dismissed() { try { return localStorage.getItem('cl_egg_' + dayKey) === '1' } catch { return false } }
 function dismiss() { try { localStorage.setItem('cl_egg_' + dayKey, '1') } catch { /* ignore */ } visible.value = false }
 
+const card = ref<HTMLElement>()
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen: visible,
+  close: dismiss,
+  dialogRef: card,
+  ariaLabel: () => title.value || '节日祝福',
+})
+
 async function check() {
   if (dismissed()) return
   // 未登录（无访问令牌）不打接口，避免登录页出现 401 噪声
@@ -65,7 +76,7 @@ onMounted(check)
 <template>
   <transition name="egg-fade">
     <div v-if="visible" class="egg-mask" :class="{ 'no-anim': setting.reduceMotion }" role="button" tabindex="0" aria-label="关闭" @click.self="dismiss" @keydown.enter.prevent="dismiss" @keydown.space.prevent="dismiss">
-      <div class="egg-card">
+      <div ref="card" v-bind="dialogAttrs" class="egg-card">
         <div class="egg-hearts" aria-hidden="true">
           <span
             v-for="(h, i) in hearts"
@@ -135,7 +146,7 @@ onMounted(check)
   border-radius: 999px;
   cursor: pointer;
   font-size: 14px;
-  color: #fff;
+  color: var(--color-on-primary);
   background: var(--color-rose, #e06a8b);
   box-shadow: 0 8px 20px rgba(224, 106, 139, 0.35);
   transition: transform 0.15s var(--ease-love, ease);

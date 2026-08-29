@@ -234,14 +234,14 @@ onUnmounted(() => {
 .brand-mark {
   display: inline-flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; border-radius: 10px; flex: 0 0 auto;
-  color: #fff; background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  color: var(--color-on-primary); background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
 }
 .brand-name { font-weight: 600; font-size: 14px; color: var(--color-ink); letter-spacing: 0.01em; }
 .collapsed .brand { padding: 6px 0 18px; }
 
 .partner-chip {
   display: flex; align-items: center; gap: 6px; margin: -8px 0 12px; padding: 7px 10px;
-  border-radius: 10px; font-size: 12px; color: var(--color-rose);
+  border-radius: 10px; font-size: 12px; color: var(--color-rose-text);
   background: var(--color-rose-soft);
 }
 
@@ -250,9 +250,9 @@ onUnmounted(() => {
   cursor: pointer; color: var(--color-ink-2); display: flex; align-items: center;
   padding: 6px; border-radius: 10px; transition: all var(--dur-micro) var(--ease-love);
 }
-.bell:hover { color: var(--color-rose); background: var(--color-rose-soft); }
+.bell:hover { color: var(--color-rose-text); background: var(--color-rose-soft); }
 .badge {
-  position: absolute; top: 2px; right: 4px; background: var(--color-rose); color: #fff;
+  position: absolute; top: 2px; right: 4px; background: var(--color-rose); color: var(--color-on-primary);
   font-size: 10px; line-height: 1; padding: 2px 5px; border-radius: 10px; font-family: var(--font-mono);
   animation: badgePulse 1.8s var(--ease-love) infinite;
 }
@@ -266,7 +266,7 @@ onUnmounted(() => {
   position: absolute; top: 64px; left: 8px; right: 8px; width: auto; max-height: 70vh; overflow: auto;
   background: var(--color-surface); border-radius: 14px; padding: 6px; z-index: 60;
   border: 1px solid var(--color-border);
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.20);
+  box-shadow: var(--shadow-float);
   transform-origin: top right;
 }
 .panel-pop-enter-active { transition: opacity 0.24s var(--ease-love), transform 0.24s var(--ease-love); }
@@ -279,10 +279,10 @@ onUnmounted(() => {
   font-family: var(--font-mono); font-size: 0.72rem; font-weight: 500; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--color-ink-2); transition: color var(--dur-micro);
 }
-.ph-title:hover { color: var(--color-rose); }
+.ph-title:hover { color: var(--color-rose-text); }
 .ph-right { display: flex; align-items: center; gap: 8px; }
 .ph-all {
-  border: none; background: var(--color-rose-soft); color: var(--color-rose);
+  border: none; background: var(--color-rose-soft); color: var(--color-rose-text);
   font-size: 11px; padding: 3px 9px; border-radius: 999px; cursor: pointer; transition: all var(--dur-micro);
 }
 .ph-all:active { transform: scale(0.95); }
@@ -315,7 +315,7 @@ html:not(.reduce-motion) .msg-list li.unread:active .swipe-hint { opacity: 0.8; 
 .nav-item:hover { color: var(--color-ink); background: var(--color-surface-2); }
 /* 激活态：玫瑰浅底 + 主色文字 + 左侧 3px 强调条 */
 .nav-item.router-link-active {
-  color: var(--color-rose);
+  color: var(--color-rose-text);
   background: var(--color-rose-soft);
   font-weight: 600;
 }
@@ -330,7 +330,7 @@ html:not(.reduce-motion) .msg-list li.unread:active .swipe-hint { opacity: 0.8; 
 }
 .nbadge.count {
   min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px;
-  background: var(--color-rose); color: #fff; font-size: 10px; line-height: 16px;
+  background: var(--color-rose); color: var(--color-on-primary); font-size: 10px; line-height: 16px;
   font-family: var(--font-mono); box-shadow: 0 0 0 2px var(--color-surface);
   animation: badgePulse 1.8s var(--ease-love) infinite;
 }

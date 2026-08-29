@@ -13,12 +13,16 @@
         :placeholder="placeholder"
         :maxlength="maxlength"
         :rows="rows"
-        :aria-label="label || placeholder"
+        :aria-label="label ? undefined : (placeholder || '')"
+        :aria-invalid="invalid || !!error || undefined"
+        :aria-required="required || undefined"
+        :aria-describedby="error ? errId : undefined"
         @input="onInput"
         @focus="focused = true"
         @blur="focused = false"
       />
     </div>
+    <p v-if="error" :id="errId" class="lf-error">{{ error }}</p>
   </div>
 </template>
 
@@ -35,14 +39,17 @@ const props = withDefaults(
     maxHeight?: number;
     counter?: boolean;
     invalid?: boolean;
+    required?: boolean;
+    error?: string;
   }>(),
-  { modelValue: '', rows: 4, maxHeight: 240, counter: false, invalid: false }
+  { modelValue: '', rows: 4, maxHeight: 240, counter: false, invalid: false, required: false, error: '' }
 );
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 const ta = ref<HTMLTextAreaElement>();
 const focused = ref(false);
 const uid = 'lft-' + Math.random().toString(36).slice(2, 9);
+const errId = uid + '-err';
 
 function onInput(e: Event) {
   emit('update:modelValue', (e.target as HTMLTextAreaElement).value);
@@ -71,6 +78,7 @@ onMounted(() => nextTick(autoGrow));
   padding-left: 2px;
 }
 .lf-count { font-size: 12px; color: var(--color-ink-3); }
+.lf-error { font-size: 12px; color: var(--color-danger, #e55a68); padding-left: 2px; }
 .lf-textarea-wrap {
   background: var(--color-surface-2);
   border-radius: 12px;

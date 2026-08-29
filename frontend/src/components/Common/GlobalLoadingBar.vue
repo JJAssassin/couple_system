@@ -1,5 +1,5 @@
 <template>
-  <div class="glb" :class="{ on: visible, done: finishing }" role="progressbar" aria-label="加载中" aria-hidden="true">
+  <div class="glb" :class="{ on: visible, done: finishing }" role="status" aria-label="加载中">
     <div class="glb-bar" />
   </div>
 </template>

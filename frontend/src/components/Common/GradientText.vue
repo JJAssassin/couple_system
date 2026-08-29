@@ -33,8 +33,7 @@ withDefaults(
   background: linear-gradient(
     100deg,
     var(--color-rose) 0%,
-    var(--color-rose-deep) 34%,
-    var(--color-cocoa) 58%,
+    var(--color-rose-deep) 50%,
     var(--color-rose) 100%
   );
   -webkit-background-clip: text;

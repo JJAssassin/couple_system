@@ -616,20 +616,20 @@ onMounted(async () => {
 .budget-body { display: flex; flex-direction: column; gap: 14px; }
 .budget-overall { background: var(--color-surface-2); border-radius: 12px; padding: 14px 16px; }
 .bo-top { display: flex; justify-content: space-between; font-size: 14px; color: var(--color-ink-2); }
-.bo-top .over { color: var(--color-rose); font-weight: 600; }
+.bo-top .over { color: var(--color-rose-text); font-weight: 600; }
 .bar { height: 10px; background: var(--color-surface-2); border-radius: 6px; overflow: hidden; margin: 10px 0 8px; }
 .bar-fill { height: 100%; background: var(--color-income); border-radius: 6px; transition: width .4s ease; }
 .bar-fill.over { background: var(--color-rose); }
 .bo-foot { display: flex; gap: 8px; }
 .tag { font-size: 12px; padding: 2px 10px; border-radius: 999px; }
 .tag.ok { background: var(--color-income-soft); color: var(--color-income-deep); }
-.tag.over { background: var(--color-rose-soft); color: var(--color-rose); }
+.tag.over { background: var(--color-rose-soft); color: var(--color-rose-text); }
 .tag.sm { padding: 1px 8px; }
 .budget-empty { color: var(--color-ink-3); font-size: 13px; padding: 8px 0; }
 .cat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
 .cat-row { display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 8px 12px; }
 .cat-name { font-weight: 600; }
-.cat-amt { color: var(--color-rose); }
+.cat-amt { color: var(--color-rose-text); }
 .cat-budget { color: var(--color-ink-3); font-size: 12px; }
 
 /* 分类预算弹窗 */
@@ -647,7 +647,7 @@ onMounted(async () => {
 .rec-mid { flex: 1; }
 .rec-amt { font-size: 18px; font-weight: 600; }
 .rec-amt.in { color: var(--color-income); }
-.rec-amt.out { color: var(--color-rose); }
+.rec-amt.out { color: var(--color-rose-text); }
 .rec-ops { display: flex; gap: 4px; flex-shrink: 0; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 @media (max-width: 767px) {
@@ -804,6 +804,6 @@ onMounted(async () => {
 .import-head { position: sticky; top: 0; background: var(--color-surface-2); color: var(--color-ink-3); font-weight: 600; }
 .import-amt { text-align: right; font-variant-numeric: tabular-nums; }
 .import-remark { color: var(--color-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.import-bad { background: var(--color-rose-soft); color: var(--color-rose); }
-.import-bad .import-remark { color: var(--color-rose); }
+.import-bad { background: var(--color-rose-soft); color: var(--color-rose-text); }
+.import-bad .import-remark { color: var(--color-rose-text); }
 </style>

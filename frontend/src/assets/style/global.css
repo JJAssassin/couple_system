@@ -46,9 +46,6 @@
   --dur-micro: 180ms;
   --dur-pop: 300ms;
   --dur-page: 380ms;
-  /* 柔和阴影令牌：供组件 inline box-shadow 复用，统一取代各页面自写值 */
-  --shadow-card: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
-  --shadow-float: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.20);
 }
 
 :root {
@@ -190,9 +187,20 @@ html.dark {
 }
 
 /* ====================== 柔和阴影工具类 ====================== */
-.shadow-card  { box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
-.shadow-float { box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.20); }
+.shadow-card  { box-shadow: var(--shadow-card); }
+.shadow-float { box-shadow: var(--shadow-float); }
 .shadow-press { box-shadow: inset 0 1px 3px rgba(122, 100, 98, 0.10); }
+
+/* 仅供屏幕阅读器：视觉隐藏但可被读屏访问（状态播报、跳转提示等） */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 /* 卡片：半透明毛玻璃 + 弹簧悬浮（让全局 Aurora 光晕自然透出，消除纯白方块感） */
 .love-card {
@@ -270,13 +278,13 @@ html:not(.reduce-motion) .love-card-pro:hover {
     color var(--dur-micro) var(--ease-love), border-color var(--dur-micro) var(--ease-love);
 }
 .ind-btn.w-full { width: 100%; }
-.ind-btn:hover { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.ind-btn:hover { color: var(--color-rose-text); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
 .ind-btn:active { transform: scale(0.96); }
 .ind-btn-accent {
-  background: var(--color-rose); color: #fff; border-color: var(--color-rose);
+  background: var(--color-rose); color: var(--color-on-primary); border-color: var(--color-rose);
   box-shadow: 0 4px 14px -4px rgba(255, 111, 125, 0.5);
 }
-.ind-btn-accent:hover { color: #fff; background: var(--color-rose-hover); border-color: var(--color-rose-hover); }
+.ind-btn-accent:hover { color: var(--color-on-primary); background: var(--color-rose-hover); border-color: var(--color-rose-hover); }
 
 /* 状态点（柔和呼吸，去重 LED 光晕） */
 .ind-led {
@@ -335,7 +343,7 @@ html:not(.reduce-motion) .love-card-pro:hover {
   border: 1px solid var(--color-border);
   transition: all var(--dur-micro) var(--ease-love);
 }
-.ind-pager .pg-btn:hover:not(:disabled) { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.ind-pager .pg-btn:hover:not(:disabled) { color: var(--color-rose-text); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
 .ind-pager .pg-btn:active:not(:disabled) { transform: scale(0.98); }
 .ind-pager .pg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
@@ -351,7 +359,7 @@ html:not(.reduce-motion) .love-card-pro:hover {
 .reduce-motion :global(.n-message-wrapper) { animation: none; }
 
 /* 按类型点缀左侧色条，强化语义（保留 Naive 自带底色与图标） */
-:global(.n-message--success) { border-left: 3px solid var(--color-rose); }
+:global(.n-message--success) { border-left: 3px solid #22c55e; }
 :global(.n-message--error)   { border-left: 3px solid #ef4444; }
 :global(.n-message--warning) { border-left: 3px solid #f59e0b; }
 :global(.n-message--info)    { border-left: 3px solid var(--color-cocoa); }
@@ -365,6 +373,15 @@ html:not(.reduce-motion) .love-card-pro:hover {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
+}
+/* 系统级偏好镜像：即使用户未开应用内开关，OS 设为 reduce 时也强制关闭非必要动效 */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* =====================================================================
@@ -391,7 +408,7 @@ p, li { text-wrap: pretty; }
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1;
-  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 55%, var(--color-cocoa) 100%);
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

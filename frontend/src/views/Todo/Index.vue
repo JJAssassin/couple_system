@@ -454,7 +454,7 @@ onMounted(async () => {
 .todo-top { display: flex; align-items: flex-start; gap: 10px; }
 .check {
   flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; cursor: pointer;
-  border: 2px solid var(--color-ink-soft); background: transparent; color: #fff;
+  border: 2px solid var(--color-ink-soft); background: transparent; color: var(--color-on-primary);
   display: grid; place-items: center; transition: all var(--dur-micro) var(--ease-love);
 }
 .check.on { background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep)); border-color: transparent; }

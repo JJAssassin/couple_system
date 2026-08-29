@@ -318,7 +318,7 @@ onUnmounted(() => {
 .msg.mine { border-left-color: var(--color-cocoa); }
 .msg.pinned { background: color-mix(in srgb, var(--color-rose-soft) 40%, var(--color-surface)); }
 .msg-top { display: flex; align-items: center; gap: 10px; }
-.pin-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--color-rose); background: var(--color-rose-soft); padding: 2px 8px; border-radius: 999px; }
+.pin-tag { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--color-rose-text); background: var(--color-rose-soft); padding: 2px 8px; border-radius: 999px; }
 .author { font-weight: 600; color: var(--color-ink); font-size: 13px; }
 .time { margin-left: auto; font-size: 11px; font-family: var(--font-mono); }
 .msg-body { margin: 8px 0 0; white-space: pre-wrap; line-height: 1.6; color: var(--color-ink); }

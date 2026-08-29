@@ -209,7 +209,7 @@ onUnmounted(() => {
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
 .page-head h1 { margin: 0; font-size: 22px; }
 .sub { margin: 4px 0 0; color: var(--color-ink-3); font-size: 13px; }
-.sub b { color: var(--color-accent); }
+.sub b { color: var(--color-accent-text); }
 .ops { display: flex; gap: 10px; }
 
 .grp { margin: 22px 0; }
@@ -218,12 +218,12 @@ onUnmounted(() => {
   display: flex; gap: 14px; align-items: flex-start; cursor: pointer;
   transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
-.m-card.unread { box-shadow: 0 0 0 1.5px var(--color-rose), 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
+.m-card.unread { box-shadow: 0 0 0 1.5px var(--color-rose), var(--shadow-card); }
 .m-card:active { transform: scale(0.99); }
 .m-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .m-ico {
   flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 20px; color: var(--color-rose); background: var(--color-rose-soft); box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
+  font-size: 20px; color: var(--color-rose-text); background: var(--color-rose-soft); box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
 }
 .m-ico.dim { filter: grayscale(0.4); opacity: 0.7; }
 .m-body { flex: 1; min-width: 0; }

@@ -295,7 +295,7 @@ onUnmounted(() => {
 .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .card-time { font-size: 12px; }
 .card-summary { margin-top: 8px; font-size: 15px; color: var(--color-ink); }
-.card-reconciled { margin-top: 8px; color: var(--color-rose); font-size: 13px; }
+.card-reconciled { margin-top: 8px; color: var(--color-rose-text); font-size: 13px; }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 
 .detail-row { display: flex; align-items: center; gap: 10px; margin: 12px 0; }

@@ -61,11 +61,11 @@ function pick(v: number) {
   color: var(--color-ink-2);
   padding-left: 2px;
 }
-.lf-mood-label { font-size: 13px; color: var(--color-rose); font-weight: 600; }
+.lf-mood-label { font-size: 13px; color: var(--color-rose-text); font-weight: 600; }
 .lf-moods {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(5, minmax(44px, 1fr));
+  gap: 6px;
 }
 .lf-mood {
   aspect-ratio: 1;

@@ -58,7 +58,7 @@ const emit = defineEmits<{ (e: 'cancel'): void; (e: 'save'): void }>();
   border: none;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
-  color: #fff;
+  color: var(--color-on-primary);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -94,7 +94,7 @@ const emit = defineEmits<{ (e: 'cancel'): void; (e: 'save'): void }>();
   position: absolute;
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--color-on-primary);
 }
 .lsb-check-enter-active { transition: transform var(--dur-pop) var(--fx-ease-back), opacity var(--dur-pop) var(--ease-love); }
 .lsb-check-enter-from { transform: scale(0.4); opacity: 0; }

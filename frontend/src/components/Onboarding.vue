@@ -1,7 +1,7 @@
 <template>
   <transition name="ob-fade">
     <div v-if="visible" class="ob-mask">
-      <div class="ob-card">
+      <div ref="card" v-bind="dialogAttrs" class="ob-card">
         <div class="ob-grip" />
         <div class="ob-stage">
           <section v-for="(s, i) in slides" :key="i" class="ob-slide" :class="{ active: i === step }">
@@ -32,6 +32,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, type Component } from 'vue';
+import { useDialogA11y } from '@/composables/useDialogA11y';
 import { Heart, PenLine, Camera, Link } from 'lucide-vue-next';
 import { useAuthStore } from '@/store/authStore';
 
@@ -63,6 +64,16 @@ function finish() {
   localStorage.setItem(KEY, '1');
   visible.value = false;
 }
+
+const card = ref<HTMLElement>();
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen: visible,
+  close: finish,
+  dialogRef: card,
+  ariaLabel: '新手引导',
+});
 </script>
 
 <style scoped>
@@ -83,13 +94,13 @@ function finish() {
   pointer-events: none;
 }
 .ob-slide.active { opacity: 1; transform: none; pointer-events: auto; }
-.ob-ico { color: var(--color-rose); }
+.ob-ico { color: var(--color-rose-text); }
 .ob-slide h2 { margin: 0; font-size: 19px; color: var(--color-ink); }
 .ob-slide p { margin: 0; color: var(--color-ink-2); font-size: 14px; line-height: 1.7; padding: 0 6px; }
 .ob-pair { margin: 14px 0 4px; }
 .ob-pair-label { font-size: 13px; color: var(--color-ink-3); margin-bottom: 8px; }
 .ob-code {
-  font-family: var(--font-mono); font-size: 30px; font-weight: 700; letter-spacing: 0.18em; color: var(--color-accent);
+  font-family: var(--font-mono); font-size: 30px; font-weight: 700; letter-spacing: 0.18em; color: var(--color-accent-text);
   background: var(--color-mist); border-radius: var(--radius-md); padding: 10px 0;
   box-shadow: inset 3px 3px 7px var(--color-ink-3), inset -3px -3px 7px #ffffff;
 }
@@ -101,7 +112,7 @@ function finish() {
 .ob-skip { flex: 0 0 auto; border: none; background: transparent; color: var(--color-ink-3); cursor: pointer; padding: 12px; font-size: 14px; }
 .ob-next {
   flex: 1; border: none; cursor: pointer; padding: 12px; border-radius: var(--radius-md);
-  background: var(--color-accent); color: #fff; font-size: 15px; font-weight: 600;
+  background: var(--color-accent); color: var(--color-on-primary); font-size: 15px; font-weight: 600;
   box-shadow: 4px 4px 8px rgba(226, 90, 104, 0.4);
 }
 .ob-next:active { transform: translateY(2px); }

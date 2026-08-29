@@ -4,12 +4,7 @@
       <div
         v-if="visible"
         class="ps-mask"
-        role="button"
-        tabindex="0"
-        aria-label="关闭"
         @click.self="close"
-        @keydown.enter.prevent="close"
-        @keydown.space.prevent="close"
       >
         <div class="ps-dialog" @click.stop>
           <div class="ps-head">
@@ -130,6 +125,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useDialogA11y } from '@/composables/useDialogA11y';
 import { useMessage } from 'naive-ui';
 import html2canvas from 'html2canvas';
 import { NButton } from 'naive-ui';
@@ -156,6 +152,17 @@ function open() {
 function close() {
   visible.value = false;
 }
+const dialogEl = ref<HTMLElement>();
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen: visible,
+  close,
+  dialogRef: dialogEl,
+  ariaLabel: '我们的年度海报',
+  initialFocus: '.action-bar button',
+});
+
 defineExpose({ open, close });
 
 const hasAgreementsOrGoals = computed(

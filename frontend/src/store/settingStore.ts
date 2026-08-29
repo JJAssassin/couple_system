@@ -75,6 +75,13 @@ export const useSettingStore = defineStore('setting', () => {
       : null;
   const systemDark = ref(mql ? mql.matches : false);
 
+  // 系统「减少动效」偏好：OS 级开关，作为兜底强制生效（即使用户未在应用内开启）
+  const motionMql =
+    typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia('(prefers-reduced-motion: reduce)')
+      : null;
+  const systemReduceMotion = ref(motionMql ? motionMql.matches : false);
+
   // 解析后的「当前是否深色」——驱动 html.dark 与 Naive darkTheme
   const dark = computed(
     () => mode.value === 'dark' || (mode.value === 'system' && systemDark.value),
@@ -124,7 +131,7 @@ export const useSettingStore = defineStore('setting', () => {
   function apply() {
     if (typeof document === 'undefined') return;
     document.documentElement.classList.toggle('dark', dark.value);
-    document.documentElement.classList.toggle('reduce-motion', reduceMotion.value);
+    document.documentElement.classList.toggle('reduce-motion', reduceMotion.value || systemReduceMotion.value);
     applyAccent();
   }
   // 切换主题色：持久化并即时应用（全站 CSS 变量 + NaiveUI overrides 自动跟随）
@@ -172,6 +179,14 @@ export const useSettingStore = defineStore('setting', () => {
       if (mode.value === 'system') apply();
     };
     mql.addEventListener('change', handler);
+  }
+  // 系统减少动效偏好变化：实时强制应用（覆盖应用内开关）
+  if (motionMql) {
+    const mHandler = (e: MediaQueryListEvent) => {
+      systemReduceMotion.value = e.matches;
+      apply();
+    };
+    motionMql.addEventListener('change', mHandler);
   }
   // 解析值变化即重应用（覆盖 systemDark 变化 / 直接切 mode 两种路径）
   watch(dark, apply);

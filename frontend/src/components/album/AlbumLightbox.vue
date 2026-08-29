@@ -2,6 +2,8 @@
   <transition name="lb-fade">
     <div
       v-if="open"
+      ref="root"
+      v-bind="dialogAttrs"
       class="lb"
       @click.self="close"
     >
@@ -60,6 +62,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
+import { useDialogA11y } from '@/composables/useDialogA11y';
 import { Heart } from 'lucide-vue-next';
 
 export interface LightboxImage {
@@ -109,6 +112,16 @@ watch(
 function close() {
   emit('update:modelValue', -1);
 }
+
+const root = ref<HTMLElement>();
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen: open,
+  close,
+  dialogRef: root,
+  ariaLabel: '图片查看器',
+});
 function setIndex(i: number) {
   const n = props.images.length;
   emit('update:modelValue', ((i % n) + n) % n);

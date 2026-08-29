@@ -1,5 +1,5 @@
 <template>
-  <div class="stats">
+  <div class="stats" ref="container">
     <!-- 年度切换 + 主题标题 -->
     <header class="yr-head">
       <button class="yr-nav" aria-label="上一年" @click="shiftYear(-1)">‹</button>
@@ -93,6 +93,7 @@ import { listAlbum, listImages } from '@/api/album';
 import { listFootprints } from '@/api/footprint';
 import type { ImageDto, FootprintDto } from '@/types';
 import type { PosterData } from '@/types/poster';
+import { useStaggerEnter } from '@/composables/useAnimation';
 
 const currentYear = new Date().getFullYear();
 const report = ref<YearReport | null>(null);
@@ -100,6 +101,9 @@ const selectedYear = ref(currentYear);
 const poster = ref<InstanceType<typeof CoupleSummaryPoster> | null>(null);
 const posterPhotos = ref<ImageDto[]>([]);
 const posterFootprints = ref<FootprintDto[]>([]);
+// 错峰入场容器（柔光 2.0 · 动效编排）
+const container = ref<HTMLElement>();
+useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 
 // 把后端 YearReport + 相册/足迹列表，映射成手账海报所需的 PosterData。
 // agreements / goals / coverCaption 后端暂无字段，留空则对应板块自动隐藏。
@@ -242,7 +246,7 @@ const conflictOption = computed(() => ({
   background: var(--color-surface); color: var(--color-ink-2); font-size: 20px; cursor: pointer;
   transition: transform var(--dur-pop) var(--ease-love);
 }
-.yr-nav:hover:not(:disabled) { transform: translateY(-2px); color: var(--color-rose); border-color: var(--color-rose); }
+.yr-nav:hover:not(:disabled) { transform: translateY(-2px); color: var(--color-rose-text); border-color: var(--color-rose); }
 .yr-nav:disabled { opacity: 0.3; cursor: default; }
 .yr-title-wrap { text-align: center; }
 .yr-title { margin: 0; font-size: 22px; font-weight: 800; color: var(--color-ink); }
@@ -263,7 +267,7 @@ const conflictOption = computed(() => ({
 .poster-btn {
   position: relative; margin-top: 16px; padding: 10px 26px; border-radius: 999px;
   border: 1px solid var(--color-rose); background: var(--color-surface);
-  color: var(--color-rose); font-size: 14px; font-weight: 600; cursor: pointer;
+  color: var(--color-rose-text); font-size: 14px; font-weight: 600; cursor: pointer;
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
 .poster-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(255, 111, 125, 0.5); }
@@ -271,13 +275,13 @@ const conflictOption = computed(() => ({
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .card {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);
-  padding: 16px; box-shadow: 0 1px 2px rgba(31,41,55,.04), 0 10px 28px -10px rgba(122,100,98,.16);
+  padding: 16px; box-shadow: var(--shadow-card);
   display: flex; flex-direction: column; gap: 4px;
 }
 .num { font-size: 24px; font-weight: 800; color: var(--color-ink); }
 .num.inc { color: #16a34a; }
 .num.exp { color: #dc2626; }
-.num.bal { color: var(--color-rose); }
+.num.bal { color: var(--color-rose-text); }
 .lbl { font-size: 12px; color: var(--color-ink-3); }
 
 .chart-card {

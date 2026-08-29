@@ -80,7 +80,7 @@ function go() {
   border-radius: var(--radius-md);
   padding: 14px 12px;
   text-align: center;
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
 .ms:hover {
@@ -91,7 +91,7 @@ function go() {
   border-color: var(--color-rose);
 }
 .ms-ico {
-  color: var(--color-rose);
+  color: var(--color-rose-text);
   display: inline-flex;
 }
 .ms-title {
@@ -106,11 +106,11 @@ function go() {
   font-family: var(--font-mono);
 }
 .ms.reached .ms-days {
-  color: var(--color-rose);
+  color: var(--color-rose-text);
 }
 .ms-tag {
   font-size: 11px;
-  color: var(--color-rose);
+  color: var(--color-rose-text);
   margin-top: 8px;
 }
 .ms-bar {

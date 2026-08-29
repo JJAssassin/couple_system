@@ -54,7 +54,7 @@ function go(p: number) {
   border: 1px solid var(--color-border);
   transition: all var(--dur-micro) var(--ease-love);
 }
-.pg-btn:hover:not(:disabled) { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.pg-btn:hover:not(:disabled) { color: var(--color-rose-text); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
 .pg-btn:active:not(:disabled) { transform: scale(0.98); }
 .pg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .pg-spin {

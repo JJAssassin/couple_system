@@ -1,7 +1,7 @@
 <template>
   <teleport to="body">
     <transition name="poster-fade">
-      <div v-if="visible" class="poster-mask" role="button" tabindex="0" aria-label="关闭" @click.self="onClose" @keydown.enter.prevent="onClose" @keydown.space.prevent="onClose">
+      <div v-if="visible" ref="maskEl" v-bind="dialogAttrs" class="poster-mask" @click.self="onClose">
         <div class="poster-wrap" @click.stop>
           <div class="poster-stage">
             <div ref="dom" class="poster-dom" :class="{ rendering: busy }">
@@ -135,6 +135,7 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
+import { useDialogA11y } from '@/composables/useDialogA11y';
 import html2canvas from 'html2canvas';
 import type { YearReport } from '@/api/stats';
 import type { ImageDto, FootprintDto } from '@/types';
@@ -146,6 +147,17 @@ const props = defineProps<{
 }>();
 
 const visible = ref(false);
+const maskEl = ref<HTMLElement>();
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen: visible,
+  close: onClose,
+  dialogRef: maskEl,
+  ariaLabel: '年度海报预览',
+  initialFocus: '.p-btn.primary',
+});
+
 const dom = ref<HTMLElement>();
 const busy = ref(false);
 const brokenImages = ref(new Set<string>());
@@ -361,7 +373,7 @@ async function share() {
 .sub { font-size: 30px; color: #9a6b72; letter-spacing: 0.12em; margin-bottom: 10px; }
 .title {
   font-size: 108px; font-weight: 800; margin: 0;
-  color: var(--color-rose);
+  color: var(--color-rose-text);
   font-family: Georgia, "STKaiti", "KaiTi", "PingFang SC", serif;
   letter-spacing: -0.02em;
   text-shadow: 2px 2px 0 rgba(216, 133, 147, 0.18);
@@ -401,7 +413,7 @@ async function share() {
 }
 .dn-ico { font-size: 44px; margin-bottom: 4px; }
 .dn-label { font-size: 26px; color: #9a6b72; }
-.dn-num { font-size: 130px; font-weight: 800; color: var(--color-rose); line-height: 1; margin: 6px 0; }
+.dn-num { font-size: 130px; font-weight: 800; color: var(--color-rose-text); line-height: 1; margin: 6px 0; }
 .dn-unit { font-size: 34px; color: #d88593; margin-top: -8px; }
 .dn-sub { font-size: 24px; color: #9a6b72; margin-top: 10px; }
 
@@ -482,7 +494,7 @@ async function share() {
 .fin-val { font-size: 34px; font-weight: 800; margin-top: 6px; }
 .fin-val.inc { color: #16a34a; }
 .fin-val.exp { color: #dc2626; }
-.fin-val.bal { color: var(--color-rose); }
+.fin-val.bal { color: var(--color-rose-text); }
 
 /* 给彼此的话 */
 .letter {
@@ -503,7 +515,7 @@ async function share() {
 /* 底部 */
 .footer { position: relative; z-index: 1; text-align: center; margin-top: 44px; padding-bottom: 50px; }
 .love-you {
-  font-size: 80px; font-weight: 800; color: var(--color-rose);
+  font-size: 80px; font-weight: 800; color: var(--color-rose-text);
   font-family: Georgia, serif; letter-spacing: 0.08em;
   text-decoration: underline wavy rgba(255, 111, 125, 0.4);
 }
@@ -515,7 +527,7 @@ async function share() {
   padding: 10px 22px; border-radius: 999px; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink-2); font-size: 14px; cursor: pointer;
 }
-.p-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: #fff; font-weight: 600; }
+.p-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: var(--color-on-primary); font-weight: 600; }
 .p-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 .poster-tip { margin-top: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.85); }
 .poster-fade-enter-active, .poster-fade-leave-active { transition: opacity 0.25s var(--ease-love); }

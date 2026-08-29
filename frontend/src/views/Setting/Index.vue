@@ -1,6 +1,6 @@
 <template>
   <IndSkeleton v-if="loading" variant="text" :rows="4" />
-  <div v-else class="set-page">
+  <div v-else class="set-page" ref="container">
     <header class="page-head"><h1>设置</h1></header>
     <!-- 帐号 -->
     <section class="block love-card">
@@ -210,6 +210,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import { FinesseSwitch } from '@/interactions';
 import { maxLenRule } from '@/utils/formRules';
 import type { FormItemRule } from 'naive-ui';
+import { useStaggerEnter } from '@/composables/useAnimation';
 
 const auth = useAuthStore();
 const setting = useSettingStore();
@@ -234,6 +235,9 @@ function toDateStr(d: Date = new Date()): string {
 
 // 情侣级共享信息（任一方设置，双方生效）
 const coupleSetting = ref<CoupleSetting | null>(null);
+// 错峰入场容器（柔光 2.0 · 动效编排；骨架屏后渲染也能正确触发）
+const container = ref<HTMLElement>();
+useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 const loveStartInput = ref('');
 const coupleName = ref('');
 const savingCS = ref(false);
@@ -520,10 +524,10 @@ async function doCommit() {
   transition: all var(--dur-micro) var(--ease-love);
 }
 .theme-seg button.on {
-  background: var(--color-rose); color: #fff; border-color: var(--color-rose);
+  background: var(--color-rose); color: var(--color-on-primary); border-color: var(--color-rose);
   box-shadow: 0 4px 14px -4px rgba(255, 111, 125, 0.5);
 }
-.theme-seg button:not(.on):hover { color: var(--color-rose); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.theme-seg button:not(.on):hover { color: var(--color-rose-text); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
 .theme-hint { font-size: 12px; color: var(--color-ink-3); margin: -4px 0 8px; text-align: right; }
 .swatches { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .sw {
@@ -548,12 +552,12 @@ async function doCommit() {
   display: flex; align-items: center; gap: 14px;
   padding: 14px; border-radius: var(--radius-lg);
   background: var(--color-surface); border: 1px solid var(--color-border);
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-card);
 }
 .bind-ava {
   width: 46px; height: 46px; border-radius: 50%; flex: 0 0 auto;
   display: flex; align-items: center; justify-content: center;
-  background: var(--color-accent); color: #fff; font-size: 20px; font-weight: 700;
+  background: var(--color-accent); color: var(--color-on-primary); font-size: 20px; font-weight: 700;
 }
 .bind-meta { flex: 1; }
 .bind-name { font-size: 15px; }
@@ -566,11 +570,11 @@ async function doCommit() {
   border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-ink);
   font-size: 14px; transition: all .2s;
 }
-.bind-tabs button.on { background: var(--color-accent); color: #fff; border-color: var(--color-accent); }
+.bind-tabs button.on { background: var(--color-accent); color: var(--color-on-primary); border-color: var(--color-accent); }
 
 .invite-code {
   font-size: 34px; letter-spacing: 8px; font-weight: 800; text-align: center;
-  padding: 16px; border-radius: var(--radius-lg); color: var(--color-rose);
+  padding: 16px; border-radius: var(--radius-lg); color: var(--color-rose-text);
   background: var(--color-surface-2); border: 1px dashed var(--color-border);
 }
 .invite-tip { font-size: 12px; color: var(--color-ink-3); text-align: center; margin: 10px 0; }

@@ -11,10 +11,10 @@ defineProps<{ label: string; value?: string | number; sub?: string }>();
 <style scoped>
 .ind-stat {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); padding: 16px 18px;
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-card);
 }
 .ind-stat-v {
-  font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--color-rose);
+  font-family: var(--font-mono); font-size: 26px; font-weight: 700; color: var(--color-rose-text);
   margin-top: 6px; letter-spacing: -0.01em;
 }
 </style>

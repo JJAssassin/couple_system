@@ -2,7 +2,7 @@
   <teleport to="body">
     <transition name="upd-fade">
       <div v-if="info" class="upd-mask" role="button" tabindex="0" aria-label="关闭" @click.self="later" @keydown.enter.prevent="later" @keydown.space.prevent="later">
-        <div class="upd-card">
+        <div ref="card" v-bind="dialogAttrs" class="upd-card">
           <div class="upd-ico">💗</div>
           <div class="upd-title">发现新版本 v{{ info.versionName }}</div>
           <div v-if="info.changelog" class="upd-log">{{ info.changelog }}</div>
@@ -31,6 +31,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useDialogA11y } from '@/composables/useDialogA11y';
 
 interface UpdateManifest {
   versionName: string;
@@ -48,6 +49,19 @@ const info = ref<UpdateManifest | null>(null);
 const downloading = ref(false);
 const platform = ref<'ios' | 'android' | 'web'>('web');
 const LS_KEY = 'cl_update_dismiss';
+
+const card = ref<HTMLElement>();
+const isOpen = computed(() => !!info.value);
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen,
+  close: () => {
+    info.value = null;
+  },
+  dialogRef: card,
+  ariaLabel: '发现新版本',
+});
 
 // Capacitor 全局访问
 function getCap(): any {
@@ -223,7 +237,7 @@ function later() {
   padding: 10px 22px; border-radius: 999px; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink-2); font-size: 14px; cursor: pointer;
 }
-.upd-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: #fff; font-weight: 600; }
+.upd-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: var(--color-on-primary); font-weight: 600; }
 .upd-btn:disabled { opacity: 0.5; cursor: default; }
 .upd-fade-enter-active, .upd-fade-leave-active { transition: opacity 0.25s var(--ease-love); }
 .upd-fade-enter-from, .upd-fade-leave-to { opacity: 0; }

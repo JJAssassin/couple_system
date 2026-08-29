@@ -253,7 +253,7 @@ onMounted(load);
 .tl-filter {
   width: 200px; flex-shrink: 0; position: sticky; top: 16px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 16px; padding: 16px;
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-card);
 }
 .tl-filter-title { font-weight: 500; margin-bottom: 12px; }
 .tl-filter-sub { margin-top: 18px; font-size: 13px; color: var(--color-ink-2); }
@@ -285,7 +285,7 @@ onMounted(load);
 .tl-stat { display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1 1 auto; padding: 0 4px; }
 .tl-stat-num { font-size: 20px; font-weight: 600; line-height: 1.1; }
 .tl-stat-label { font-size: 11px; color: var(--color-ink-3); margin-top: 2px; }
-.tl-stat-total .tl-stat-num { color: var(--color-accent); }
+.tl-stat-total .tl-stat-num { color: var(--color-accent-text); }
 .tl-stat.t-anniversary .tl-stat-num { color: var(--color-semantic-anniv); }
 .tl-stat.t-diary .tl-stat-num { color: var(--color-semantic-diary); }
 .tl-stat.t-wish .tl-stat-num { color: var(--color-semantic-wish); }
@@ -318,13 +318,13 @@ html.reduce-motion .tl-item { animation: none; }
 .tl-card { padding: 14px 16px; }
 .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
 .tl-date { color: var(--color-ink-3); font-size: 12px; }
-.tl-rel { margin-left: 6px; color: var(--color-accent); }
+.tl-rel { margin-left: 6px; color: var(--color-accent-text); }
 .tl-title { font-weight: 500; }
 .tl-summary { color: var(--color-ink-2); font-size: 13px; margin-top: 4px; }
-.tl-summary b { color: var(--color-accent); }
+.tl-summary b { color: var(--color-accent-text); }
 .tl-expired { color: var(--color-ink-3); }
 .tl-expand {
-  margin-top: 6px; background: none; border: none; color: var(--color-rose);
+  margin-top: 6px; background: none; border: none; color: var(--color-rose-text);
   font-size: 12px; cursor: pointer; padding: 0;
 }
 

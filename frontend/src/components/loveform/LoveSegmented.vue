@@ -88,6 +88,6 @@ function pick(v: string | number) {
   transition: color var(--dur-micro) var(--ease-love);
 }
 .lf-seg-item:active { transform: scale(0.97); }
-.lf-seg-item.active { color: var(--color-rose); font-weight: 600; }
+.lf-seg-item.active { color: var(--color-rose-text); font-weight: 600; }
 .lf-seg-ico { display: inline-flex; }
 </style>

@@ -134,7 +134,7 @@ function onKey(e: KeyboardEvent) {
   font-weight: 600; color: var(--color-ink); font-size: 14px;
   transition: transform var(--fx-dur-micro, 140ms) var(--fx-ease-back, ease);
 }
-.fx-slider__value.pop { transform: scale(1.18); color: var(--color-rose); }
+.fx-slider__value.pop { transform: scale(1.18); color: var(--color-rose-text); }
 html.reduce-motion .fx-slider__fill,
 html.reduce-motion .fx-slider__knob { transition: none; }
 html.reduce-motion .fx-slider__value { transition: none; }

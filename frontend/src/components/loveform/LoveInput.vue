@@ -12,7 +12,10 @@
         :maxlength="maxlength"
         :inputmode="inputmode"
         :enterkeyhint="enterkeyhint"
-        :aria-label="label || placeholder"
+        :aria-label="label ? undefined : (placeholder || '请输入')"
+        :aria-invalid="invalid || !!error || undefined"
+        :aria-required="required || undefined"
+        :aria-describedby="error ? errId : undefined"
         @input="onInput"
         @focus="focused = true"
         @blur="focused = false"
@@ -22,6 +25,7 @@
       </button>
       <span v-if="counter && maxlength" class="lf-count">{{ String(modelValue ?? '').length }}/{{ maxlength }}</span>
     </div>
+    <p v-if="error" :id="errId" class="lf-error">{{ error }}</p>
   </div>
 </template>
 
@@ -40,13 +44,16 @@ const props = withDefaults(
     inputmode?: 'text' | 'numeric' | 'decimal' | 'tel' | 'email' | 'url' | 'search' | 'none';
     enterkeyhint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
     invalid?: boolean;
+    required?: boolean;
+    error?: string;
   }>(),
-  { modelValue: '', type: 'text', clearable: false, counter: false, invalid: false }
+  { modelValue: '', type: 'text', clearable: false, counter: false, invalid: false, required: false, error: '' }
 );
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: string): void }>();
 const focused = ref(false);
 const uid = 'lfi-' + Math.random().toString(36).slice(2, 9);
+const errId = uid + '-err';
 
 function onInput(e: Event) {
   emit('update:modelValue', (e.target as HTMLInputElement).value);
@@ -116,5 +123,10 @@ function clear() {
   font-size: 12px;
   color: var(--color-ink-3);
   white-space: nowrap;
+}
+.lf-error {
+  font-size: 12px;
+  color: var(--color-danger, #e55a68);
+  padding-left: 2px;
 }
 </style>

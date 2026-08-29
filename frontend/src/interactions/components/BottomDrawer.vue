@@ -2,7 +2,7 @@
   <teleport to="body">
     <div v-if="visible" class="fx-drawer-root">
       <div class="fx-drawer-mask" :class="{ closing }" role="button" tabindex="0" aria-label="关闭" @click="close" @keydown.enter.prevent="close" @keydown.space.prevent="close" />
-      <div class="fx-drawer-panel" :class="{ closing, reduced }" role="dialog" aria-modal="true">
+      <div ref="panel" class="fx-drawer-panel" :class="{ closing, reduced }" v-bind="dialogAttrs">
         <div class="fx-drawer-grab" />
         <div v-if="title || $slots.head" class="fx-drawer-head">
           <slot name="head"><span class="fx-drawer-title">{{ title }}</span></slot>
@@ -16,6 +16,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onBeforeUnmount } from 'vue';
+import { useDialogA11y } from '@/composables/useDialogA11y';
 
 const props = defineProps<{ modelValue: boolean; title?: string }>();
 const emit = defineEmits<{ (e: 'update:modelValue', v: boolean): void }>();
@@ -23,6 +24,15 @@ const emit = defineEmits<{ (e: 'update:modelValue', v: boolean): void }>();
 const visible = ref(false);
 const closing = ref(false);
 const reduced = ref(false);
+const panel = ref<HTMLElement>();
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen: visible,
+  close,
+  dialogRef: panel,
+  ariaLabel: () => props.title || '抽屉',
+});
 
 watch(
   () => props.modelValue,
@@ -82,7 +92,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
   border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--color-ink-2);
   transition: all var(--fx-dur-micro, 140ms) var(--fx-ease-soft, ease);
 }
-.fx-drawer-close:hover { color: var(--color-rose); }
+.fx-drawer-close:hover { color: var(--color-rose-text); }
 .fx-drawer-body { max-height: 70vh; overflow: auto; }
 @keyframes fx-drawer-down { from { transform: translateY(0); } to { transform: translateY(100%); } }
 @keyframes fx-fade-in { from { opacity: 0; } to { opacity: 1; } }

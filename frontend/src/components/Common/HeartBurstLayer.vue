@@ -79,7 +79,7 @@ onUnmounted(() => {
   position: absolute;
   left: 0;
   top: 0;
-  color: var(--color-rose);
+  color: var(--color-rose-text);
   font-size: 18px;
   transform: translate(-50%, -50%);
   text-shadow: 0 2px 8px rgba(255, 111, 125, 0.35);

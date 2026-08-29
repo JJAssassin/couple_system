@@ -70,7 +70,14 @@ api.interceptors.response.use(
         // 429 限流或网络层失败一律不登出——保留本地 token，等冷却后下次请求自动恢复，
         // 避免移动端弱网/被限流时「刷新失败 → 登出 → 又被踢回登录页」的循环。
         if (status === 401 || status === 400 || status === 403) {
+          // 令牌失效/过期：优雅登出——明确提示用户并跳回登录页，
+          // 避免「静默登出」让用户误以为系统故障（整改 #8 / WCAG 3.2 可预测性）
+          useNotifyStore().error('登录已过期，请重新登录');
           useAuthStore().logout();
+          // 动态 import 避免与 router 形成静态循环依赖；replace 不入历史栈，避免返回键回到登录前页
+          void import('@/router')
+            .then((m) => m.default.replace('/login'))
+            .catch(() => {});
         }
         return Promise.reject(err);
       }

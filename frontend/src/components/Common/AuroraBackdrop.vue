@@ -37,7 +37,7 @@ withDefaults(defineProps<{ strong?: boolean; global?: boolean }>(), { strong: fa
   height: 46vmax;
   left: -12%;
   top: -18%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 111, 125, 0.55), transparent 62%);
+  background: radial-gradient(circle at 30% 30%, var(--aurora-1, rgb(255 111 125 / 0.55)), transparent 62%);
   animation: drift1 26s var(--ease-love) infinite alternate;
 }
 /* 玫瑰粉次光斑 */
@@ -46,7 +46,7 @@ withDefaults(defineProps<{ strong?: boolean; global?: boolean }>(), { strong: fa
   height: 40vmax;
   right: -14%;
   top: -10%;
-  background: radial-gradient(circle at 70% 30%, rgba(216, 133, 147, 0.5), transparent 62%);
+  background: radial-gradient(circle at 70% 30%, var(--aurora-2, rgb(216 133 147 / 0.5)), transparent 62%);
   animation: drift2 32s var(--ease-love) infinite alternate;
 }
 /* 雾蓝柔光（提亮中央） */

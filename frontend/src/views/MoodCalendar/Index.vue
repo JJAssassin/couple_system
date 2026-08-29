@@ -210,11 +210,11 @@ html.reduce-motion .mc-section { animation: none; }
 .mc-tooltip {
   margin-top: 12px; padding: 10px 14px; border-radius: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border);
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); font-size: 13px;
+  box-shadow: var(--shadow-card); font-size: 13px;
 }
 .mc-tooltip-date { color: var(--color-ink-3); margin-bottom: 4px; }
 .mc-tooltip-mood { font-weight: 600; color: var(--color-ink); }
-.mc-tooltip-tag { margin-left: 6px; color: var(--color-rose); font-weight: 400; }
+.mc-tooltip-tag { margin-left: 6px; color: var(--color-rose-text); font-weight: 400; }
 .mc-tooltip-empty { color: var(--color-ink-3); }
 
 /* 图例 */
@@ -233,6 +233,6 @@ html.reduce-motion .mc-section { animation: none; }
   padding: 16px; border-radius: 12px; text-align: center;
   background: var(--color-surface); border: 1px solid var(--color-border);
 }
-.mc-stat-num { font-size: 24px; font-weight: 700; color: var(--color-rose); }
+.mc-stat-num { font-size: 24px; font-weight: 700; color: var(--color-rose-text); }
 .mc-stat-label { font-size: 12px; color: var(--color-ink-3); margin-top: 4px; }
 </style>

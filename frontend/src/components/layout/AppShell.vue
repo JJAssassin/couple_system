@@ -59,14 +59,14 @@
         </div>
       </header>
 
-      <!-- 内容区（URL 驱动，淡入淡出转场） -->
-      <div class="content">
+      <!-- 内容区（URL 驱动，淡入淡出转场）：<main> 地标，路由切换后接收焦点 -->
+      <main id="main" class="content" tabindex="-1">
         <router-view v-slot="{ Component }">
           <PageTransition>
             <component :is="Component" />
           </PageTransition>
         </router-view>
-      </div>
+      </main>
     </div>
 
     <!-- 移动端底部 TabBar -->
@@ -117,6 +117,13 @@ const partner = usePartnerStore();
 const setting = useSettingStore();
 const { partnerOnline } = useRealtime();
 
+/* 路由切换后将焦点移到主内容区（WCAG 2.4.3 焦点顺序 / 可预测导航） */
+const removeRouteFocus = router.afterEach(() => {
+  requestAnimationFrame(() => {
+    document.getElementById('main')?.focus();
+  });
+});
+
 const drawerOpen = ref(false);
 
 // 移动端底部 TabBar：4 个主入口 + 「更多」打开抽屉（完整导航）
@@ -142,7 +149,10 @@ onMounted(() => {
   // 弱网/离线时前端自动读缓存降级（见 request.ts readApiCache）
   prefetchData();
 });
-onUnmounted(() => window.removeEventListener('resize', evalTablet));
+onUnmounted(() => {
+  window.removeEventListener('resize', evalTablet);
+  removeRouteFocus();
+});
 
 /* 离线数据预取：核心模块读接口（GET），供 SW 缓存；失败静默忽略 */
 function prefetchData() {
@@ -223,13 +233,13 @@ function logout() {
     color var(--dur-micro) var(--ease-love), background var(--dur-micro) var(--ease-love);
 }
 .tb-icon:active { transform: scale(0.96); }
-.tb-icon:hover { color: var(--color-rose); background: var(--color-rose-soft); }
-.tb-logout:hover { color: var(--color-rose); }
+.tb-icon:hover { color: var(--color-rose-text); background: var(--color-rose-soft); }
+.tb-logout:hover { color: var(--color-rose-text); }
 
 .avatars { display: flex; align-items: center; }
 .avatar {
   width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 13px; font-weight: 600; color: #fff; overflow: hidden;
+  font-size: 13px; font-weight: 600; color: var(--color-on-primary); overflow: hidden;
   background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
   border: 2px solid var(--color-surface);
 }
@@ -271,7 +281,7 @@ function logout() {
   color: var(--color-ink-3); text-decoration: none; cursor: pointer; background: none; border: none;
   font-size: 11px; padding: 4px 0; transition: color var(--dur-micro) var(--ease-love), transform var(--dur-micro) var(--fx-ease-back, cubic-bezier(0.34, 1.56, 0.64, 1));
 }
-.tab.router-link-active { color: var(--color-rose); }
+.tab.router-link-active { color: var(--color-rose-text); }
 .tab:active { transform: scale(0.96); }
 .tab-lbl { line-height: 1; }
 .drawer-fade-enter-active, .drawer-fade-leave-active { transition: opacity var(--dur-pop) var(--ease-love); }

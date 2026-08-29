@@ -256,7 +256,7 @@ onMounted(async () => {
 .brand {
   display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-card);
 }
 .brand-status {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
@@ -270,7 +270,7 @@ onMounted(async () => {
 .head-row { display: flex; align-items: center; justify-content: space-between; }
 .add-btn {
   border: 1px solid var(--color-border); cursor: pointer; padding: 9px 16px; border-radius: 999px;
-  color: var(--color-rose); font-size: 13px; background: var(--color-rose-soft);
+  color: var(--color-rose-text); font-size: 13px; background: var(--color-rose-soft);
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
   transition: all var(--dur-micro) var(--ease-love);
 }
@@ -283,7 +283,7 @@ onMounted(async () => {
   position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 26px 16px 20px; cursor: pointer; text-align: center; border-radius: var(--radius-lg);
   background: var(--color-surface); border: 1px solid var(--color-border);
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
   user-select: none;
 }
@@ -300,7 +300,7 @@ onMounted(async () => {
 .fp-emoji { font-size: 38px; margin-bottom: 8px; }
 .fp-title { font-size: 14px; font-weight: 600; color: var(--color-ink); margin-bottom: 10px; }
 .fp-desc { font-size: 11px; color: var(--color-ink-3); margin-bottom: 8px; line-height: 1.4; padding: 0 4px; }
-.fp-count { font-size: 42px; font-weight: 800; color: var(--color-accent); line-height: 1; text-shadow: 0 0 16px rgba(255, 111, 125, 0.3); }
+.fp-count { font-size: 42px; font-weight: 800; color: var(--color-accent-text); line-height: 1; text-shadow: 0 0 16px rgba(255, 111, 125, 0.3); }
 .fp-label { font-size: 12px; color: var(--color-ink-3); margin-top: 4px; }
 .fp-time { font-size: 11px; color: var(--color-ink-3); margin-top: 10px; font-family: var(--font-mono); }
 .fp-progress { width: 100%; margin-top: 8px; }
@@ -309,7 +309,7 @@ onMounted(async () => {
 .fp-bar span.done { background: linear-gradient(90deg, #43d17a, #2fb56a); }
 .fp-target { font-size: 11px; color: var(--color-ink-3); margin-top: 4px; font-family: var(--font-mono); }
 .fp-target.done { color: #2fb56a; font-weight: 600; }
-.fp-card.reached { border-color: rgba(67, 209, 122, 0.55); box-shadow: 0 0 0 2px rgba(67, 209, 122, 0.45), 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
+.fp-card.reached { border-color: rgba(67, 209, 122, 0.55); box-shadow: 0 0 0 2px rgba(67, 209, 122, 0.45), var(--shadow-card); }
 .fp-actions {
   position: absolute; top: 6px; right: 7px; display: flex; gap: 2px; align-items: center;
 }
@@ -323,8 +323,8 @@ onMounted(async () => {
   font-size: 14px; color: var(--color-ink-3); cursor: pointer; line-height: 1; padding: 3px 5px 1px;
   border-radius: 8px; transition: color var(--dur-micro);
 }
-.del-float:hover { color: var(--color-accent); }
-.edit-float:hover { color: var(--color-accent); }
+.del-float:hover { color: var(--color-accent-text); }
+.edit-float:hover { color: var(--color-accent-text); }
 
 .emoji-pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .emoji-chip {
@@ -334,7 +334,7 @@ onMounted(async () => {
   transition: all var(--dur-micro) var(--ease-love);
 }
 .emoji-chip:hover { border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
-.emoji-chip.on { border-color: var(--color-rose); color: var(--color-rose); background: var(--color-rose-soft); }
+.emoji-chip.on { border-color: var(--color-rose); color: var(--color-rose-text); background: var(--color-rose-soft); }
 .emoji-input {
   width: 84px; height: 40px; padding: 0 10px; font-size: 16px; text-align: center;
   border: 1px solid var(--color-border); border-radius: var(--radius-md);

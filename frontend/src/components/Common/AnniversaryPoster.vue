@@ -1,7 +1,7 @@
 <template>
   <teleport to="body">
     <transition name="poster-fade">
-      <div v-if="visible" class="poster-mask" role="button" tabindex="0" aria-label="关闭" @click.self="visible = false" @keydown.enter.prevent="visible = false" @keydown.space.prevent="visible = false">
+      <div v-if="visible" ref="maskEl" v-bind="dialogAttrs" class="poster-mask" @click.self="visible = false">
         <div class="poster-wrap">
           <canvas ref="cv" width="1080" height="1440" class="poster-canvas" />
           <div class="poster-actions">
@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
+import { useDialogA11y } from '@/composables/useDialogA11y';
 import type { AnniversaryDto } from '@/types';
 import { usePartnerStore } from '@/store/partnerStore';
 
@@ -25,6 +26,18 @@ const props = defineProps<{ anniversary: AnniversaryDto | null }>();
 const visible = ref(false);
 const cv = ref<HTMLCanvasElement>();
 const canShare = typeof navigator !== 'undefined' && !!navigator.share;
+const maskEl = ref<HTMLElement>();
+
+// 无障碍：对话框语义 + 焦点陷阱 + Esc + 焦点归还
+const { dialogAttrs } = useDialogA11y({
+  isOpen: visible,
+  close: () => {
+    visible.value = false;
+  },
+  dialogRef: maskEl,
+  ariaLabel: '纪念日海报预览',
+  initialFocus: '.p-btn.primary',
+});
 const partner = usePartnerStore();
 
 const PALETTE = {
@@ -182,7 +195,7 @@ async function share() {
   padding: 10px 22px; border-radius: 999px; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink-2); font-size: 14px; cursor: pointer;
 }
-.p-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: #fff; font-weight: 600; }
+.p-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: var(--color-on-primary); font-weight: 600; }
 .poster-tip { margin-top: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.85); }
 .poster-fade-enter-active, .poster-fade-leave-active { transition: opacity 0.25s var(--ease-love); }
 .poster-fade-enter-from, .poster-fade-leave-to { opacity: 0; }

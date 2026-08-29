@@ -67,7 +67,7 @@ async function onSubmit() {
 .reduce-motion .login-card { animation: none; }
 .brand-mark {
   width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 14px; display: grid; place-items: center;
-  color: #fff; background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  color: var(--color-on-primary); background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
   box-shadow: 0 8px 22px -8px rgba(255, 111, 125, 0.5);
 }
 h1 { color: var(--color-ink); font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
@@ -77,7 +77,7 @@ input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px sol
   transition: border-color var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love); }
 input:focus { border-color: var(--color-rose); box-shadow: 0 0 0 3px var(--color-rose-soft); }
 button { width: 100%; margin-top: 22px; padding: 12px; border: none; border-radius: 10px;
-  background: var(--color-rose); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer;
+  background: var(--color-rose); color: var(--color-on-primary); font-size: 15px; font-weight: 600; cursor: pointer;
   box-shadow: 0 6px 18px -6px rgba(255, 111, 125, 0.5);
   transition: background var(--dur-micro) var(--ease-love), transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love); }
 button:hover:not(:disabled) { background: var(--color-rose-hover); transform: translateY(-1px); box-shadow: 0 10px 24px -8px rgba(255, 111, 125, 0.6); }

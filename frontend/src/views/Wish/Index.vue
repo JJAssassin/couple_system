@@ -165,7 +165,9 @@
           :maxlength="120"
           counter
           clearable
+          required
           :invalid="titleInvalid"
+          :error="titleInvalid ? '请输入愿望标题' : ''"
           @update:modelValue="titleInvalid = false"
         />
         <LoveTextarea
@@ -551,7 +553,7 @@ html:not(.reduce-motion) .wish-face:hover {
 .progress.anim .bar { animation: pop 0.5s var(--ease-love); }
 @keyframes pop { 0% { filter: brightness(1.4); } 100% { filter: brightness(1); } }
 .wish-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.wish-complete { margin-top: 10px; color: var(--color-rose); }
+.wish-complete { margin-top: 10px; color: var(--color-rose-text); }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 
 /* 移动端：单列 + 模态全屏 */

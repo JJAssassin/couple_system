@@ -16,7 +16,7 @@
       <AuroraBackdrop class="hero-aurora" />
       <div class="hero-blob" />
       <FloatingHearts class="hero-hearts" />
-      <GradientText class="hero-greet" tag="div">{{ greet }}，{{ nickName }}</GradientText>
+      <GradientText class="hero-greet" tag="h1">{{ greet }}，{{ nickName }}</GradientText>
       <template v-if="loveInfo.hasLoveStart">
         <div class="hero-days"><LoveCount :value="loveInfo.totalDays" /> <span>天</span></div>
         <div class="hero-sub">你们已经相恋 {{ loveInfo.totalDays }} 天 · 精确 {{ loveInfo.totalHours }} 小时</div>
@@ -491,7 +491,7 @@ onUnmounted(() => {
 .cele-banner {
   display: flex; align-items: center; gap: 8px; justify-content: center;
   margin: 0 auto 18px; max-width: 520px; padding: 10px 14px; border-radius: 999px;
-  color: #fff; font-weight: 600; font-size: 14px;
+  color: var(--color-on-primary); font-weight: 600; font-size: 14px;
   background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
   box-shadow: 0 8px 24px -8px rgba(255, 111, 125, 0.5);
   position: relative;
@@ -499,7 +499,7 @@ onUnmounted(() => {
 .cele-ico { display: inline-flex; flex: 0 0 auto; }
 .cele-txt { flex: 1; text-align: center; }
 .cele-close {
-  flex: 0 0 auto; border: none; background: rgba(255, 255, 255, 0.22); color: #fff;
+  flex: 0 0 auto; border: none; background: rgba(255, 255, 255, 0.22); color: var(--color-on-primary);
   width: 22px; height: 22px; border-radius: 999px; cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center; padding: 0;
   transition: background var(--dur-micro) var(--ease-love);
@@ -516,7 +516,7 @@ onUnmounted(() => {
   display: flex; align-items: baseline; justify-content: center; gap: 8px;
   margin-top: 6px;
   /* 渐变大字：品牌色渐变 + 等宽数字（"天" 后缀由 .hero-days span 单独着色） */
-  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 55%, var(--color-cocoa) 100%);
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -542,9 +542,9 @@ onUnmounted(() => {
   padding: 5px 14px; border-radius: 999px;
   background: var(--color-rose-soft); border: 1px solid var(--color-border);
 }
-.hero-lovedate :deep(svg) { color: var(--color-rose); }
+.hero-lovedate :deep(svg) { color: var(--color-rose-text); }
 .hero-edit {
-  color: var(--color-rose); cursor: pointer; font-size: 12px; font-weight: 600;
+  color: var(--color-rose-text); cursor: pointer; font-size: 12px; font-weight: 600;
   border-bottom: 1px dashed var(--color-rose); padding-bottom: 1px;
 }
 .hero-edit:hover { opacity: 0.8; }
@@ -552,11 +552,11 @@ onUnmounted(() => {
 .hero-set-tip { color: var(--color-ink-3); font-size: 14px; }
 .hero-set-cta {
   display: inline-block; margin-top: 10px; padding: 8px 16px; border-radius: 999px; cursor: pointer;
-  color: var(--color-rose); font-size: 14px; font-weight: 600;
+  color: var(--color-rose-text); font-size: 14px; font-weight: 600;
   background: var(--color-rose-soft); border: 1px solid var(--color-border);
   transition: all var(--dur-micro) var(--ease-love);
 }
-.hero-set-cta:hover { background: var(--color-rose); color: #fff; border-color: var(--color-rose); }
+.hero-set-cta:hover { background: var(--color-rose); color: var(--color-on-primary); border-color: var(--color-rose); }
 .hero-set-form { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center; }
 .love-input {
   padding: 7px 10px; border-radius: 10px; border: 1px solid var(--color-border);
@@ -568,21 +568,21 @@ onUnmounted(() => {
 .today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .today-card {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px;
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-card);
   display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
 .today-card:hover { transform: translateY(-3px); }
 .today-card.ok { animation: cardGlow 2.8s ease-in-out infinite; }
 @keyframes cardGlow {
-  0%, 100% { box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
-  50% { box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.35), 0 10px 28px -10px rgba(122, 100, 98, 0.16); }
+  0%, 100% { box-shadow: var(--shadow-card); }
+  50% { box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.35), var(--shadow-card); }
 }
 .reduce-motion .today-card.ok { animation: none; }
-.tc-ico { color: var(--color-rose); display: inline-flex; }
+.tc-ico { color: var(--color-rose-text); display: inline-flex; }
 .tc-label { font-size: 13px; color: var(--color-ink-2); }
 .tc-val { font-weight: 600; font-size: 14px; color: var(--color-ink); }
 /* 临近纪念日（≤7 天）：大字玫瑰色强调 */
-.tc-val.tc-big { font-size: 19px; font-weight: 800; color: var(--color-rose); line-height: 1.35; }
+.tc-val.tc-big { font-size: 19px; font-weight: 800; color: var(--color-rose-text); line-height: 1.35; }
 
 /* 回忆胶片 */
 .film { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
@@ -590,7 +590,7 @@ onUnmounted(() => {
 .film-cell img, .film-ph {
   width: 150px; height: 110px; object-fit: cover; border-radius: var(--radius-md);
   background: var(--color-ink-soft); display: grid; place-items: center; font-size: 32px; color: var(--color-ink-3);
-  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 10px 28px -10px rgba(122, 100, 98, 0.16);
+  box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love);
 }
 .film-cell:hover img, .film-cell:hover .film-ph { transform: translateY(-3px); }
@@ -599,14 +599,14 @@ onUnmounted(() => {
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .mini .name { font-weight: 500; display: flex; align-items: center; gap: 6px; }
 .mini .days { color: var(--color-ink-3); font-size: 13px; margin-top: 4px; }
-.mini .days b { color: var(--color-rose); }
+.mini .days b { color: var(--color-rose-text); }
 .yr-badge {
   font-size: 10px; padding: 1px 7px; border-radius: 999px; font-weight: 600;
-  color: #fff; background: var(--color-rose); letter-spacing: 0.04em; line-height: 1.6;
+  color: var(--color-on-primary); background: var(--color-rose); letter-spacing: 0.04em; line-height: 1.6;
 }
 .mini .next { font-size: 11px; color: var(--color-ink-3); margin-top: 4px; font-family: var(--font-mono); }
 .mini .next.expired { color: var(--color-ink-3); }
-.hm-lunar { color: var(--color-rose); font-weight: 600; margin-left: 4px; }
+.hm-lunar { color: var(--color-rose-text); font-weight: 600; margin-left: 4px; }
 .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .stat-link { cursor: pointer; transition: transform var(--dur-pop) var(--ease-love); }
 .stat-link:hover { transform: translateY(-3px); }
@@ -626,7 +626,7 @@ onUnmounted(() => {
 .feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .feed-item { display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--color-border); }
 .feed-item:last-child { border-bottom: none; }
-.feed-ico { color: var(--color-rose); display: inline-flex; }
+.feed-ico { color: var(--color-rose-text); display: inline-flex; }
 .feed-title { font-size: 14px; color: var(--color-ink); }
 .feed-time { font-size: 12px; color: var(--color-ink-3); }
 
@@ -637,7 +637,7 @@ onUnmounted(() => {
 .quote-card { padding: 20px 22px; position: relative; overflow: hidden; }
 .quote-mark {
   position: absolute; top: -6px; left: 10px; font-size: 64px; line-height: 1;
-  color: var(--color-rose); opacity: 0.18; font-family: Georgia, serif;
+  color: var(--color-rose-text); opacity: 0.18; font-family: Georgia, serif;
 }
 .quote-text {
   position: relative; font-size: 16px; line-height: 1.8; color: var(--color-ink);
@@ -649,11 +649,11 @@ onUnmounted(() => {
 .quote-hint {
   display: block; margin-top: 10px; text-align: right; font-size: 12px; color: var(--color-ink-3);
 }
-.q-heart { vertical-align: middle; color: var(--color-rose); }
+.q-heart { vertical-align: middle; color: var(--color-rose-text); }
 .quote-shuffle {
   position: absolute; top: 12px; right: 12px; z-index: 3;
   width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--color-border);
-  background: var(--color-surface); color: var(--color-rose); cursor: pointer;
+  background: var(--color-surface); color: var(--color-rose-text); cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
   transition: all var(--dur-micro) var(--ease-love);
 }

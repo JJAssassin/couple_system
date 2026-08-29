@@ -8,12 +8,16 @@
   <PwaInstallPrompt />
   <AppUpdatePrompt />
   <AnniversaryReminder />
+
+  <!-- 屏幕阅读器状态播报区（WCAG 4.1.3 Status Messages）：与视觉 message 同步，但不抢占焦点 -->
+  <div class="sr-only" aria-live="polite" aria-atomic="true">{{ notify.polite }}</div>
+  <div class="sr-only" role="alert" aria-live="assertive" aria-atomic="true">{{ notify.assertive }}</div>
 </template>
 <script setup lang="ts">
 import { useMessage, useNotification } from 'naive-ui';
 import { useSettingStore } from '@/store/settingStore';
 import { useAuthStore } from '@/store/authStore';
-import { bindNotify } from '@/store/notifyStore';
+import { bindNotify, useNotifyStore } from '@/store/notifyStore';
 import { usePwa } from '@/composables/usePwa';
 import { useSwipeBack } from '@/composables/useSwipeBack';
 import Onboarding from '@/components/Onboarding.vue';
@@ -29,6 +33,8 @@ import GlobalLoadingBar from '@/components/Common/GlobalLoadingBar.vue';
 // 因此本组件作为 provider 的子节点（见 App.vue）渲染，setup 中才能拿到实例。
 useSettingStore().hydrate();
 bindNotify(useMessage(), useNotification());
+// 状态播报：与视觉 message 镜像到隐藏 aria-live 区域（见模板底部）
+const notify = useNotifyStore();
 
 // PWA：VitePWA 自动注册 SW；本处只初始化安装引导 + 后台系统通知
 const pwa = usePwa();

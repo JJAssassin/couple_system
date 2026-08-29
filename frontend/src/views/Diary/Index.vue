@@ -493,7 +493,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
   padding: 6px 12px; border-radius: 999px; color: var(--color-ink-3);
   font-size: 14px; transition: all var(--dur-micro) var(--ease-love);
 }
-.tab.active { background: var(--color-rose); color: #fff; }
+.tab.active { background: var(--color-rose); color: var(--color-on-primary); }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .diary-card { cursor: pointer; }
@@ -502,8 +502,8 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .title { font-weight: 500; flex: 1; }
 .row2 { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; font-size: 13px; }
 .meta { display: inline-flex; align-items: center; gap: 4px; color: var(--color-ink-3); }
-.meta :deep(svg) { color: var(--color-rose); flex: 0 0 auto; }
-.mood-tag { color: var(--color-rose); font-size: 12px; margin-top: 6px; }
+.meta :deep(svg) { color: var(--color-rose-text); flex: 0 0 auto; }
+.mood-tag { color: var(--color-rose-text); font-size: 12px; margin-top: 6px; }
 
 .detail-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
 .diary-content { line-height: 1.8; word-break: break-word; }
@@ -537,10 +537,10 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
   padding: 7px 10px; border-radius: 7px; font-size: 14px;
 }
 .mention-item.active, .mention-item:hover {
-  background: var(--color-rose-soft, rgba(214, 51, 108, 0.10)); color: var(--color-rose);
+  background: var(--color-rose-soft, rgba(214, 51, 108, 0.10)); color: var(--color-rose-text);
 }
 .mention-empty { padding: 8px 10px; font-size: 13px; color: var(--color-ink-3); }
-.mention { color: var(--color-rose); font-weight: 600; }
+.mention { color: var(--color-rose-text); font-weight: 600; }
 
 .diary-form { display: flex; flex-direction: column; gap: 18px; }
 </style>
