@@ -77,7 +77,6 @@ export const useSettingStore = defineStore('setting', () => {
     root.setProperty('--color-rose-soft', darkMode ? a.softD : a.softL);
     root.setProperty('--color-rose-deep', darkMode ? a.deepD : a.deepL);
     root.setProperty('--color-accent', a.p);
-    root.setProperty('--color-accent-strong', a.pr);
     root.setProperty('--color-accent-soft', darkMode ? a.softD : a.softL);
   }
 

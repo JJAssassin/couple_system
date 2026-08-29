@@ -42,7 +42,7 @@ let watchdog: number | null = null;
 
 const bodyStyle = computed(() => ({
   transform: `translateY(${Math.min(delta.value, THRESHOLD + 24)}px)`,
-  transition: pulling.value ? 'none' : 'transform 0.28s var(--ease-mech)',
+  transition: pulling.value ? 'none' : 'transform 0.28s var(--ease-love)',
 }));
 const pullText = computed(() => (delta.value >= THRESHOLD ? '松手刷新' : '下拉刷新'));
 
@@ -161,7 +161,7 @@ onBeforeUnmount(() => {
 .pull-refresh__hint {
   position: absolute; left: 0; right: 0; top: 0; text-align: center;
   color: var(--color-ink-3); font-size: 13px; padding: 10px 0;
-  transform: translateY(-100%); transition: transform var(--dur-pop) var(--ease-mech);
+  transform: translateY(-100%); transition: transform var(--dur-pop) var(--ease-love);
   pointer-events: none; z-index: 2;
 }
 .pull-refresh__hint.show { transform: translateY(0); }

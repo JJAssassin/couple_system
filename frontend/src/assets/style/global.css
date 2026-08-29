@@ -55,8 +55,11 @@
   font-family: var(--font-sans);
   line-height: 1.7;
   color: var(--color-ink);
-  /* 暖奶油底 + 顶部极淡玫瑰光晕，营造柔和呼吸感（非立体光照） */
+  /* 暖奶油底 + 弥散极光环境光，让所有毛玻璃卡片透出微光 */
   background:
+    radial-gradient(at 10% 0%, rgba(255, 111, 125, 0.12) 0px, transparent 45%),
+    radial-gradient(at 90% 15%, rgba(255, 182, 193, 0.14) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(232, 238, 242, 0.35) 0px, transparent 60%),
     radial-gradient(130% 80% at 50% -12%, #ffffff 0%, var(--color-cream) 58%),
     var(--color-cream);
   -webkit-font-smoothing: antialiased;
@@ -74,20 +77,11 @@ body { font-size: 15px; }
 /* 仅鼠标聚焦时不显示环，避免点击自定义元素出现突兀蓝框 */
 :focus:not(:focus-visible) { outline: none; }
 
-/* 兼容旧工业主题变量 → 映射到浪漫令牌（避免引用旧名静默回退） */
+/* 兼容别名（仍被多处引用，保留：accent / accent-soft / ink-soft） */
 :root {
   --color-accent: var(--color-rose);
-  --color-accent-strong: var(--color-rose-pressed);
   --color-accent-soft: var(--color-rose-soft);
-  --color-accent-foreground: #ffffff;
-  --color-chassis: var(--color-cream);
-  --color-panel: var(--color-surface);
-  --color-recessed: var(--color-mist);
-  --color-shadow: var(--color-ink-3);
-  --color-highlight: #ffffff;
-  --color-border-dark: var(--color-border);
   --color-ink-soft: var(--color-ink-soft);
-  --ease-mech: var(--ease-love);
 }
 
 /* =====================================================================
@@ -112,6 +106,36 @@ body { font-size: 15px; }
   --shadow-glass-lg: 0 16px 40px -8px rgba(255, 111, 125, 0.20), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
 }
 
+/* =====================================================================
+   语义化模块 / 收支 / 玻璃别名（视觉升级 Phase 2：归一化硬编码色值的统一出口）
+   - 业务页与图表统一引用下列语义变量，彻底解决暗色模式局部色块失真的体验问题
+   - 命名对齐视觉规范；与既有 --glass-* / --shadow-glass-* 等价，向后兼容
+   ===================================================================== */
+:root {
+  /* 模块语义色（时间轴 / 标签 / 状态） */
+  --color-semantic-anniv: var(--color-rose-deep);     /* 纪念日 #D88593 的语义出口 */
+  --color-semantic-diary: #5b8def;                     /* 日记蓝 */
+  --color-semantic-wish: #38bdf8;                      /* 愿望青 */
+  --color-semantic-conflict: #fb923c;                  /* 矛盾橙 */
+
+  /* 收支语义（记账模块；收入色沿用既有 --color-income / --color-income-soft） */
+  --color-expend: #f43f5e;
+  --color-expend-soft: rgba(244, 63, 94, 0.10);
+
+  /* 玻璃材质别名（对齐规范命名） */
+  --color-surface-glass: var(--glass-surface);
+  --color-surface-glass-sub: var(--glass-surface-strong);
+  --color-border-glass: var(--glass-border);
+  --color-border-subtle: rgba(122, 100, 98, 0.08);
+  --color-rose-tint: rgba(255, 111, 125, 0.16);
+
+  /* 缓动 / 阴影别名 */
+  --ease-spring: var(--spring-bounce);
+  --ease-smooth: var(--spring-smooth);
+  --shadow-card: var(--shadow-glass-md);
+  --shadow-float: var(--shadow-glass-lg);
+}
+
 h1, h2, h3 { line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; }
 
 /* ====================== 暗色模式：深可可暖夜 ====================== */
@@ -132,9 +156,6 @@ html.dark {
   --color-border: rgba(255, 255, 255, 0.09);
   --color-rose-soft: rgba(255, 111, 125, 0.16);
   --color-accent-soft: rgba(255, 111, 125, 0.16);
-  --color-panel: #2a2429;
-  --color-recessed: #231e22;
-  --color-chassis: #1f1a1f;
   /* 暗色玻璃材质（深可可半透 + 微光描边） */
   --glass-surface: rgba(36, 30, 30, 0.70);
   --glass-surface-strong: rgba(36, 30, 30, 0.82);
@@ -142,6 +163,8 @@ html.dark {
   --shadow-glass-md: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
   --shadow-glass-lg: 0 16px 40px -8px rgba(255, 111, 125, 0.28), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
   background:
+    radial-gradient(at 10% 0%, rgba(225, 29, 72, 0.14) 0px, transparent 50%),
+    radial-gradient(at 90% 90%, rgba(120, 50, 70, 0.12) 0px, transparent 50%),
     radial-gradient(130% 80% at 50% -12%, #2a2429 0%, var(--color-cream) 60%),
     var(--color-cream);
   color: var(--color-ink);
@@ -243,11 +266,7 @@ html:not(.reduce-motion) .love-card-pro:hover {
 @keyframes ind-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 .reduce-motion .ind-led { animation: none; }
 
-/* 螺丝：降级为极小的半透明装饰点（组件将不再使用，仅作兼容占位） */
-.ind-screw {
-  width: 6px; height: 6px; border-radius: 9999px;
-  background: var(--color-ink-3); opacity: 0.25;
-}
+/* 螺丝装饰已退役：组件不再使用，移除死代码以避免变量覆盖冲突 */
 
 /* ====================== 保留的通用类 ====================== */
 .app-bar { padding-top: calc(env(safe-area-inset-top) + 8px); padding-left: 16px; padding-right: 16px; }

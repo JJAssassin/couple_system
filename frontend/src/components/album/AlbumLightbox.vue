@@ -256,7 +256,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
   color: #fff;
   background: rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(4px);
-  transition: transform 0.15s var(--ease-mech), background 0.15s;
+  transition: transform 0.15s var(--ease-love), background 0.15s;
 }
 .lb-btn:hover { background: rgba(255, 255, 255, 0.28); }
 .lb-btn:active { transform: scale(0.92); }
@@ -276,7 +276,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
   color: #fff;
   background: rgba(255, 255, 255, 0.14);
   z-index: 2;
-  transition: background 0.15s, transform 0.15s var(--ease-mech);
+  transition: background 0.15s, transform 0.15s var(--ease-love);
 }
 .lb-nav:hover { background: rgba(255, 255, 255, 0.26); }
 .lb-nav:active { transform: translateY(-50%) scale(0.92); }

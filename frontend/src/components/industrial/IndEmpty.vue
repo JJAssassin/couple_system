@@ -54,7 +54,7 @@ defineEmits<{ (e: 'action'): void }>();
 .ring { fill: none; stroke: var(--color-accent); stroke-width: 2; opacity: 0.35; }
 .ring2 { fill: none; stroke: var(--color-accent); stroke-width: 1.5; opacity: 0.22; transform-origin: 60px 60px; animation: spin 26s linear infinite; }
 .heart { fill: var(--color-accent); opacity: 0.18; }
-.spark { fill: var(--color-accent); opacity: 0.5; animation: spark 3.2s var(--ease-mech) infinite; }
+.spark { fill: var(--color-accent); opacity: 0.5; animation: spark 3.2s var(--ease-love) infinite; }
 .halo {
   position: absolute; inset: 0; display: grid; place-items: center;
   font-size: 44px; line-height: 1; filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.18));

@@ -71,7 +71,7 @@ function finish() {
   background: rgba(20, 18, 22, 0.5); backdrop-filter: blur(4px); padding: 20px;
 }
 .ob-card {
-  width: min(440px, 94vw); background: var(--color-chassis); border-radius: 24px;
+  width: min(440px, 94vw); background: var(--color-cream); border-radius: 24px;
   padding: 18px 24px 22px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   text-align: center; overflow: hidden;
 }
@@ -79,7 +79,7 @@ function finish() {
 .ob-stage { position: relative; height: 210px; }
 .ob-slide {
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 12px; opacity: 0; transform: translateX(24px); transition: opacity 0.35s var(--ease-mech), transform 0.35s var(--ease-mech);
+  gap: 12px; opacity: 0; transform: translateX(24px); transition: opacity 0.35s var(--ease-love), transform 0.35s var(--ease-love);
   pointer-events: none;
 }
 .ob-slide.active { opacity: 1; transform: none; pointer-events: auto; }
@@ -90,12 +90,12 @@ function finish() {
 .ob-pair-label { font-size: 13px; color: var(--color-ink-3); margin-bottom: 8px; }
 .ob-code {
   font-family: var(--font-mono); font-size: 30px; font-weight: 700; letter-spacing: 0.18em; color: var(--color-accent);
-  background: var(--color-recessed); border-radius: var(--radius-md); padding: 10px 0;
-  box-shadow: inset 3px 3px 7px var(--color-shadow), inset -3px -3px 7px var(--color-highlight);
+  background: var(--color-mist); border-radius: var(--radius-md); padding: 10px 0;
+  box-shadow: inset 3px 3px 7px var(--color-ink-3), inset -3px -3px 7px #ffffff;
 }
 .ob-pair-tip { font-size: 12px; color: var(--color-ink-3); margin-top: 10px; }
 .ob-dots { display: flex; gap: 8px; justify-content: center; margin: 14px 0; }
-.dot { width: 8px; height: 8px; border-radius: 999px; background: var(--color-ink-soft); transition: all var(--dur-micro) var(--ease-mech); }
+.dot { width: 8px; height: 8px; border-radius: 999px; background: var(--color-ink-soft); transition: all var(--dur-micro) var(--ease-love); }
 .dot.on { width: 22px; background: var(--color-accent); }
 .ob-actions { display: flex; gap: 10px; }
 .ob-skip { flex: 0 0 auto; border: none; background: transparent; color: var(--color-ink-3); cursor: pointer; padding: 12px; font-size: 14px; }

@@ -79,7 +79,7 @@ defineExpose({ apply });
 
 <style scoped>
 .ring { position: relative; display: inline-grid; place-items: center; }
-.prog { transition: stroke-dashoffset 0.9s var(--ease-mech); }
+.prog { transition: stroke-dashoffset 0.9s var(--ease-love); }
 .center {
   position: absolute; inset: 0; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 2px; pointer-events: none;

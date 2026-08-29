@@ -13,6 +13,6 @@ withDefaults(defineProps<{ label: string; led?: boolean }>(), { led: false });
 .ind-sec-title { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
 .ind-sec-line {
   flex: 1; height: 2px; border-radius: 2px; opacity: 0.6;
-  background: linear-gradient(90deg, var(--color-border-dark), transparent);
+  background: linear-gradient(90deg, var(--color-border), transparent);
 }
 </style>
