@@ -77,11 +77,17 @@ body { font-size: 15px; }
 /* 仅鼠标聚焦时不显示环，避免点击自定义元素出现突兀蓝框 */
 :focus:not(:focus-visible) { outline: none; }
 
-/* 兼容别名（仍被多处引用，保留：accent / accent-soft / ink-soft） */
+/* 兼容别名（仍被多处引用，保留：accent / accent-soft） */
 :root {
   --color-accent: var(--color-rose);
   --color-accent-soft: var(--color-rose-soft);
-  --color-ink-soft: var(--color-ink-soft);
+  /* 注意：不要再在此处声明 --color-ink-soft。
+     本文件 @theme 内（:31）已有 --color-ink-soft: #F3F4F6，
+     而 @theme 产出落在 @layer theme 内、本 :root 未分层 —— 未分层声明优先于分层，
+     一旦在此重复声明就会遮蔽 @theme 的正确值。历史上这里正是写成了
+     `--color-ink-soft: var(--color-ink-soft)` 的自引用，构成循环依赖导致该变量
+     guaranteed-invalid：浅色模式下所有 border/background 用法属性整个消失
+     （分隔线、待办复选框边框、进度条底槽等共 19 处）。详见审计报告 P0-0。 */
 }
 
 /* =====================================================================
