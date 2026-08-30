@@ -55,26 +55,28 @@
       :love-start-time="loveInfo.loveStartTime"
     />
 
-    <!-- 今日全景：Bento 网格（Apple keynote 式大小混排；移动 1 列 / 平板 2 列 / 桌面 4 列） -->
-    <section class="block">
-      <IndSectionTitle label="今日全景" :led="true" />
-      <div class="bento">
-        <!-- 每日一句：情感主卡（桌面 2×2） -->
-        <IndCard v-if="quote.content" class="bento-cell b-quote quote-card">
-          <button class="quote-shuffle" :class="{ beat: quoteBeat }" @click="shuffleQuote" title="换一句情话" aria-label="换一句情话">
-            <Heart :size="15" />
-          </button>
-          <button class="quote-poster-btn" type="button" title="做成金句海报" aria-label="做成金句海报" @click="posterRef?.open()">
-            <Image :size="15" />
-          </button>
-          <span class="quote-mark">“</span>
-          <p class="quote-text">{{ quote.content }}</p>
-          <span class="quote-author" v-if="quote.author">—— {{ quote.author }}</span>
-          <span class="quote-hint" v-else>—— <Heart :size="12" class="q-heart" /> 换一句</span>
-        </IndCard>
+    <!-- 每日一句 -->
+    <section class="block" v-if="quote.content">
+      <IndSectionTitle label="每日一句" :led="true" />
+      <IndCard class="quote-card">
+        <button class="quote-shuffle" :class="{ beat: quoteBeat }" @click="shuffleQuote" title="换一句情话" aria-label="换一句情话">
+          <Heart :size="15" />
+        </button>
+        <button class="quote-poster-btn" type="button" title="做成金句海报" aria-label="做成金句海报" @click="posterRef?.open()">
+          <Image :size="15" />
+        </button>
+        <span class="quote-mark">“</span>
+        <p class="quote-text">{{ quote.content }}</p>
+        <span class="quote-author" v-if="quote.author">—— {{ quote.author }}</span>
+        <span class="quote-hint" v-else>—— <Heart :size="12" class="q-heart" /> 换一句</span>
+      </IndCard>
+    </section>
 
-        <!-- 今日与你：两张快捷卡 -->
-        <button class="bento-cell today-card" type="button" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" aria-label="查看最近纪念日" @click="go('anniversary')">
+    <!-- 今日与你（聚合卡） -->
+    <section class="block">
+      <IndSectionTitle label="今日与你" :led="true" />
+      <div class="today-grid">
+        <button class="today-card" type="button" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" aria-label="查看最近纪念日" @click="go('anniversary')">
           <span class="tc-ico"><component :is="icAnniversary" :size="22" /></span>
           <div class="tc-label">最近纪念日</div>
           <div v-if="nearest.length" class="tc-val" :class="{ 'tc-big': nearest[0].daysLeft <= 7 }">
@@ -83,86 +85,105 @@
           </div>
           <div v-else class="tc-val">未设置</div>
         </button>
-        <button class="bento-cell today-card" type="button" :class="{ ok: unread > 0 }" aria-label="查看未读消息" @click="go('message')">
+        <button class="today-card" type="button" :class="{ ok: unread > 0 }" aria-label="查看未读消息" @click="go('message')">
           <span class="tc-ico"><component :is="icMessage" :size="22" /></span>
           <div class="tc-label">未读消息</div>
           <div class="tc-val">{{ unread > 0 ? unread + ' 条' : '暂无' }}</div>
         </button>
+      </div>
+    </section>
 
-        <!-- 回忆胶片 + 最近动态（宽卡并排） -->
-        <IndCard v-if="albums.length" class="bento-cell b-2 cell-pad">
-          <div class="cell-label">回忆胶片</div>
-          <div class="film">
-            <button v-for="a in albums" :key="a.id" class="film-cell" type="button" :aria-label="'查看相册 ' + a.albumName" @click="go('album')">
-              <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" class="img-fade" @error="onAlbumCoverError(a)" />
-              <div v-else class="film-ph">{{ a.albumName.slice(0, 1) }}</div>
-              <div class="film-cap">{{ a.albumName }} · {{ a.imageCount }}张</div>
-            </button>
+    <!-- 回忆轮播 -->
+    <section class="block" v-if="albums.length">
+      <IndSectionTitle label="回忆胶片" :led="true" />
+      <div class="film">
+        <button v-for="a in albums" :key="a.id" class="film-cell" type="button" :aria-label="'查看相册 ' + a.albumName" @click="go('album')">
+          <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" class="img-fade" @error="onAlbumCoverError(a)" />
+          <div v-else class="film-ph">{{ a.albumName.slice(0, 1) }}</div>
+          <div class="film-cap">{{ a.albumName }} · {{ a.imageCount }}张</div>
+        </button>
+      </div>
+    </section>
+
+    <!-- 就近纪念日 -->
+    <section class="block">
+      <IndSectionTitle label="就近纪念日" :led="true" />
+      <div v-if="nearest.length" class="cards">
+        <IndCard v-for="a in nearest" :key="a.id" class="mini">
+          <div class="name">
+            {{ a.name }}
+            <span v-if="a.isYearly" class="yr-badge">每年</span>
           </div>
+          <div class="days">还有 <b>{{ a.daysLeft }}</b> 天</div>
+          <div class="next" v-if="a.nextOccurrence">下次 {{ fmtMD(a.nextOccurrence) }}<span v-if="a.lunarDate" class="hm-lunar">{{ a.lunarDate }}</span></div>
+          <div class="next expired" v-else>已过去</div>
         </IndCard>
+      </div>
+      <IndEmpty v-else title="还没有纪念日" desc="在「设置 / 时间轴」里记下一个重要的日子吧" />
+    </section>
 
-        <IndCard v-if="feed.length" class="bento-cell b-2 cell-pad">
-          <div class="cell-label">最近动态</div>
-          <ul class="feed">
-            <li v-for="f in feed" :key="f.id" class="feed-item">
-              <span class="feed-ico"><component :is="feedIcon(f.type)" :size="18" /></span>
-              <div class="feed-body">
-                <div class="feed-title">{{ f.title }}</div>
-                <div class="feed-time">{{ f.date.slice(0, 10) }}</div>
-              </div>
-            </li>
-          </ul>
-        </IndCard>
-
-        <!-- 就近纪念日 -->
-        <IndCard class="bento-cell b-2 cell-pad">
-          <div class="cell-label">就近纪念日</div>
-          <div v-if="nearest.length" class="cards">
-            <IndCard v-for="a in nearest" :key="a.id" class="mini">
-              <div class="name">
-                {{ a.name }}
-                <span v-if="a.isYearly" class="yr-badge">每年</span>
-              </div>
-              <div class="days">还有 <b>{{ a.daysLeft }}</b> 天</div>
-              <div class="next" v-if="a.nextOccurrence">下次 {{ fmtMD(a.nextOccurrence) }}<span v-if="a.lunarDate" class="hm-lunar">{{ a.lunarDate }}</span></div>
-              <div class="next expired" v-else>已过去</div>
-            </IndCard>
-          </div>
-          <div v-else class="cell-empty">还没有纪念日 · 在「设置 / 时间轴」里记下一个重要的日子吧</div>
-        </IndCard>
-
-        <!-- 关键指标：余额宽卡 + 两枚小卡 -->
-        <button class="bento-cell b-2 stat-link" type="button" aria-label="查看共同余额" @click="go('account')">
-          <IndStatCard label="共同余额" :value="'¥' + (dashboard.accountSummary?.balance ?? 0).toFixed(2)" />
-        </button>
-        <button class="bento-cell stat-link" type="button" aria-label="查看愿望完成率" @click="go('wish')">
-          <IndStatCard label="愿望完成率" :value="dashboard.wishCompleteRate + '%'" />
-        </button>
-        <button class="bento-cell stat-link" type="button" aria-label="查看连续互动" @click="go('diary')">
-          <IndStatCard label="连续互动" :value="dashboard.activeStreakDays + ' 天'" />
-        </button>
-
-        <!-- 趋势数据带：心情 + 矛盾 -->
-        <IndCard class="bento-cell b-2 trend-cell">
+    <!-- 趋势数据带：双图并列 -->
+    <section class="block">
+      <IndSectionTitle label="数据趋势" :led="true" />
+      <div class="trend-grid">
+        <IndCard class="trend-cell">
           <div class="viz-title">心情趋势 · 近 30 天</div>
-          <ChartWrap :option="moodOption" height="200px" />
+          <div class="screen">
+            <ChartWrap :option="moodOption" />
+          </div>
         </IndCard>
-        <IndCard class="bento-cell b-2 trend-cell">
+        <IndCard class="trend-cell">
           <div class="viz-title">矛盾趋势 · 近 6 月</div>
-          <ChartWrap :option="conflictOption" height="200px" />
+          <div class="screen">
+            <ChartWrap :option="conflictOption" />
+          </div>
         </IndCard>
+      </div>
+    </section>
 
-        <!-- 数据可视化：愿望仪表盘 + 收支环形 -->
-        <IndCard as="button" type="button" class="bento-cell b-2 viz-card" aria-label="查看愿望完成率" @click="go('wish')">
+    <!-- 关键指标 -->
+    <section class="block stat-row">
+      <button class="stat-link" type="button" aria-label="查看愿望完成率" @click="go('wish')">
+        <IndStatCard label="愿望完成率" :value="dashboard.wishCompleteRate + '%'" />
+      </button>
+      <button class="stat-link" type="button" aria-label="查看共同余额" @click="go('account')">
+        <IndStatCard label="共同余额" :value="'¥' + (dashboard.accountSummary?.balance ?? 0).toFixed(2)" />
+      </button>
+      <button class="stat-link" type="button" aria-label="查看连续互动" @click="go('diary')">
+        <IndStatCard label="连续互动" :value="dashboard.activeStreakDays + ' 天'" />
+      </button>
+    </section>
+
+    <!-- 数据可视化大屏：愿望完成率仪表盘 + 共同收支环形图 -->
+    <section class="block">
+      <IndSectionTitle label="关系数据 · 一目了然" :led="true" />
+      <div class="viz-grid">
+        <IndCard as="button" type="button" class="viz-card" aria-label="查看愿望完成率" @click="go('wish')">
           <div class="viz-title">愿望完成率</div>
-          <ChartWrap :option="wishGaugeOption" height="200px" />
+          <ChartWrap :option="wishGaugeOption" height="210px" />
         </IndCard>
-        <IndCard as="button" type="button" class="bento-cell b-2 viz-card" aria-label="查看共同收支" @click="go('account')">
+        <IndCard as="button" type="button" class="viz-card" aria-label="查看共同收支" @click="go('account')">
           <div class="viz-title">共同收支</div>
-          <ChartWrap :option="accountDonutOption" height="200px" />
+          <ChartWrap :option="accountDonutOption" height="210px" />
         </IndCard>
       </div>
       <div class="viz-hint">点击卡片可前往对应模块 · 数据随你们的使用实时更新</div>
+    </section>
+
+    <!-- 最近动态 feed -->
+    <section class="block" v-if="feed.length">
+      <IndSectionTitle label="最近动态" :led="true" />
+      <IndCard>
+        <ul class="feed">
+          <li v-for="f in feed" :key="f.id" class="feed-item">
+            <span class="feed-ico"><component :is="feedIcon(f.type)" :size="18" /></span>
+            <div class="feed-body">
+              <div class="feed-title">{{ f.title }}</div>
+              <div class="feed-time">{{ f.date.slice(0, 10) }}</div>
+            </div>
+          </li>
+        </ul>
+      </IndCard>
     </section>
 
     <!-- 每日一句金句海报 + 整百天纪念海报（Teleport 弹窗，ref.open() 打开） -->
@@ -189,6 +210,7 @@ import ChartWrap from '@/components/ChartWrap.vue';
 import IndCard from '@/components/industrial/IndCard.vue';
 import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import MilestoneStrip from '@/components/Common/MilestoneStrip.vue';
@@ -605,24 +627,8 @@ onUnmounted(() => {
 }
 .block { margin: 22px 0; }
 
-/* 今日全景 Bento：移动 1 列 → 平板 2 列 → 桌面 4 列，大小卡混排 */
-.bento { display: grid; gap: 12px; }
-.bento-cell { min-width: 0; }
-.cell-pad { padding: 14px 16px 16px; }
-.cell-label { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 10px; }
-.cell-empty { font-size: 13px; color: var(--color-ink-3); padding: 6px 0 2px; }
-/* 每日一句主卡：桌面 2×2 时垂直居中，文字更抒情 */
-.b-quote { display: flex; flex-direction: column; justify-content: center; }
-.b-quote .quote-text { font-size: 18px; line-height: 2; }
-.b-quote .quote-mark { font-size: 88px; top: -2px; }
-@media (min-width: 768px) {
-  .bento { grid-template-columns: repeat(2, 1fr); }
-  .bento .b-2, .bento .b-quote { grid-column: span 2; }
-}
-@media (min-width: 1024px) {
-  .bento { grid-template-columns: repeat(4, 1fr); }
-  .bento .b-quote { grid-row: span 2; }
-}
+/* 今日与你（聚合卡，移动端单列、宽屏自适应多列） */
+.today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 .today-card {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px;
   box-shadow: var(--shadow-card);
@@ -664,17 +670,23 @@ onUnmounted(() => {
 .mini .next { font-size: 11px; color: var(--color-ink-3); margin-top: 4px; font-family: var(--font-mono); }
 .mini .next.expired { color: var(--color-ink-3); }
 .hm-lunar { color: var(--color-rose-text); font-weight: 600; margin-left: 4px; }
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .stat-link { cursor: pointer; transition: transform var(--dur-pop) var(--ease-love); }
 .stat-link:hover { transform: translateY(-3px); }
 
-/* 数据可视化卡片（Bento 内） */
+/* 数据可视化大屏 */
+.viz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .viz-card { padding: 14px 14px 8px; cursor: pointer; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
 .viz-card:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.3), 0 10px 28px -10px rgba(122, 100, 98, 0.18); }
 .viz-title { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 2px; }
 .viz-hint { margin-top: 10px; font-size: 12px; color: var(--color-ink-3); text-align: center; }
 
-/* 趋势数据卡（Bento 内） */
+/* 趋势数据带：双图并列、窄屏回落单列 */
+.trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
 .trend-cell { padding: 12px 12px 6px; }
+
+/* 图表容器 */
+.screen { position: relative; border-radius: var(--radius-md); padding: 8px; }
 
 /* feed */
 .feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
