@@ -42,7 +42,7 @@ const parts = computed<Parts | null>(() => {
 function reducedMotion(): boolean {
   return (
     document.documentElement.classList.contains('reduce-motion') ||
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   );
 }
 
