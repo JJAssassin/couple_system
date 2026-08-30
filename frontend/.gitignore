@@ -2,5 +2,8 @@ node_modules
 dist
 dist.prev.*
 dist.trash
+dist-verify
+dist_tmp
+ALL_VISUAL_STYLES.css
 *.local
 .DS_Store

@@ -1,8 +1,13 @@
 <template>
   <div class="quiz-page" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">QUIZ · 默契问答</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 同步中</span>
+    </div>
+
     <header class="page-head">
       <div class="head-left">
-        <h1>默契问答</h1>
         <span class="sub">同一道题各选一次，看看你们想的是不是同一个答案</span>
       </div>
     </header>
@@ -102,7 +107,7 @@
     <!-- 历史战绩 -->
     <section class="history">
       <div class="sec-head">
-        <h2>历史战绩</h2>
+        <IndSectionTitle label="历史战绩" :led="true" />
         <n-button size="small" tertiary @click="showBank = true">题库管理</n-button>
       </div>
 
@@ -212,6 +217,8 @@ import { useAuthStore } from '@/store/authStore';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import { feedback } from '@/utils/feedback';
 import { fireHearts } from '@/composables/useConfetti';
 
@@ -354,8 +361,17 @@ onMounted(async () => {
 
 <style scoped>
 .quiz-page { max-width: 880px; margin: 0 auto; }
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px; background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
 .page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.page-head h1 { font-size: 22px; margin: 0; }
 .sub { font-size: 13px; color: var(--color-ink-3); }
 
 .stat-card {
@@ -448,6 +464,7 @@ onMounted(async () => {
 .builtin { font-size: 11px; }
 
 @media (max-width: 767px) {
+  .brand { flex-wrap: wrap; }
   .stat-card { justify-content: center; }
   .stat-tip { text-align: center; }
   .starter-actions { flex-direction: column; }

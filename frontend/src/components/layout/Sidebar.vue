@@ -53,7 +53,7 @@
         :aria-label="item.label"
         @click="hapticForAction('tap'); onClickNav"
       >
-        <span class="ico"><component :is="item.icon" :size="18" :stroke-width="1.8" /></span>
+        <span class="ico"><component :is="item.icon" :size="20" :stroke-width="1.8" /></span>
         <span v-if="!collapsed" class="lbl">{{ item.label }}</span>
         <span v-if="badgeMap[item.to]" class="nbadge" :class="badgeMap[item.to]!.type">
           <template v-if="badgeMap[item.to]!.type === 'count'">{{ badgeMap[item.to]!.value }}</template>
@@ -66,9 +66,9 @@
 import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { gsap } from 'gsap';
 import {
-  Mail, Home, History, BookOpen, Star, ListChecks, MessageCircle, Sparkles, Image, CloudFog,
-  CircleCheck, Wallet, Coffee, Settings, HeartHandshake, Footprints, CalendarHeart, Heart,
-  BarChart3, Target, Smile,
+  Mail, HeartHandshake, Heart,
+  Home, History, BookOpen, Star, ListChecks, MessageCircle, Sparkles, Image, CloudFog,
+  Wallet, Coffee, Footprints, CalendarHeart, BarChart3, Smile, Settings,
 } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import api from '@/utils/request';
@@ -106,6 +106,7 @@ const items = [
   { to: '/wish', label: '愿望', icon: Star },
   { to: '/todo', label: '待办', icon: ListChecks },
   { to: '/board', label: '留言板', icon: MessageCircle },
+  { to: '/message', label: '消息', icon: Mail },
   { to: '/quiz', label: '默契问答', icon: Sparkles },
   { to: '/album', label: '相册', icon: Image },
   { to: '/conflict', label: '矛盾', icon: CloudFog },
@@ -234,7 +235,7 @@ onUnmounted(() => {
 .brand-mark {
   display: inline-flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; border-radius: 10px; flex: 0 0 auto;
-  color: var(--color-on-primary); background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  color: var(--color-on-primary); background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
 }
 .brand-name { font-weight: 600; font-size: 14px; color: var(--color-ink); letter-spacing: 0.01em; }
 .collapsed .brand { padding: 6px 0 18px; }
@@ -324,6 +325,7 @@ html:not(.reduce-motion) .msg-list li.unread:active .swipe-hint { opacity: 0.8; 
   border-radius: 3px; background: var(--color-rose);
 }
 .ico { width: 20px; display: flex; justify-content: center; }
+.ico :deep(svg) { color: currentColor; }
 .nbadge {
   position: absolute; top: 7px; right: 9px; z-index: 2;
   display: inline-flex; align-items: center; justify-content: center;

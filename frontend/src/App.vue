@@ -52,8 +52,8 @@ const overrides = computed<GlobalThemeOverrides>(() => ({
     // naive-ui 浮层（NModal / NPopover / NSelect 下拉 / NDatePicker 面板 /
     // NPopconfirm / NDrawer / NMessage）在暗色下没有投影。
     boxShadow1: 'var(--shadow-card)',
-    boxShadow2: 'var(--shadow-float)',
-    boxShadow3: 'var(--shadow-float)',
+    boxShadow2: 'var(--shadow-overlay)',
+    boxShadow3: 'var(--shadow-overlay)',
   },
   Button: {
     borderRadius: '10',

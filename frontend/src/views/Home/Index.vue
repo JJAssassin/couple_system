@@ -2,11 +2,19 @@
   <IndSkeleton v-if="loading" variant="hero" />
   <PullRefresh v-else @refresh="onRefresh">
     <div class="home" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">HOME · 首页</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
     <!-- 圆整节点庆祝横幅 -->
     <transition name="cele">
       <div v-if="celebrate" class="cele-banner">
         <PartyPopper :size="18" class="cele-ico" />
         <span class="cele-txt">{{ celebrate }}</span>
+        <button class="cele-poster" type="button" aria-label="查看纪念海报" title="做成纪念海报" @click="mPosterRef?.open()">
+          <Image :size="16" />
+        </button>
         <button class="cele-close" aria-label="关闭" @click="celebrate = ''"><X :size="16" /></button>
       </div>
     </transition>
@@ -47,25 +55,26 @@
       :love-start-time="loveInfo.loveStartTime"
     />
 
-    <!-- 每日一句 -->
-    <section class="block" v-if="quote.content">
-      <IndSectionTitle label="每日一句" :led="true" />
-      <IndCard class="quote-card">
-        <button class="quote-shuffle" :class="{ beat: quoteBeat }" @click="shuffleQuote" title="换一句情话" aria-label="换一句情话">
-          <Heart :size="15" />
-        </button>
-        <span class="quote-mark">“</span>
-        <p class="quote-text">{{ quote.content }}</p>
-        <span class="quote-author" v-if="quote.author">—— {{ quote.author }}</span>
-        <span class="quote-hint" v-else>—— <Heart :size="12" class="q-heart" /> 换一句</span>
-      </IndCard>
-    </section>
-
-    <!-- 今日与你（聚合卡） -->
+    <!-- 今日全景：Bento 网格（Apple keynote 式大小混排；移动 1 列 / 平板 2 列 / 桌面 4 列） -->
     <section class="block">
-      <IndSectionTitle label="今日与你" :led="true" />
-      <div class="today-grid">
-        <button class="today-card" type="button" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" aria-label="查看最近纪念日" @click="go('anniversary')">
+      <IndSectionTitle label="今日全景" :led="true" />
+      <div class="bento">
+        <!-- 每日一句：情感主卡（桌面 2×2） -->
+        <IndCard v-if="quote.content" class="bento-cell b-quote quote-card">
+          <button class="quote-shuffle" :class="{ beat: quoteBeat }" @click="shuffleQuote" title="换一句情话" aria-label="换一句情话">
+            <Heart :size="15" />
+          </button>
+          <button class="quote-poster-btn" type="button" title="做成金句海报" aria-label="做成金句海报" @click="posterRef?.open()">
+            <Image :size="15" />
+          </button>
+          <span class="quote-mark">“</span>
+          <p class="quote-text">{{ quote.content }}</p>
+          <span class="quote-author" v-if="quote.author">—— {{ quote.author }}</span>
+          <span class="quote-hint" v-else>—— <Heart :size="12" class="q-heart" /> 换一句</span>
+        </IndCard>
+
+        <!-- 今日与你：两张快捷卡 -->
+        <button class="bento-cell today-card" type="button" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" aria-label="查看最近纪念日" @click="go('anniversary')">
           <span class="tc-ico"><component :is="icAnniversary" :size="22" /></span>
           <div class="tc-label">最近纪念日</div>
           <div v-if="nearest.length" class="tc-val" :class="{ 'tc-big': nearest[0].daysLeft <= 7 }">
@@ -74,106 +83,91 @@
           </div>
           <div v-else class="tc-val">未设置</div>
         </button>
-        <button class="today-card" type="button" :class="{ ok: unread > 0 }" aria-label="查看未读消息" @click="go('message')">
+        <button class="bento-cell today-card" type="button" :class="{ ok: unread > 0 }" aria-label="查看未读消息" @click="go('message')">
           <span class="tc-ico"><component :is="icMessage" :size="22" /></span>
           <div class="tc-label">未读消息</div>
           <div class="tc-val">{{ unread > 0 ? unread + ' 条' : '暂无' }}</div>
         </button>
-      </div>
-    </section>
 
-    <!-- 回忆轮播 -->
-    <section class="block" v-if="albums.length">
-      <IndSectionTitle label="回忆胶片" :led="true" />
-      <div class="film">
-        <button v-for="a in albums" :key="a.id" class="film-cell" type="button" :aria-label="'查看相册 ' + a.albumName" @click="go('album')">
-          <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" @error="onAlbumCoverError(a)" />
-          <div v-else class="film-ph">{{ a.albumName.slice(0, 1) }}</div>
-          <div class="film-cap">{{ a.albumName }} · {{ a.imageCount }}张</div>
+        <!-- 回忆胶片 + 最近动态（宽卡并排） -->
+        <IndCard v-if="albums.length" class="bento-cell b-2 cell-pad">
+          <div class="cell-label">回忆胶片</div>
+          <div class="film">
+            <button v-for="a in albums" :key="a.id" class="film-cell" type="button" :aria-label="'查看相册 ' + a.albumName" @click="go('album')">
+              <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" class="img-fade" @error="onAlbumCoverError(a)" />
+              <div v-else class="film-ph">{{ a.albumName.slice(0, 1) }}</div>
+              <div class="film-cap">{{ a.albumName }} · {{ a.imageCount }}张</div>
+            </button>
+          </div>
+        </IndCard>
+
+        <IndCard v-if="feed.length" class="bento-cell b-2 cell-pad">
+          <div class="cell-label">最近动态</div>
+          <ul class="feed">
+            <li v-for="f in feed" :key="f.id" class="feed-item">
+              <span class="feed-ico"><component :is="feedIcon(f.type)" :size="18" /></span>
+              <div class="feed-body">
+                <div class="feed-title">{{ f.title }}</div>
+                <div class="feed-time">{{ f.date.slice(0, 10) }}</div>
+              </div>
+            </li>
+          </ul>
+        </IndCard>
+
+        <!-- 就近纪念日 -->
+        <IndCard class="bento-cell b-2 cell-pad">
+          <div class="cell-label">就近纪念日</div>
+          <div v-if="nearest.length" class="cards">
+            <IndCard v-for="a in nearest" :key="a.id" class="mini">
+              <div class="name">
+                {{ a.name }}
+                <span v-if="a.isYearly" class="yr-badge">每年</span>
+              </div>
+              <div class="days">还有 <b>{{ a.daysLeft }}</b> 天</div>
+              <div class="next" v-if="a.nextOccurrence">下次 {{ fmtMD(a.nextOccurrence) }}<span v-if="a.lunarDate" class="hm-lunar">{{ a.lunarDate }}</span></div>
+              <div class="next expired" v-else>已过去</div>
+            </IndCard>
+          </div>
+          <div v-else class="cell-empty">还没有纪念日 · 在「设置 / 时间轴」里记下一个重要的日子吧</div>
+        </IndCard>
+
+        <!-- 关键指标：余额宽卡 + 两枚小卡 -->
+        <button class="bento-cell b-2 stat-link" type="button" aria-label="查看共同余额" @click="go('account')">
+          <IndStatCard label="共同余额" :value="'¥' + (dashboard.accountSummary?.balance ?? 0).toFixed(2)" />
         </button>
-      </div>
-    </section>
+        <button class="bento-cell stat-link" type="button" aria-label="查看愿望完成率" @click="go('wish')">
+          <IndStatCard label="愿望完成率" :value="dashboard.wishCompleteRate + '%'" />
+        </button>
+        <button class="bento-cell stat-link" type="button" aria-label="查看连续互动" @click="go('diary')">
+          <IndStatCard label="连续互动" :value="dashboard.activeStreakDays + ' 天'" />
+        </button>
 
-    <!-- 就近纪念日 -->
-    <section class="block">
-      <IndSectionTitle label="就近纪念日" :led="true" />
-      <div v-if="nearest.length" class="cards">
-        <IndCard v-for="a in nearest" :key="a.id" class="mini">
-          <div class="name">
-            {{ a.name }}
-            <span v-if="a.isYearly" class="yr-badge">每年</span>
-          </div>
-          <div class="days">还有 <b>{{ a.daysLeft }}</b> 天</div>
-          <div class="next" v-if="a.nextOccurrence">下次 {{ fmtMD(a.nextOccurrence) }}<span v-if="a.lunarDate" class="hm-lunar">{{ a.lunarDate }}</span></div>
-          <div class="next expired" v-else>已过去</div>
-        </IndCard>
-      </div>
-      <IndEmpty v-else title="还没有纪念日" desc="在「设置 / 时间轴」里记下一个重要的日子吧" />
-    </section>
-
-    <!-- 趋势数据带：双图并列，缩短纵向、制造节奏层次 -->
-    <section class="block">
-      <IndSectionTitle label="数据趋势" :led="true" />
-      <div class="trend-grid">
-        <IndCard class="trend-cell">
+        <!-- 趋势数据带：心情 + 矛盾 -->
+        <IndCard class="bento-cell b-2 trend-cell">
           <div class="viz-title">心情趋势 · 近 30 天</div>
-          <div class="screen">
-            <ChartWrap :option="moodOption" />
-          </div>
+          <ChartWrap :option="moodOption" height="200px" />
         </IndCard>
-        <IndCard class="trend-cell">
+        <IndCard class="bento-cell b-2 trend-cell">
           <div class="viz-title">矛盾趋势 · 近 6 月</div>
-          <div class="screen">
-            <ChartWrap :option="conflictOption" />
-          </div>
+          <ChartWrap :option="conflictOption" height="200px" />
         </IndCard>
-      </div>
-    </section>
 
-    <!-- 关键指标 -->
-    <section class="block stat-row">
-      <button class="stat-link" type="button" aria-label="查看愿望完成率" @click="go('wish')">
-        <IndStatCard label="愿望完成率" :value="dashboard.wishCompleteRate + '%'" />
-      </button>
-      <button class="stat-link" type="button" aria-label="查看共同余额" @click="go('account')">
-        <IndStatCard label="共同余额" :value="'¥' + (dashboard.accountSummary?.balance ?? 0).toFixed(2)" />
-      </button>
-      <button class="stat-link" type="button" aria-label="查看连续互动" @click="go('diary')">
-        <IndStatCard label="连续互动" :value="dashboard.activeStreakDays + ' 天'" />
-      </button>
-    </section>
-
-    <!-- 数据可视化大屏：愿望完成率仪表盘 + 共同收支环形图 -->
-    <section class="block">
-      <IndSectionTitle label="关系数据 · 一目了然" :led="true" />
-      <div class="viz-grid">
-        <IndCard as="button" type="button" class="viz-card" aria-label="查看愿望完成率" @click="go('wish')">
+        <!-- 数据可视化：愿望仪表盘 + 收支环形 -->
+        <IndCard as="button" type="button" class="bento-cell b-2 viz-card" aria-label="查看愿望完成率" @click="go('wish')">
           <div class="viz-title">愿望完成率</div>
-          <ChartWrap :option="wishGaugeOption" height="210px" />
+          <ChartWrap :option="wishGaugeOption" height="200px" />
         </IndCard>
-        <IndCard as="button" type="button" class="viz-card" aria-label="查看共同收支" @click="go('account')">
+        <IndCard as="button" type="button" class="bento-cell b-2 viz-card" aria-label="查看共同收支" @click="go('account')">
           <div class="viz-title">共同收支</div>
-          <ChartWrap :option="accountDonutOption" height="210px" />
+          <ChartWrap :option="accountDonutOption" height="200px" />
         </IndCard>
       </div>
       <div class="viz-hint">点击卡片可前往对应模块 · 数据随你们的使用实时更新</div>
     </section>
 
-    <!-- 最近动态 feed -->
-    <section class="block" v-if="feed.length">
-      <IndSectionTitle label="最近动态" :led="true" />
-      <IndCard>
-        <ul class="feed">
-          <li v-for="f in feed" :key="f.id" class="feed-item">
-            <span class="feed-ico"><component :is="feedIcon(f.type)" :size="18" /></span>
-            <div class="feed-body">
-              <div class="feed-title">{{ f.title }}</div>
-              <div class="feed-time">{{ f.date.slice(0, 10) }}</div>
-            </div>
-          </li>
-        </ul>
-      </IndCard>
-    </section>
+    <!-- 每日一句金句海报 + 整百天纪念海报（Teleport 弹窗，ref.open() 打开） -->
+    <QuotePoster ref="posterRef" v-bind="quotePosterData" />
+    <MilestonePoster ref="mPosterRef" v-bind="milestonePosterData" />
   </div>
   </PullRefresh>
 </template>
@@ -195,9 +189,11 @@ import ChartWrap from '@/components/ChartWrap.vue';
 import IndCard from '@/components/industrial/IndCard.vue';
 import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
-import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import MilestoneStrip from '@/components/Common/MilestoneStrip.vue';
+import QuotePoster from '@/components/Common/QuotePoster.vue';
+import MilestonePoster from '@/components/Common/MilestonePoster.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useAuthStore } from '@/store/authStore';
 import { useNotifyStore } from '@/store/notifyStore';
@@ -294,6 +290,23 @@ const feed = ref<TimelineItemDto[]>([]);
 const quote = ref<DailyQuoteDto>({ content: '' });
 
 const quoteBeat = ref(false);
+// 每日一句金句海报：当前句 + 昵称 + 相恋天数 + 日期，随换句实时联动
+const posterRef = ref<InstanceType<typeof QuotePoster>>();
+const quotePosterData = computed(() => ({
+  quote: quote.value.content,
+  author: quote.value.author || '',
+  name: auth.profile?.nickName || '我',
+  days: loveInfo.value.totalDays,
+  date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.'),
+}));
+// 整百天纪念海报：庆祝横幅文案 + 相恋天数 + 日期（横幅出现才可打开）
+const mPosterRef = ref<InstanceType<typeof MilestonePoster>>();
+const milestonePosterData = computed(() => ({
+  days: loveInfo.value.totalDays,
+  label: celebrate.value || '我们的纪念日',
+  name: auth.profile?.nickName || '我',
+  date: new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.'),
+}));
 // 本地治愈系短句库：点击 ♥ 随机换一句，丰富首页情趣（不依赖后端）
 const extraQuotes = [
   '世界很大，但和你在一起的地方就是家。',
@@ -362,7 +375,7 @@ const moodOption = computed<EChartsOption>(() => ({
 const conflictOption = computed<EChartsOption>(() => ({
   xAxis: { type: 'category', data: dashboard.value.conflictTrend.map((p) => p.label) },
   yAxis: { type: 'value' },
-  series: [{ type: 'bar', data: dashboard.value.conflictTrend.map((p) => p.value), itemStyle: { color: '#9CA3AF', borderRadius: [6, 6, 0, 0] } }],
+  series: [{ type: 'bar', data: dashboard.value.conflictTrend.map((p) => p.value), itemStyle: { color: 'var(--color-semantic-conflict)', borderRadius: [6, 6, 0, 0] } }],
   grid: { left: 30, right: 16, top: 16, bottom: 24 },
 }));
 
@@ -399,8 +412,8 @@ const accountDonutOption = computed<EChartsOption>(() => {
       data: empty
         ? [{ name: '暂无记账', value: 1, itemStyle: { color: 'rgba(122,100,98,0.18)' } }]
         : [
-            { name: '收入', value: a.income, itemStyle: { color: '#16a34a' } },
-            { name: '支出', value: a.expend, itemStyle: { color: '#dc2626' } },
+            { name: '收入', value: a.income, itemStyle: { color: 'var(--color-income)' } },
+            { name: '支出', value: a.expend, itemStyle: { color: 'var(--color-expend)' } },
           ],
     }],
   };
@@ -474,6 +487,19 @@ onUnmounted(() => {
 </script>
 <style scoped>
 .home { max-width: 880px; margin: 0 auto; }
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .hero { position: relative; text-align: center; padding: 28px 0 8px; overflow: hidden; border-radius: var(--radius-lg, 24px); }
 .hero-hearts { z-index: 0; }
 .hero > :not(.hero-hearts):not(.hero-aurora):not(.hero-blob) { position: relative; z-index: 1; }
@@ -484,6 +510,13 @@ onUnmounted(() => {
     radial-gradient(60% 100% at 28% 0%, color-mix(in srgb, var(--color-rose) 16%, transparent), transparent 70%),
     radial-gradient(50% 100% at 78% 12%, color-mix(in srgb, var(--color-cocoa) 12%, transparent), transparent 70%);
   filter: blur(10px); opacity: 0.9; pointer-events: none;
+  /* P1-9：光斑缓慢呼吸漂移（transform-only，极慢以保持克制；reduce-motion 由全局规则收敛） */
+  animation: blob-drift 26s var(--ease-love) infinite;
+}
+@keyframes blob-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(3%, 2%, 0) scale(1.06); }
+  66% { transform: translate3d(-2.5%, -2%, 0) scale(0.97); }
 }
 .reduce-motion .hero-blob { filter: none; }
 
@@ -492,7 +525,7 @@ onUnmounted(() => {
   display: flex; align-items: center; gap: 8px; justify-content: center;
   margin: 0 auto 18px; max-width: 520px; padding: 10px 14px; border-radius: 999px;
   color: var(--color-on-primary); font-weight: 600; font-size: 14px;
-  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   box-shadow: 0 8px 24px -8px rgba(255, 111, 125, 0.5);
   position: relative;
 }
@@ -505,18 +538,26 @@ onUnmounted(() => {
   transition: background var(--dur-micro) var(--ease-love);
 }
 .cele-close:hover { background: rgba(255, 255, 255, 0.36); }
+.cele-poster {
+  flex: 0 0 auto; border: none; background: rgba(255, 255, 255, 0.22); color: var(--color-on-primary);
+  width: 26px; height: 26px; border-radius: 999px; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0;
+  transition: background var(--dur-micro) var(--ease-love);
+}
+.cele-poster:hover { background: rgba(255, 255, 255, 0.42); }
 .cele-enter-active, .cele-leave-active { transition: all var(--dur-pop) var(--ease-love); }
 .cele-enter-from, .cele-leave-to { opacity: 0; transform: translateY(-10px) scale(0.96); }
 .hero-greet {
+  font-family: var(--font-serif); /* 情感衬线：问候语是页面的第一记忆点 */
   font-size: 22px; font-weight: 700; letter-spacing: 0.01em; margin-bottom: 2px;
   display: inline-block;
 }
 .hero-days {
-  font-size: 52px; font-weight: 900;
+  font-size: clamp(42px, 11vw, 56px); font-weight: 900;
   display: flex; align-items: baseline; justify-content: center; gap: 8px;
   margin-top: 6px;
   /* 渐变大字：品牌色渐变 + 等宽数字（"天" 后缀由 .hero-days span 单独着色） */
-  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 100%);
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -564,8 +605,24 @@ onUnmounted(() => {
 }
 .block { margin: 22px 0; }
 
-/* 今日与你 */
-.today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+/* 今日全景 Bento：移动 1 列 → 平板 2 列 → 桌面 4 列，大小卡混排 */
+.bento { display: grid; gap: 12px; }
+.bento-cell { min-width: 0; }
+.cell-pad { padding: 14px 16px 16px; }
+.cell-label { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 10px; }
+.cell-empty { font-size: 13px; color: var(--color-ink-3); padding: 6px 0 2px; }
+/* 每日一句主卡：桌面 2×2 时垂直居中，文字更抒情 */
+.b-quote { display: flex; flex-direction: column; justify-content: center; }
+.b-quote .quote-text { font-size: 18px; line-height: 2; }
+.b-quote .quote-mark { font-size: 88px; top: -2px; }
+@media (min-width: 768px) {
+  .bento { grid-template-columns: repeat(2, 1fr); }
+  .bento .b-2, .bento .b-quote { grid-column: span 2; }
+}
+@media (min-width: 1024px) {
+  .bento { grid-template-columns: repeat(4, 1fr); }
+  .bento .b-quote { grid-row: span 2; }
+}
 .today-card {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 16px;
   box-shadow: var(--shadow-card);
@@ -607,19 +664,16 @@ onUnmounted(() => {
 .mini .next { font-size: 11px; color: var(--color-ink-3); margin-top: 4px; font-family: var(--font-mono); }
 .mini .next.expired { color: var(--color-ink-3); }
 .hm-lunar { color: var(--color-rose-text); font-weight: 600; margin-left: 4px; }
-.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .stat-link { cursor: pointer; transition: transform var(--dur-pop) var(--ease-love); }
 .stat-link:hover { transform: translateY(-3px); }
 
-/* 数据可视化大屏 */
-.viz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+/* 数据可视化卡片（Bento 内） */
 .viz-card { padding: 14px 14px 8px; cursor: pointer; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
 .viz-card:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.3), 0 10px 28px -10px rgba(122, 100, 98, 0.18); }
 .viz-title { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 2px; }
 .viz-hint { margin-top: 10px; font-size: 12px; color: var(--color-ink-3); text-align: center; }
 
-/* 趋势数据带：与「关系数据」区对齐，2 列并列、窄屏回落单列 */
-.trend-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+/* 趋势数据卡（Bento 内） */
 .trend-cell { padding: 12px 12px 6px; }
 
 /* feed */
@@ -630,9 +684,6 @@ onUnmounted(() => {
 .feed-title { font-size: 14px; color: var(--color-ink); }
 .feed-time { font-size: 12px; color: var(--color-ink-3); }
 
-/* 图表容器 */
-.screen { position: relative; border-radius: var(--radius-md); padding: 8px; }
-
 /* 每日一句 */
 .quote-card { padding: 20px 22px; position: relative; overflow: hidden; }
 .quote-mark {
@@ -640,8 +691,9 @@ onUnmounted(() => {
   color: var(--color-rose-text); opacity: 0.18; font-family: Georgia, serif;
 }
 .quote-text {
-  position: relative; font-size: 16px; line-height: 1.8; color: var(--color-ink);
-  margin: 6px 0 0; padding-left: 8px; padding-right: 40px; letter-spacing: 0.02em;
+  position: relative; font-family: var(--font-serif); font-weight: 500;
+  font-size: 17px; line-height: 1.9; color: var(--color-ink);
+  margin: 6px 0 0; padding-left: 8px; padding-right: 40px; letter-spacing: 0.03em;
 }
 .quote-author {
   display: block; margin-top: 10px; text-align: right; font-size: 13px; color: var(--color-ink-3);
@@ -665,6 +717,15 @@ onUnmounted(() => {
   60% { transform: scale(0.92); }
 }
 .reduce-motion .quote-shuffle.beat { animation: none; }
+/* 金句海报入口（与换句并列） */
+.quote-poster-btn {
+  position: absolute; top: 12px; right: 48px; z-index: 3;
+  width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--color-border);
+  background: var(--color-surface); color: var(--color-cocoa); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.quote-poster-btn:hover { background: var(--color-rose-soft); border-color: var(--color-rose); color: var(--color-rose-text); transform: scale(1.08); }
 
 /* 无障碍：将原 div/span 点击区改为原生 button，统一重置 + 键盘焦点环 */
 button.hero-edit, button.hero-set-cta, button.today-card, button.film-cell, button.stat-link, .viz-card.ind-card-shell {
@@ -682,5 +743,11 @@ button.hero-edit:focus-visible, button.hero-set-cta:focus-visible, button.today-
 button.film-cell:focus-visible, button.stat-link:focus-visible, .viz-card.ind-card-shell:focus-visible {
   outline: 2px solid var(--color-accent, var(--color-rose));
   outline-offset: 2px;
+}
+
+@media (max-width: 767px) {
+  .brand { padding: 10px 14px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
 }
 </style>

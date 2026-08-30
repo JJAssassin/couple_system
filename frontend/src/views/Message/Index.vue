@@ -1,15 +1,25 @@
 <template>
   <div class="msg-page" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">MESSAGE · 消息中心</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
+    <p class="lead">重要的日子与记录会在这里提醒你</p>
+
     <div class="page-head">
-      <div>
-        <h1>消息中心</h1>
-        <p class="sub">共 {{ list.length }} 条 · 未读 <b>{{ unread }}</b></p>
-      </div>
       <div class="ops">
         <NButton size="small" v-press-bounce :loading="loading" @click="onRefreshClick">刷新</NButton>
         <NButton size="small" type="primary" :disabled="unread === 0" v-press-bounce @click="markAllRead">全部已读</NButton>
       </div>
     </div>
+
+    <!-- 统计瓷砖 -->
+    <section class="block stats">
+      <IndStatCard label="未读" :value="unread" sub="待你查看" />
+      <IndStatCard label="已读" :value="readList.length" sub="已处理" />
+      <IndStatCard label="共" :value="list.length" sub="全部消息" />
+    </section>
 
       <IndSkeleton v-if="loading" variant="list" :rows="6" />
       <IndEmpty
@@ -98,8 +108,13 @@ import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
+import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import { useSettingStore } from '@/store/settingStore';
 import { usePagedList } from '@/composables/usePagedList';
+import { useStaggerEnter } from '@/composables/useAnimation';
+import { useRealtime } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 import { feedback } from '@/utils/feedback';
 import { Mail, Gem, CheckCircle2, Heart, Star, Image as ImageIcon, PenLine } from 'lucide-vue-next';
 
@@ -184,6 +199,8 @@ async function markAllRead() {
   feedback.info('已把所有消息标记为已读');
 }
 
+useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
+const { useModuleSync } = useRealtime();
 onMounted(async () => {
   try {
     await loadFirst();
@@ -193,6 +210,9 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+  // 伴侣触发的消息变更：整表刷新 + 卡片错落入场
+  useModuleSync('message', { items: list, getId: (m) => m.id, load: refresh });
+  useSyncSettle('message', container, list, '.m-card');
   timer = window.setInterval(async () => {
     try {
       unread.value = (await msgApi.unreadCount()) ?? 0;
@@ -206,20 +226,39 @@ onUnmounted(() => {
 
 <style scoped>
 .msg-page { max-width: 880px; margin: 0 auto; }
-.page-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 18px; }
-.page-head h1 { margin: 0; font-size: 22px; }
-.sub { margin: 4px 0 0; color: var(--color-ink-3); font-size: 13px; }
-.sub b { color: var(--color-accent-text); }
+.block { margin: 22px 0; }
+
+/* 品牌条 */
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
+.lead { margin: 0 0 18px; font-size: 13px; color: var(--color-ink-3); }
+
+/* 操作区 + 统计瓷砖 */
+.page-head { display: flex; align-items: flex-end; justify-content: flex-end; margin-bottom: 14px; }
 .ops { display: flex; gap: 10px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
 .grp { margin: 22px 0; }
 .list { display: flex; flex-direction: column; gap: 12px; }
 .m-card {
   display: flex; gap: 14px; align-items: flex-start; cursor: pointer;
-  transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
+  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
 .m-card.unread { box-shadow: 0 0 0 1.5px var(--color-rose), var(--shadow-card); }
+.m-card:hover { transform: translateY(-2px); box-shadow: var(--elev-2); }
+.m-card.unread:hover { box-shadow: 0 0 0 1.5px var(--color-rose), var(--elev-2); }
 .m-card:active { transform: scale(0.99); }
+.m-card.open { box-shadow: 0 0 0 1.5px var(--color-rose-soft), var(--elev-2); }
 .m-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .m-ico {
   flex: 0 0 auto; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center;
@@ -233,4 +272,8 @@ onUnmounted(() => {
 .m-time { font-size: 12px; color: var(--color-ink-3); font-family: var(--font-mono); margin: 2px 0 4px; }
 .m-content { font-size: 13px; color: var(--color-ink-2); line-height: 1.6; white-space: pre-wrap; }
 .m-content.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+@media (max-width: 767px) {
+  .stats { grid-template-columns: 1fr; }
+}
 </style>

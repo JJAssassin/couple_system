@@ -1,5 +1,5 @@
 <template>
-  <div class="shell">
+  <div class="shell" :data-module="route.name ? String(route.name).toLowerCase() : undefined">
     <!-- 全局极淡柔光背景：固定定位，置于所有内容之下、画布之上，贯穿全站 -->
     <teleport to="body">
       <AuroraBackdrop global />
@@ -78,7 +78,7 @@
         class="tab"
         @click="hapticForAction('tap'); drawerOpen = false"
       >
-        <component :is="t.icon" :size="22" :stroke-width="1.8" />
+        <component :is="t.icon" :size="22" :stroke-width="1.8" class="tab-ico" />
         <span class="tab-lbl">{{ t.label }}</span>
       </router-link>
       <button class="tab" aria-label="更多" @click="hapticForAction('tap'); drawerOpen = true">
@@ -93,8 +93,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
-  Menu, Moon, Sun, LogOut, ChevronRight,
-  Home, Wallet, MessageCircle, Sparkles,
+  Menu, Moon, Sun, LogOut, ChevronRight, Home, Wallet, MessageCircle, Sparkles,
 } from 'lucide-vue-next';
 import Sidebar from './Sidebar.vue';
 import PageTransition from '@/components/Common/PageTransition.vue';
@@ -240,7 +239,7 @@ function logout() {
 .avatar {
   width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
   font-size: 13px; font-weight: 600; color: var(--color-on-primary); overflow: hidden;
-  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   border: 2px solid var(--color-surface);
 }
 .avatar img { width: 100%; height: 100%; object-fit: cover; }

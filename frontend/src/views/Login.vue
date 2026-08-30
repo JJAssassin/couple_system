@@ -67,7 +67,7 @@ async function onSubmit() {
 .reduce-motion .login-card { animation: none; }
 .brand-mark {
   width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 14px; display: grid; place-items: center;
-  color: var(--color-on-primary); background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  color: var(--color-on-primary); background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   box-shadow: 0 8px 22px -8px rgba(255, 111, 125, 0.5);
 }
 h1 { color: var(--color-ink); font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }

@@ -13,6 +13,12 @@ withDefaults(defineProps<{ label: string; led?: boolean; level?: number }>(), { 
 .ind-sec-title { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; }
 .ind-sec-line {
   flex: 1; height: 2px; border-radius: 2px; opacity: 0.6;
-  background: linear-gradient(90deg, var(--color-border), transparent);
+  /* 起始端带模块点缀色（diary 蓝 / wish 青 / conflict 橙…），其余走普通分隔线色 */
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--module-accent, var(--color-rose)) 35%, transparent),
+    var(--color-border) 35%,
+    transparent
+  );
 }
 </style>

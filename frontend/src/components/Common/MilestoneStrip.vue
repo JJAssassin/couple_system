@@ -124,7 +124,7 @@ function go() {
   display: block;
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-rose-deep), var(--color-rose));
+  background: linear-gradient(90deg, var(--color-rose-vivid), var(--color-rose));
   transition: width var(--dur-page) var(--ease-love);
 }
 .ms-left {

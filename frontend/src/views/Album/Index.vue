@@ -1,9 +1,14 @@
 <template>
   <div class="album-page" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">ALBUM · 双人相册</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
+
     <!-- ===== 相册列表 ===== -->
     <section v-if="!currentAlbum" class="stagger-item">
-      <div class="page-head">
-        <h1>双人相册</h1>
+      <div class="page-head page-head-solo">
         <NButton type="primary" size="small" v-press-bounce @click="showCreate = true">＋ 新建相册</NButton>
       </div>
 
@@ -70,6 +75,17 @@
         >
           <NButton type="primary" size="small" v-press-bounce>＋ 上传图片</NButton>
         </NUpload>
+        <NButton
+          quaternary
+          size="small"
+          type="error"
+          class="album-del-btn"
+          @click="showDeleteAlbum = true"
+          aria-label="删除相册"
+        >
+          <template #icon><Trash2 :size="14" :stroke-width="1.8" /></template>
+          删除相册
+        </NButton>
       </div>
 
       <div class="album-toolbar">
@@ -257,6 +273,20 @@
         </template>
       </NModal>
 
+      <!-- 删除相册确认 -->
+      <NModal v-model:show="showDeleteAlbum" title="删除相册" preset="card" style="width:92%;max-width:420px">
+        <p class="del-album-warn">
+          确定删除「{{ currentAlbum?.albumName }}」吗？相册内的
+          {{ currentAlbum?.imageCount ?? images.length }} 张照片会一并移入回收（对你和 TA 都不可见），且<strong>不可恢复</strong>。
+        </p>
+        <template #footer>
+          <div class="modal-foot">
+            <NButton @click="showDeleteAlbum = false">取消</NButton>
+            <NButton type="error" :loading="deletingAlbum" @click="confirmDeleteAlbum">删除</NButton>
+          </div>
+        </template>
+      </NModal>
+
       <!-- 移动端固定底部上传 -->
       <div v-if="isMobile()" class="upload-fab">
         <NUpload
@@ -308,8 +338,9 @@ import { useSettingStore } from '@/store/settingStore';
 import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import { feedback } from '@/utils/feedback';
-import { Heart, Search, GripVertical, Check, CheckSquare, ImagePlus } from 'lucide-vue-next';
+import { Heart, Search, GripVertical, Check, CheckSquare, ImagePlus, Trash2 } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';
 import ImageField from '@/components/Common/ImageField.vue';
 import draggable from 'vuedraggable';
@@ -362,6 +393,8 @@ const images = ref<ImageDto[]>([]);
 const imgLoading = ref(false);
 
 const showCreate = ref(false);
+const showDeleteAlbum = ref(false);
+const deletingAlbum = ref(false);
 const creating = ref(false);
 const form = reactive<AlbumReq>({ albumName: '', cover: '', remark: '' });
 const favs = ref<Set<number>>(new Set());
@@ -435,6 +468,23 @@ async function openAlbum(a: AlbumDto) {
 function backToList() {
   currentAlbum.value = null;
   loadAlbums();
+}
+
+async function confirmDeleteAlbum() {
+  if (!currentAlbum.value) return;
+  const id = currentAlbum.value.id;
+  deletingAlbum.value = true;
+  try {
+    await albumApi.deleteAlbum(id);
+    feedback.deleted('相册');
+    showDeleteAlbum.value = false;
+    currentAlbum.value = null;
+    await loadAlbums();
+  } catch {
+    feedback.error('删除失败，请重试');
+  } finally {
+    deletingAlbum.value = false;
+  }
 }
 
 async function createAlbum() {
@@ -659,28 +709,47 @@ onUnmounted(() => {
 
 <style scoped>
 .album-page { max-width: 960px; margin: 0 auto; }
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .page-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .page-head h1 { margin: 0; font-size: 22px; }
 .page-head h2 { margin: 0; font-size: 18px; }
 .album-title { flex: 1; }
+.page-head-solo { justify-content: flex-end; margin-bottom: 12px; }
+
+/* 缩略图/封面淡入：元素挂载时轻淡入（reduce-motion 下由全局规则收敛为瞬时）。
+   用 animation 而非 @load 处理，避免缓存命中时 @load 不触发导致图片永久不可见。 */
+@keyframes img-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
 .album-card { padding: 0; overflow: hidden; cursor: pointer; transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
 .album-cover { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--color-ink-soft); }
-.album-cover img { position: absolute; top: -15%; left: 0; width: 100%; height: 130%; object-fit: cover; transition: transform var(--dur-micro) var(--ease-love); }
+.album-cover img { position: absolute; top: -15%; left: 0; width: 100%; height: 130%; object-fit: cover; transition: transform var(--dur-micro) var(--ease-love); animation: img-fade-in var(--dur-pop) var(--ease-love) both; }
 .album-cover-ph { width: 100%; height: 100%; display: grid; place-items: center; color: var(--color-ink-3); }
-html:not(.reduce-motion) .album-card:hover { transform: translateY(-3px) scale(1.015); box-shadow: 0 6px 16px rgba(31, 41, 55, 0.08), 0 22px 50px -14px rgba(122, 100, 98, 0.28); }
+/* 浮起改用分层景深令牌：暗色下 --elev-3 走深底阴影，修正原硬编码近黑阴影在暗色不可见的问题 */
+html:not(.reduce-motion) .album-card:hover { transform: translateY(-3px) scale(1.015); box-shadow: var(--elev-3); }
 .album-meta { padding: 10px 12px; }
 .album-name { font-weight: 500; }
 
 .img-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(108px, 1fr)); gap: 8px; }
 .img-drag { display: contents; }
-.img-cell { position: relative; padding: 0; overflow: hidden; aspect-ratio: 1; cursor: pointer; border-radius: var(--radius-md); }
-.img-cell :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--dur-micro) var(--ease-love); }
-.thumb { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; transition: transform var(--dur-micro) var(--ease-love); }
+.img-cell { position: relative; padding: 0; overflow: hidden; aspect-ratio: 1; cursor: pointer; border-radius: var(--radius-md); transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
+.img-cell :deep(img) { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform var(--dur-micro) var(--ease-love); animation: img-fade-in var(--dur-pop) var(--ease-love) both; }
+.thumb { width: 100%; height: 100%; object-fit: cover; display: block; cursor: zoom-in; transition: transform var(--dur-micro) var(--ease-love); animation: img-fade-in var(--dur-pop) var(--ease-love) both; }
 html:not(.reduce-motion) .img-cell:hover :deep(img) { transform: scale(1.05); }
-.img-cell.selected { box-shadow: 0 0 0 2px var(--color-accent); }
-html:not(.reduce-motion) .img-cell:hover :deep(img) { transform: scale(1.05); }
+/* 批量选择态：高亮描边 + 轻微回缩，带平滑过渡（替代原来生硬 snap） */
+.img-cell.selected { box-shadow: 0 0 0 2px var(--color-accent); transform: scale(0.97); }
 .img-cap {
   position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 8px; font-size: 12px; color: #fff;
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.55)); pointer-events: none;
@@ -694,6 +763,9 @@ html:not(.reduce-motion) .img-cell:hover .img-fav, .img-fav.on { opacity: 1; }
 .img-del { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.45); color: #fff; }
 
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
+.del-album-warn { margin: 0 0 4px; color: var(--color-ink-2); line-height: 1.6; font-size: 14px; }
+.del-album-warn strong { color: var(--color-rose-text); }
+.album-del-btn { margin-left: 2px; }
 :global(.album-modal) { padding: 0 !important; }
 
 .upload-fab {
@@ -719,13 +791,14 @@ html:not(.reduce-motion) .img-cell:hover .drag-handle, .drag-handle:active { opa
 .select-overlay {
   position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
   background: rgba(0, 0, 0, 0.38); border: 2px solid transparent; box-sizing: border-box; z-index: 2;
+  transition: background var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
 }
 .img-cell.selected .select-overlay { background: rgb(var(--color-rose-rgb, 255 111 125) / 0.28); border-color: var(--color-rose); }
 .sel-toggle { flex: 0 0 auto; }
 .batch-bar {
   position: fixed; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 16px);
   z-index: 30; display: flex; align-items: center; gap: 10px; padding: 10px 14px;
-  background: var(--color-surface, #fff); border-radius: var(--radius-lg); box-shadow: 0 8px 24px rgba(31, 41, 55, 0.16);
+  background: var(--color-surface, #fff); border-radius: var(--radius-lg); box-shadow: var(--elev-4);
 }
 .batch-count { flex: 1; font-size: 13px; color: var(--color-ink-2); }
 .add-tile {
@@ -735,7 +808,7 @@ html:not(.reduce-motion) .img-cell:hover .drag-handle, .drag-handle:active { opa
   color: var(--color-accent-text); background: var(--color-accent-soft);
   transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
-html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
+html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: var(--elev-3); }
 .add-plus { font-size: 30px; line-height: 1; }
 .add-txt { font-size: 13px; font-weight: 500; }
 :deep(.add-tile-wrap .n-upload-trigger) { width: 100%; height: 100%; }
@@ -761,6 +834,9 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: 0
   .img-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
   /* 移动端固定上传 / 批量栏会盖住最后一行，给内容区留底白 */
   .album-page { padding-bottom: 84px; }
+  .brand { padding: 10px 14px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
 }
 
 /* #16-c 相册照片批量导入 */

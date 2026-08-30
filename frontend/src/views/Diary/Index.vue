@@ -1,8 +1,14 @@
 <template>
   <div class="diary-page" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">DIARY · 双人日记</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
+
     <!-- 顶部：标题 + 写日记 -->
-    <header class="page-head">
-      <h1>双人日记</h1>
+    <header class="page-head sec-head">
+      <IndSectionTitle label="我们的日记" :led="true" />
       <n-button type="primary" v-press-bounce @click="openWrite">写日记</n-button>
     </header>
 
@@ -166,6 +172,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
 import {
   NButton, NDrawer, NDrawerContent, NTag, NDivider, NInput,
 } from 'naive-ui';
@@ -182,6 +189,8 @@ import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import {
   LoveSheet, LoveInput, LoveTextarea, LoveMoodPicker,
   LoveChips, LoveSegmented, LoveDateField, LoveSaveBar,
@@ -190,6 +199,7 @@ import { feedback } from '@/utils/feedback';
 
 const auth = useAuthStore();
 const partner = usePartnerStore();
+const route = useRoute();
 const { useModuleSync } = useRealtime();
 const myId = computed(() => auth.profile?.id ?? 0);
 
@@ -255,6 +265,16 @@ onMounted(async () => {
   if (!partner.status) await partner.load();
   await load();
   useModuleSync('diary', { items: list, getId: i => i.id, load, map: overlaySyncMap });
+  // 心情日历点击某天 → /diary?date=YYYY-MM-DD：预填日期并打开写日记，便于补记/回看当天
+  const q = route.query.date;
+  if (typeof q === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(q)) {
+    const d = new Date(`${q}T00:00:00`);
+    if (!Number.isNaN(d.getTime())) {
+      resetWrite();
+      form.dateTs = d.getTime();
+      showWrite.value = true;
+    }
+  }
 });
 
 // ---------- 写日记 ----------
@@ -484,8 +504,23 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 
 <style scoped>
 .diary-page { max-width: 880px; margin: 0 auto; }
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .page-head h1 { font-size: 22px; margin: 0; }
+.sec-head { gap: 12px; }
+.sec-head :deep(.ind-sec-title) { flex: 1 1 auto; min-width: 0; margin: 0; }
 
 .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
 .tab {
@@ -496,7 +531,8 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .tab.active { background: var(--color-rose); color: var(--color-on-primary); }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-.diary-card { cursor: pointer; }
+.diary-card { cursor: pointer; transition: box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love); }
+.diary-card:hover { box-shadow: var(--elev-3); border-color: var(--color-rose-soft); }
 .diary-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .row1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .title { font-weight: 500; flex: 1; }
@@ -543,4 +579,10 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .mention { color: var(--color-rose-text); font-weight: 600; }
 
 .diary-form { display: flex; flex-direction: column; gap: 18px; }
+
+@media (max-width: 767px) {
+  .brand { padding: 10px 14px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
+}
 </style>

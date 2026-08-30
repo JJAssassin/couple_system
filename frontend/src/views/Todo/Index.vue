@@ -1,9 +1,14 @@
 <template>
   <div class="todo-page" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">TODO · 待办清单</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
+
     <!-- 头部 -->
     <header class="page-head">
       <div class="head-left">
-        <h1>待办清单</h1>
         <IndProgressRing :value="rate" :size="62" :stroke="8" sublabel="完成率" />
       </div>
       <n-button type="primary" round v-press-bounce @click="openAdd">+ 加待办</n-button>
@@ -207,6 +212,7 @@ import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import { feedback } from '@/utils/feedback';
 import { toLocalISO } from '@/utils/format';
 import {
@@ -428,6 +434,19 @@ onMounted(async () => {
 
 <style scoped>
 .todo-page { max-width: 960px; margin: 0 auto; }
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .head-left { display: flex; align-items: center; gap: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
@@ -438,7 +457,9 @@ onMounted(async () => {
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 /* 拖拽手柄：绝对定位在卡片右上角，仅在手柄上按下才触发排序（@pointerdown.stop 隔离 SwipeCard 左滑） */
-.todo { position: relative; }
+.todo { position: relative; transition: box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love); }
+/* 卡片浮起（box-shadow，避开 SwipeCard 的 translate 手势冲突；拖拽手柄已用 @pointerdown.stop 隔离） */
+.todo:hover { box-shadow: var(--elev-3); border-color: var(--color-rose-soft); }
 .drag-handle {
   position: absolute; top: 8px; right: 8px; z-index: 3;
   width: 26px; height: 26px; display: grid; place-items: center;
@@ -457,7 +478,7 @@ onMounted(async () => {
   border: 2px solid var(--color-ink-soft); background: transparent; color: var(--color-on-primary);
   display: grid; place-items: center; transition: all var(--dur-micro) var(--ease-love);
 }
-.check.on { background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep)); border-color: transparent; }
+.check.on { background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%); border-color: transparent; }
 .todo-title { font-size: 16px; font-weight: 500; color: var(--color-ink); flex: 1 1 auto; }
 .todo.done .todo-title { color: var(--color-ink-3); text-decoration: line-through; }
 .cat-tag { flex: 0 0 auto; }
@@ -467,7 +488,7 @@ onMounted(async () => {
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 .todo-form { display: flex; flex-direction: column; gap: 18px; }
 
-@media (max-width: 767px) { .cards { grid-template-columns: 1fr; } }
+@media (max-width: 767px) { .cards { grid-template-columns: 1fr; } .brand { padding: 10px 14px; } .brand .ind-label { font-size: 12px; } .brand-status { padding: 3px 9px; font-size: 11px; } }
 :global(.todo-modal) { padding: 0 !important; }
 @media (max-width: 767px) {
   :global(.todo-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; }

@@ -1,120 +1,128 @@
 <template>
-  <IndSkeleton v-if="loading" variant="list" :rows="6" />
+  <div class="tl-root" ref="container">
+    <IndSkeleton v-if="loading" variant="list" :rows="6" />
 
-  <div v-else class="tl-page">
-    <!-- 左侧筛选 -->
-    <aside class="tl-filter">
-      <div class="tl-filter-title">按时间筛选</div>
-      <NDatePicker
-        v-model:value="monthValue"
-        type="month"
-        clearable
-        placeholder="选择年份/月份"
-        style="width: 100%"
-      />
-      <NButton quaternary block @click="clearFilter">查看全部</NButton>
-
-      <div class="tl-filter-title tl-filter-sub">按类型筛选</div>
-      <div class="tl-chips">
-        <button
-          v-for="t in TYPE_ORDER"
-          :key="t"
-          class="tl-chip"
-          :class="[`t-${t}`, { active: activeTypes.has(t) }]"
-          type="button"
-          @click="toggleType(t)"
-        >
-          <span class="tl-chip-dot"></span>{{ TYPE_META[t].label }}
-          <span class="tl-chip-count">{{ typeCounts[t] }}</span>
-        </button>
-      </div>
-      <NButton v-if="activeTypes.size" text size="small" class="tl-chip-clear" @click="activeTypes.clear()">
-        清除类型筛选
-      </NButton>
-
-      <div class="tl-tip sub-text">共 {{ filteredAll.length }} 条记录</div>
-    </aside>
-
-    <!-- 右侧时间轴 -->
-    <section class="tl-wrap">
-      <header class="page-head">
-        <h1>我们的时间轴</h1>
-      </header>
-
-      <!-- 统计条 -->
-      <div v-if="items.length" class="tl-stats love-card">
-        <div class="tl-stat tl-stat-total">
-          <span class="tl-stat-num">{{ filteredAll.length }}</span>
-          <span class="tl-stat-label">条记录</span>
-        </div>
-        <div v-for="t in TYPE_ORDER" :key="t" class="tl-stat" :class="`t-${t}`">
-          <span class="tl-stat-num">{{ typeCounts[t] }}</span>
-          <span class="tl-stat-label">{{ TYPE_META[t].label }}</span>
-        </div>
+    <template v-else>
+      <!-- 品牌条 -->
+      <div class="brand">
+        <h1 class="ind-label">TIMELINE · 我们的时间轴</h1>
+        <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
       </div>
 
-      <IndEmpty
-        v-if="!filteredItems.length"
-        title="这段时间还没有记录"
-        desc="去创造更多回忆吧，把重要时刻都记下来～"
-      />
+      <div class="tl-page">
+        <!-- 左侧筛选 -->
+        <aside class="tl-filter">
+          <div class="tl-filter-title">按时间筛选</div>
+          <NDatePicker
+            v-model:value="monthValue"
+            type="month"
+            clearable
+            placeholder="选择年份/月份"
+            style="width: 100%"
+          />
+          <NButton quaternary block @click="clearFilter">查看全部</NButton>
 
-      <template v-else>
-        <div v-for="g in groups" :key="g.year" class="tl-group">
-          <div class="tl-year">{{ g.year }}</div>
-          <div class="tl">
-            <span class="tl-line"></span>
-            <div
-              v-for="(item, i) in g.items"
-              :key="item.id"
-              class="tl-item"
-              :style="{ animationDelay: i * 0.05 + 's' }"
+          <div class="tl-filter-title tl-filter-sub">按类型筛选</div>
+          <div class="tl-chips">
+            <button
+              v-for="t in TYPE_ORDER"
+              :key="t"
+              class="tl-chip"
+              :class="[`t-${t}`, { active: activeTypes.has(t) }]"
+              type="button"
+              @click="toggleType(t)"
             >
-              <span class="tl-dot" :class="`t-${item.type}`"></span>
-              <div class="love-card tl-card">
-                <div class="tl-head">
-                  <NTag :type="tagType(item.type)" size="small">{{ typeLabel(item.type) }}</NTag>
-                  <NTag v-if="item.type === 'anniversary' && item.isYearly" size="small" type="primary" round>每年</NTag>
-                  <span class="tl-date">
-                    {{ formatDate(item.date) }}
-                    <span class="tl-rel">{{ relativeTime(item.date) }}</span>
-                  </span>
-                </div>
-                <div class="tl-title">{{ item.title }}</div>
-                <div v-if="item.type === 'anniversary' && item.nextOccurrence" class="tl-summary">
-                  下次 {{ formatDate(item.nextOccurrence) }} · 还有 <b>{{ daysUntil(item.nextOccurrence) }}</b> 天
-                </div>
-                <div v-else-if="item.type === 'anniversary' && !item.nextOccurrence" class="tl-summary tl-expired">
-                  这一天已经过去啦
-                </div>
-                <template v-else-if="item.summary">
-                  <div class="tl-summary" :class="{ 'title-clamp': !expanded.has(item.id) }">{{ item.summary }}</div>
-                  <button
-                    v-if="item.summary.length > 40"
-                    class="tl-expand"
-                    type="button"
-                    @click="toggleExpand(item.id)"
-                  >
-                    {{ expanded.has(item.id) ? '收起' : '展开' }}
-                  </button>
-                </template>
-              </div>
+              <span class="tl-chip-dot"></span>{{ TYPE_META[t].label }}
+              <span class="tl-chip-count">{{ typeCounts[t] }}</span>
+            </button>
+          </div>
+          <NButton v-if="activeTypes.size" text size="small" class="tl-chip-clear" @click="activeTypes.clear()">
+            清除类型筛选
+          </NButton>
+
+          <div class="tl-tip sub-text">共 {{ filteredAll.length }} 条记录</div>
+        </aside>
+
+        <!-- 右侧时间轴 -->
+        <section class="tl-wrap">
+          <IndSectionTitle label="记录概览" :led="true" />
+
+          <!-- 统计条 -->
+          <div v-if="items.length" class="tl-stats love-card">
+            <div class="tl-stat tl-stat-total">
+              <span class="tl-stat-num">{{ filteredAll.length }}</span>
+              <span class="tl-stat-label">条记录</span>
+            </div>
+            <div v-for="t in TYPE_ORDER" :key="t" class="tl-stat" :class="`t-${t}`">
+              <span class="tl-stat-num">{{ typeCounts[t] }}</span>
+              <span class="tl-stat-label">{{ TYPE_META[t].label }}</span>
             </div>
           </div>
-        </div>
 
-        <IndPager
-          v-if="filteredItems.length"
-          mode="more"
-          :page="1"
-          :page-size="15"
-          :total="filteredItems.length"
-          :loading="false"
-          :has-more="hasMore"
-          @load-more="onLoadMore"
-        />
-      </template>
-    </section>
+          <IndEmpty
+            v-if="!filteredItems.length"
+            title="这段时间还没有记录"
+            desc="去创造更多回忆吧，把重要时刻都记下来～"
+          />
+
+          <template v-else>
+            <div v-for="g in groups" :key="g.year" class="tl-group">
+              <div class="tl-year">{{ g.year }}</div>
+              <div class="tl">
+                <span class="tl-line"></span>
+                <div
+                  v-for="(item, i) in g.items"
+                  :key="item.id"
+                  class="tl-item"
+                  :style="{ animationDelay: i * 0.05 + 's' }"
+                >
+                  <span class="tl-dot" :class="`t-${item.type}`"></span>
+                  <div class="love-card tl-card">
+                    <div class="tl-head">
+                      <NTag :type="tagType(item.type)" size="small">{{ typeLabel(item.type) }}</NTag>
+                      <NTag v-if="item.type === 'anniversary' && item.isYearly" size="small" type="primary" round>每年</NTag>
+                      <span class="tl-date">
+                        {{ formatDate(item.date) }}
+                        <span class="tl-rel">{{ relativeTime(item.date) }}</span>
+                      </span>
+                    </div>
+                    <div class="tl-title">{{ item.title }}</div>
+                    <div v-if="item.type === 'anniversary' && item.nextOccurrence" class="tl-summary">
+                      下次 {{ formatDate(item.nextOccurrence) }} · 还有 <b>{{ daysUntil(item.nextOccurrence) }}</b> 天
+                    </div>
+                    <div v-else-if="item.type === 'anniversary' && !item.nextOccurrence" class="tl-summary tl-expired">
+                      这一天已经过去啦
+                    </div>
+                    <template v-else-if="item.summary">
+                      <div class="tl-summary" :class="{ 'title-clamp': !expanded.has(item.id) }">{{ item.summary }}</div>
+                      <button
+                        v-if="item.summary.length > 40"
+                        class="tl-expand"
+                        type="button"
+                        @click="toggleExpand(item.id)"
+                      >
+                        {{ expanded.has(item.id) ? '收起' : '展开' }}
+                      </button>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <IndPager
+              v-if="filteredItems.length"
+              mode="more"
+              :page="1"
+              :page-size="15"
+              :total="filteredItems.length"
+              :loading="false"
+              :has-more="hasMore"
+              @load-more="onLoadMore"
+            />
+          </template>
+        </section>
+      </div>
+    </template>
   </div>
 </template>
 
@@ -126,13 +134,19 @@ import type { TimelineItemDto } from '@/types';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
+import { useRealtime } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 
+const { useModuleSync } = useRealtime();
 const loading = ref(true);
 const items = ref<TimelineItemDto[]>([]);
 const monthValue = ref<number | null>(null);
 const shown = ref(15);
 const activeTypes = ref(new Set<string>());
 const expanded = ref(new Set<number>());
+const container = ref<HTMLElement>();
 
 const TYPE_ORDER = ['anniversary', 'diary', 'wish', 'conflict'] as const;
 
@@ -245,10 +259,28 @@ function relativeTime(s: string) {
 }
 
 watch(params, load);
-onMounted(load);
+onMounted(() => {
+  load();
+  useModuleSync('timeline', { items, getId: (i: TimelineItemDto) => i.id, load });
+  useSyncSettle('timeline', container, items, '.tl-item');
+});
 </script>
 
 <style scoped>
+.tl-root { max-width: 1100px; margin: 0 auto; }
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin: 16px 0 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
+
 .tl-page { display: flex; gap: 20px; align-items: flex-start; }
 .tl-filter {
   width: 200px; flex-shrink: 0; position: sticky; top: 16px;
@@ -282,7 +314,11 @@ onMounted(load);
   display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap;
   padding: 12px 14px; margin-bottom: 18px;
 }
-.tl-stat { display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1 1 auto; padding: 0 4px; }
+.tl-stat {
+  display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1 1 auto; padding: 0 4px;
+  transition: transform 0.18s var(--ease-love);
+}
+.tl-stat:hover { transform: translateY(-2px); }
 .tl-stat-num { font-size: 20px; font-weight: 600; line-height: 1.1; }
 .tl-stat-label { font-size: 11px; color: var(--color-ink-3); margin-top: 2px; }
 .tl-stat-total .tl-stat-num { color: var(--color-accent-text); }
@@ -315,7 +351,8 @@ html.reduce-motion .tl-item { animation: none; }
 .tl-dot.t-diary { --chip-c: var(--color-semantic-diary); }
 .tl-dot.t-wish { --chip-c: var(--color-semantic-wish); }
 .tl-dot.t-conflict { --chip-c: var(--color-semantic-conflict); }
-.tl-card { padding: 14px 16px; }
+.tl-card { padding: 14px 16px; transition: box-shadow 0.18s var(--ease-love), transform 0.18s var(--ease-love); }
+.tl-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover, 0 8px 24px -10px rgba(31,41,55,0.18)); }
 .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
 .tl-date { color: var(--color-ink-3); font-size: 12px; }
 .tl-rel { margin-left: 6px; color: var(--color-accent-text); }
@@ -329,10 +366,11 @@ html.reduce-motion .tl-item { animation: none; }
 }
 
 @media (max-width: 767px) {
+  .brand { padding: 10px 14px; margin: 12px 0 8px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
   .tl-page { flex-direction: column; width: 100%; max-width: 100%; }
   .tl-wrap { width: 100%; max-width: 100%; }
-.page-head { display: flex; align-items: center; margin-bottom: 16px; }
-.page-head h1 { font-size: 22px; margin: 0; }
   .tl-filter { width: 100%; position: static; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
   .tl-filter-title { margin-bottom: 0; }
   .tl-filter-sub { margin-top: 0; width: 100%; }

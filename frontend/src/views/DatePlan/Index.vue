@@ -1,34 +1,27 @@
 <template>
   <IndSkeleton v-if="loading" variant="grid" :rows="4" :columns="2" />
   <div v-else class="dateplan" ref="container">
-    <header class="page-head">
-      <h1>约会计划</h1>
-    </header>
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">DATE PLAN · 约会计划</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 记录中</span>
+    </div>
 
-    <!-- 统计 -->
-    <section class="hero">
-      <div class="stat">
-        <div class="stat-v"><LoveCount :value="stats.totalDates" /> <span>次</span></div>
-        <div class="stat-k">已完成约会</div>
-      </div>
-      <div class="stat">
-        <div class="stat-v">{{ stats.avgScore.toFixed(1) }} <span>★</span></div>
-        <div class="stat-k">平均体验分</div>
-      </div>
-      <div class="stat">
-        <div class="stat-v">{{ pending.length }} <span>个</span></div>
-        <div class="stat-k">待执行</div>
-      </div>
+    <!-- 统计瓷砖 -->
+    <section class="block stats">
+      <IndStatCard label="已完成约会" :value="stats.totalDates" sub="次浪漫回忆" />
+      <IndStatCard label="平均体验分" :value="stats.avgScore.toFixed(1)" sub="满分 5★" />
+      <IndStatCard label="待执行" :value="pending.length" sub="个小期待" />
     </section>
 
     <!-- 待执行 -->
     <section class="block">
       <div class="block-head">
-        <h2>待执行约会</h2>
+        <IndSectionTitle label="待执行约会" :led="true" />
         <NButton type="primary" size="small" v-press-bounce @click="openCreate">+ 加约会</NButton>
       </div>
       <div v-if="pending.length" class="cards">
-        <div v-for="d in pending" :key="d.id" class="love-card card">
+        <div v-for="d in pending" :key="d.id" class="love-card card" :class="{ removing: removingId === d.id }">
           <div class="card-top">
             <NTag size="small" type="info">计划中</NTag>
             <NPopconfirm @positive-click="remove(d)">
@@ -49,9 +42,9 @@
 
     <!-- 历史 -->
     <section class="block">
-      <h2>约会回忆</h2>
+      <IndSectionTitle label="约会回忆" :led="true" />
       <div v-if="history.length" class="cards">
-        <div v-for="d in history" :key="d.id" class="love-card card">
+        <div v-for="d in history" :key="d.id" class="love-card card" :class="{ removing: removingId === d.id }">
           <div class="card-top">
             <NTag size="small" type="success">已完成</NTag>
             <NPopconfirm @positive-click="remove(d)">
@@ -105,12 +98,16 @@ import {
 import type { DateRecordDto } from '@/types';
 import * as dp from '@/api/dateplan';
 import { LoveSheet, LoveInput, LoveTextarea, LoveDateField, LoveSaveBar } from '@/components/loveform';
-import LoveCount from '@/components/Common/LoveCount.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
+import IndStatCard from '@/components/industrial/IndStatCard.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { usePagedList } from '@/composables/usePagedList';
+import { useRealtime } from '@/composables/useRealtime';
+import { useSyncSettle } from '@/composables/useSyncSettle';
 import { feedback } from '@/utils/feedback';
 import { toLocalISO } from '@/utils/format';
 
@@ -121,6 +118,7 @@ const message = useMessage();
 const saving = ref(false);
 const created = ref(false);
 const completed = ref(false);
+const removingId = ref<number | null>(null);
 useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 
 const { list, page, pageSize, total, loading: listLoading, hasMore, refresh: refreshList, nextPage } = usePagedList<DateRecordDto>(
@@ -226,22 +224,31 @@ async function saveComplete() {
 }
 
 async function remove(d: DateRecordDto) {
-  await dp.deleteDate(d.id);
-  feedback.deleted('这段约会');
-  await refresh();
+  // 先播收缩动画，再删库并刷新，避免瞬间消失（对标纪念日页删除 pop）
+  removingId.value = d.id;
+  later(async () => {
+    try {
+      await dp.deleteDate(d.id);
+      feedback.deleted('这段约会');
+      await refresh();
+    } finally {
+      removingId.value = null;
+    }
+  }, 320);
 }
 
 onMounted(async () => {
   try { await refresh(); } finally { loading.value = false; }
+  const { onSync } = useRealtime();
+  // 伴侣新增/完成/删除约会时，整表刷新并让卡片错落入场
+  onSync('dateplan', () => refresh());
+  useSyncSettle('dateplan', container, list, '.love-card');
 });
 </script>
 
 <style scoped>
 .dateplan { max-width: 880px; margin: 0 auto; }
-.hero { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center; padding: 24px 0 8px; }
-.stat-v { font-size: 34px; font-weight: 800; color: var(--color-rose-text); display: flex; align-items: baseline; justify-content: center; gap: 4px; }
-.stat-v span { font-size: 15px; color: var(--color-ink-3); }
-.stat-k { color: var(--color-ink-3); font-size: 13px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .block { margin: 22px 0; }
 .block h2 { font-size: 16px; margin: 0 0 12px; }
 .page-head { margin-bottom: 4px; }
@@ -254,8 +261,15 @@ onMounted(async () => {
 .card-plan { font-weight: 600; }
 .card-loc { color: var(--color-cocoa); }
 .card-btn { margin-top: 6px; }
+.love-card.removing { animation: cardRemove 0.32s var(--ease-love) forwards; pointer-events: none; }
+@keyframes cardRemove {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0; }
+}
+.reduce-motion .love-card.removing { animation: none; }
 .score { display: flex; align-items: center; gap: 8px; }
 @media (max-width: 767px) {
+  .stats { grid-template-columns: 1fr; }
   .cards { grid-template-columns: 1fr; }
 }
 

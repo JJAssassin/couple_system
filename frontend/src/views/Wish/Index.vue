@@ -1,9 +1,14 @@
 <template>
   <div class="wish-page" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">WISH · 愿望清单</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
+
     <!-- 头部 -->
     <header class="page-head">
       <div class="head-left">
-        <h1>愿望清单</h1>
         <IndProgressRing :value="rate" :size="62" :stroke="8" sublabel="完成率" />
       </div>
       <n-button type="primary" round v-press-bounce @click="openAdd">+ 加愿望</n-button>
@@ -238,6 +243,7 @@ import { useSyncSettle } from '@/composables/useSyncSettle';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import ImageField from '@/components/Common/ImageField.vue';
 import { SkeletonSettle, FlipCard, SwipeCard } from '@/interactions';
 import draggable from 'vuedraggable';
@@ -495,6 +501,19 @@ onMounted(async () => {
 
 <style scoped>
 .wish-page { max-width: 960px; margin: 0 auto; }
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .head-left { display: flex; align-items: center; gap: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
@@ -559,6 +578,9 @@ html:not(.reduce-motion) .wish-face:hover {
 /* 移动端：单列 + 模态全屏 */
 @media (max-width: 767px) {
   .cards { grid-template-columns: 1fr; }
+  .brand { padding: 10px 14px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
 }
 
 </style>

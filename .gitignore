@@ -42,8 +42,9 @@ secrets/
 data/
 
 # Real appsettings holds DB + SMTP passwords; keep a sanitized example instead
+# NOTE: appsettings.Development.json is intentionally tracked — it contains NO secrets
+# (only local Redis host + Seed flag) and carries the local-dev fix for the redis:6379 crash.
 backend/CoupleLoveSystem.Api/appsettings.json
-backend/CoupleLoveSystem.Api/appsettings.Development.json
 
 # Plaintext DB credential note kept locally for reference — never commit
 MySQL账号密码.txt
@@ -63,3 +64,5 @@ Thumbs.db
 # ===== Python (if any scripts land in repo) =====
 __pycache__/
 *.pyc
+# Temporary style-extraction helper (not part of the app)
+extract_styles.py

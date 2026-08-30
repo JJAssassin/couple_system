@@ -178,7 +178,7 @@ function noop() {}
 .real b { color: var(--color-ink); }
 .real span { color: var(--color-ink-2); font-size: 13px; }
 .face { width: 100%; height: 100%; display: grid; place-items: center; border-radius: var(--radius-lg); font-weight: 600; color: var(--color-on-primary); }
-.face.front { background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep)); }
+.face.front { background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%); }
 .face.back { background: linear-gradient(135deg, var(--color-cocoa), var(--color-ink-2)); }
 .burger-demo { border: none; background: none; cursor: pointer; color: var(--color-ink); padding: 8px; }
 .stack { position: relative; height: 120px; }
@@ -187,6 +187,6 @@ function noop() {}
   font-weight: 600; color: var(--color-on-primary);
 }
 .stack-base { background: linear-gradient(135deg, var(--color-cocoa), var(--color-ink-2)); }
-.stack-top { background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep)); box-shadow: 0 10px 30px -8px rgba(255,111,125,0.5); z-index: 2; }
+.stack-top { background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%); box-shadow: 0 10px 30px -8px rgba(255,111,125,0.5); z-index: 2; }
 .foot { margin-top: 22px; color: var(--color-ink-3); font-size: 12px; text-align: center; }
 </style>

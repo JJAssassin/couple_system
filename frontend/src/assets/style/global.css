@@ -11,7 +11,8 @@
   --color-rose-hover: #ff8893;    /* hover */
   --color-rose-pressed: #e25a68;  /* pressed */
   --color-rose-soft: #ffe9ec;     /* 浅玫瑰底（active 态 / 浅填充） */
-  --color-rose-deep: #D88593;     /* 玫瑰粉（图表 / 装饰次色） */
+  --color-rose-deep: #D88593;     /* 玫瑰粉（图表 / 装饰次色，保留作实色） */
+  --color-rose-vivid: #ff5e72;    /* 主按钮 / 渐变收尾：更饱和的鲜活玫瑰，替代偏暗的 rose-deep 作渐变亮端 */
   --color-income: #5BB98C;        /* 收入 / 正向（绿） */
   --color-income-soft: #e7f6ee;   /* 收入浅底（ok 标签 / 渐变起色） */
   --color-income-deep: #2f9e6b;   /* 收入深（文字） */
@@ -40,6 +41,8 @@
   /* —— 字体（中文优先：PingFang SC / 雅黑 / Noto） —— */
   --font-sans: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "Roboto Mono", "SFMono-Regular", monospace;
+  /* 情感衬线：仅用于「每日一句 / hero 问候 / 纪念日名」等情感时刻（杂志感记忆点） */
+  --font-serif: "Noto Serif SC", "Songti SC", "STZhongsong", "SimSun", serif;
 
   /* —— 缓动（柔，带轻微回弹但克制） —— */
   --ease-love: cubic-bezier(0.25, 0.1, 0.25, 1);
@@ -65,11 +68,13 @@
 html, body, #app { height: 100%; margin: 0; }
 body { font-size: 15px; }
 
-/* 全局键盘焦点环：自定义按钮/可点 div 缺原生焦点指示（finesse-ui §7 可访问性） */
+/* 全局键盘焦点环：自定义按钮/可点 div 缺原生焦点指示（finesse-ui §7 可访问性）。
+   玫瑰描边 + 极淡玫瑰光晕，确保键盘焦点在浅/暗双主题下都清晰可辨（WCAG 2.4.7/2.4.11）。 */
 :focus-visible {
   outline: 2px solid var(--color-rose);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 4px var(--color-rose-soft);
 }
 /* 仅鼠标聚焦时不显示环，避免点击自定义元素出现突兀蓝框 */
 :focus:not(:focus-visible) { outline: none; }
@@ -148,8 +153,35 @@ body { font-size: 15px; }
   /* 缓动 / 阴影别名 */
   --ease-spring: var(--spring-bounce);
   --ease-smooth: var(--spring-smooth);
-  --shadow-card: var(--shadow-glass-md);
-  --shadow-float: var(--shadow-glass-lg);
+  --shadow-card: var(--elev-2);
+  --shadow-float: var(--elev-3);
+  --shadow-overlay: var(--elev-4);
+}
+
+/* =====================================================================
+   模块语义色主题化（P1-6）：data-module 挂在 AppShell 根节点（路由名小写）。
+   模块点缀色只用于 LED / 分区装饰线 / 卡片 hover 描边 / 空态小心的「10% 点缀层」，
+   不用于正文文字（保证 AA 对比不受影响）。参照 Linear team color / Material 3 dynamic color：
+   翻到哪页，点缀光就换什么颜色，页面由此获得可识别的「身份证」。
+   ===================================================================== */
+[data-module="diary"] { --module-accent: var(--color-semantic-diary); }
+[data-module="wish"] { --module-accent: var(--color-semantic-wish); }
+[data-module="conflict"] { --module-accent: var(--color-semantic-conflict); }
+[data-module="anniversary"],
+[data-module="dateplan"] { --module-accent: var(--color-semantic-anniv); }
+
+/* =====================================================================
+   分层景深（Layered Elevation）：surface → card → raised → overlay 四档。
+   - 多层柔和阴影 + 极淡玫瑰色温，营造真实物理浮起感；
+   - 暗色模式在 html.dark 内用深底阴影增强浮层对比；
+   - 全站卡片/浮层统一引用本系统，避免散落硬编码阴影。
+   - 仅用既有品牌色（玫瑰/可可）做色温，不引入新色相。
+   ===================================================================== */
+:root {
+  --elev-1: 0 1px 2px -1px rgba(122, 100, 98, 0.06);
+  --elev-2: 0 8px 24px -8px rgba(122, 100, 98, 0.12), 0 2px 6px -1px rgba(0, 0, 0, 0.03);
+  --elev-3: 0 18px 44px -10px rgba(255, 111, 125, 0.18), 0 6px 14px -2px rgba(0, 0, 0, 0.04);
+  --elev-4: 0 28px 64px -12px rgba(31, 41, 55, 0.22), 0 8px 20px -4px rgba(0, 0, 0, 0.06);
 }
 
 h1, h2, h3 { line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; }
@@ -178,6 +210,11 @@ html.dark {
   --glass-border: rgba(255, 255, 255, 0.10);
   --shadow-glass-md: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
   --shadow-glass-lg: 0 16px 40px -8px rgba(255, 111, 125, 0.28), 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+  /* 分层景深暗色版：深底阴影提升浮层对比（与浅色同档位语义对应） */
+  --elev-1: 0 1px 2px -1px rgba(0, 0, 0, 0.30);
+  --elev-2: 0 8px 24px -8px rgba(0, 0, 0, 0.50);
+  --elev-3: 0 18px 44px -10px rgba(255, 111, 125, 0.22), 0 6px 14px -2px rgba(0, 0, 0, 0.45);
+  --elev-4: 0 28px 64px -12px rgba(0, 0, 0, 0.65), 0 8px 20px -4px rgba(0, 0, 0, 0.50);
   background:
     radial-gradient(at 10% 0%, rgba(225, 29, 72, 0.14) 0px, transparent 50%),
     radial-gradient(at 90% 90%, rgba(120, 50, 70, 0.12) 0px, transparent 50%),
@@ -191,6 +228,12 @@ html.dark {
 .shadow-float { box-shadow: var(--shadow-float); }
 .shadow-press { box-shadow: inset 0 1px 3px rgba(122, 100, 98, 0.10); }
 
+/* 分层景深工具类：按需给任意元素指定浮起档位 */
+.elev-1 { box-shadow: var(--elev-1); }
+.elev-2 { box-shadow: var(--elev-2); }
+.elev-3 { box-shadow: var(--elev-3); }
+.elev-4 { box-shadow: var(--elev-4); }
+
 /* 仅供屏幕阅读器：视觉隐藏但可被读屏访问（状态播报、跳转提示等） */
 .sr-only {
   position: absolute;
@@ -202,8 +245,14 @@ html.dark {
   border: 0;
 }
 
+/* 异步图片进场淡入（全局工具类）：配合 loading="lazy" 使用，弱网下不突兀弹出。
+   reduce-motion 由全局规则收敛为瞬时，无需单独处理。 */
+@keyframes img-fade { from { opacity: 0; } to { opacity: 1; } }
+.img-fade { animation: img-fade var(--dur-pop) var(--ease-love) both; }
+
 /* 卡片：半透明毛玻璃 + 弹簧悬浮（让全局 Aurora 光晕自然透出，消除纯白方块感） */
 .love-card {
+  position: relative; /* ::after 渐变 hairline 描边的定位基准（同时让卡片内 absolute 子元素锚定到卡片，符合预期） */
   background: var(--glass-surface);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
@@ -211,15 +260,37 @@ html.dark {
   border-radius: var(--radius-lg);
   padding: 16px;
   /* 顶部内高光（不依赖 overflow:hidden，避免裁切卡片内浮层/角标）+ 玻璃悬浮阴影 */
-  box-shadow: var(--shadow-glass-md), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  box-shadow: var(--elev-2), inset 0 1px 0 rgba(255, 255, 255, 0.55);
   transition: transform var(--dur-pop) var(--spring-smooth), box-shadow var(--dur-pop) var(--spring-smooth), border-color var(--dur-pop) var(--spring-smooth);
 }
 html:not(.reduce-motion) .love-card:hover {
   transform: translateY(-4px) scale(1.008);
-  box-shadow: var(--shadow-glass-lg), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  border-color: var(--color-rose-soft);
+  box-shadow: var(--elev-3), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  border-color: color-mix(in srgb, var(--module-accent, var(--color-rose)) 28%, transparent);
 }
 .love-card:active { transform: scale(0.98); }
+
+/* 1px 渐变 hairline 描边（Stripe/Linear 手法）：单色描边 → 顶亮底玫瑰的渐变描边。
+   ::after + mask-composite 只保留外圈 1px 环，不遮挡内容；pointer-events:none 不挡交互。
+   暗色下降强度避免亮环刺眼；纯 CSS 静态层，reduce-motion 无需处理。 */
+.love-card::after,
+.love-card-pro::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.75), rgba(255, 111, 125, 0.30) 55%, rgba(255, 255, 255, 0.25));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+html.dark .love-card::after,
+html.dark .love-card-pro::after {
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.20), rgba(255, 111, 125, 0.22) 55%, rgba(255, 255, 255, 0.06));
+}
 
 /* 升级卡片：带顶部内高光与更强物理悬浮（用于 Hero / 焦点卡） */
 .love-card-pro {
@@ -229,7 +300,7 @@ html:not(.reduce-motion) .love-card:hover {
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: 20px;
-  box-shadow: var(--shadow-glass-md);
+  box-shadow: var(--elev-2);
   position: relative;
   overflow: hidden;
   transition: transform var(--dur-pop) var(--spring-smooth), box-shadow var(--dur-pop) var(--spring-smooth);
@@ -243,7 +314,7 @@ html:not(.reduce-motion) .love-card:hover {
 }
 html:not(.reduce-motion) .love-card-pro:hover {
   transform: translateY(-4px) scale(1.01);
-  box-shadow: var(--shadow-glass-lg);
+  box-shadow: var(--elev-3);
 }
 .love-card-pro:active { transform: scale(0.98); }
 
@@ -289,7 +360,7 @@ html:not(.reduce-motion) .love-card-pro:hover {
 /* 状态点（柔和呼吸，去重 LED 光晕） */
 .ind-led {
   width: 8px; height: 8px; border-radius: 9999px;
-  background: var(--color-rose);
+  background: var(--module-accent, var(--color-rose));
   animation: ind-pulse 2.4s var(--ease-love) infinite;
 }
 @keyframes ind-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -368,6 +439,20 @@ html:not(.reduce-motion) .love-card-pro:hover {
 .reduce-motion :global(.n-message--warning),
 .reduce-motion :global(.n-message--info) { border-left: none; }
 
+/* ====================== 路由过渡（页面入场淡入） ====================== */
+/* 通过给路由视图包裹 keyed 容器，每次导航重建该 div 触发入场动画；
+   内部页面可是多根组件（如 loading 骨架 v-if/v-else），不受影响。
+   注意：仅用 opacity，绝不用 transform / filter —— 否则会创建 containing block，
+   破坏页面内 position:fixed 元素（如 Album 移动端底部固定上传栏）。
+   reduced-motion 下由全局规则收敛为瞬时（animation-duration: 0.001ms）。 */
+.route-fade {
+  animation: route-fade-in var(--dur-page) var(--ease-smooth) both;
+}
+@keyframes route-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 /* 通用可访问性：尊重 reduce-motion，关闭非必要位移动画 */
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {
   animation-duration: 0.001ms !important;
@@ -408,7 +493,7 @@ p, li { text-wrap: pretty; }
   font-weight: 900;
   letter-spacing: -0.03em;
   line-height: 1;
-  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 100%);
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;

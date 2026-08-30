@@ -61,7 +61,7 @@ onUnmounted(() => {
   transform: scaleX(0);
   opacity: 0;
   pointer-events: none;
-  background: linear-gradient(90deg, var(--color-rose), var(--color-rose-deep));
+  background: linear-gradient(90deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   box-shadow: 0 0 8px color-mix(in srgb, var(--color-rose) 60%, transparent);
   transition: transform 0.3s var(--ease-love), opacity 0.4s var(--ease-love);
 }

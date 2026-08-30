@@ -1,7 +1,20 @@
 <template>
   <div class="conflict-page" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">CONFLICT · 矛盾复盘</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 记录中</span>
+    </div>
+
+    <!-- 统计瓷砖 -->
+    <section class="block stats">
+      <IndStatCard label="复盘总数" :value="cfStats.total" sub="次摩擦" />
+      <IndStatCard label="已和解" :value="cfStats.reconciled" sub="关系更稳" />
+      <IndStatCard label="待和解" :value="cfStats.open" sub="好好聊聊" />
+    </section>
+
     <header class="page-head">
-      <h1>矛盾复盘</h1>
+      <IndSectionTitle label="复盘记录" :led="true" />
       <n-button type="primary" round v-press-bounce @click="openAdd">+ 记录矛盾</n-button>
     </header>
 
@@ -18,6 +31,7 @@
           v-for="c in list"
           :key="c.id"
           class="love-card"
+          :class="{ reconciled: c.reconcileTime }"
           @click="openDetail(c)"
         >
           <div class="card-top">
@@ -124,6 +138,9 @@ import { useStaggerEnter } from '@/composables/useAnimation';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
+import IndStatCard from '@/components/industrial/IndStatCard.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import { feedback } from '@/utils/feedback';
 import { usePagedList } from '@/composables/usePagedList';
 import { isMobile } from '@/composables/useDevice';
@@ -159,6 +176,14 @@ const levelMap: Record<number, { label: string; type: 'success' | 'warning' | 'e
   2: { label: '中等争执', type: 'warning' },
   3: { label: '严重矛盾', type: 'error' },
 };
+
+// 统计瓷砖：复盘总数 / 已和解 / 待和解
+const cfStats = computed(() => {
+  const all = list.value;
+  const total = all.length;
+  const reconciled = all.filter((c) => c.reconcileTime).length;
+  return { total, reconciled, open: total - reconciled };
+});
 
 function fmt(s: string) {
   const d = new Date(s);
@@ -289,6 +314,7 @@ onUnmounted(() => {
 
 <style scoped>
 .conflict-page { max-width: 960px; margin: 0 auto; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
@@ -296,6 +322,7 @@ onUnmounted(() => {
 .card-time { font-size: 12px; }
 .card-summary { margin-top: 8px; font-size: 15px; color: var(--color-ink); }
 .card-reconciled { margin-top: 8px; color: var(--color-rose-text); font-size: 13px; }
+.love-card.reconciled { border-color: rgba(67, 209, 122, 0.42); box-shadow: 0 0 0 1px rgba(67, 209, 122, 0.28), var(--elev-2); }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 
 .detail-row { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
@@ -305,6 +332,7 @@ onUnmounted(() => {
 .detail-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
 
 @media (max-width: 767px) {
+  .stats { grid-template-columns: 1fr; }
   .cards { grid-template-columns: 1fr; }
 }
 </style>

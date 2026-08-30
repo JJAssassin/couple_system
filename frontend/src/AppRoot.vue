@@ -1,5 +1,13 @@
 <template>
-  <router-view />
+  <!-- 路由过渡：keyed 容器在每次导航重建并触发入场淡入。
+       仅用 opacity（绝不用 transform/filter），以免创建 containing block
+       破坏页面内 position:fixed 元素（如 Album 移动端底部固定上传栏）。
+       内部页面可是多根组件（loading 骨架 v-if/v-else），不受影响。 -->
+  <router-view v-slot="{ Component, route }">
+    <div class="route-fade" :key="route.path">
+      <component :is="Component" />
+    </div>
+  </router-view>
   <GlobalLoadingBar />
   <Onboarding />
   <HeartBurstLayer />

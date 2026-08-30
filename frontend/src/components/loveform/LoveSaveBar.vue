@@ -57,7 +57,7 @@ const emit = defineEmits<{ (e: 'cancel'): void; (e: 'save'): void }>();
   min-height: 46px;
   border: none;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-rose), var(--color-rose-deep));
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   color: var(--color-on-primary);
   font-size: 15px;
   font-weight: 600;

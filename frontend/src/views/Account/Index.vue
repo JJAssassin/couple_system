@@ -1,6 +1,12 @@
 <template>
   <IndSkeleton v-if="loading" variant="list" :rows="5" />
   <div v-else class="account" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand block">
+      <h1 class="ind-label">ACCOUNT · 共同小金库</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
+
     <!-- 余额大字 -->
     <section class="hero">
       <h1 class="hero-title">共同小金库余额</h1>
@@ -13,14 +19,14 @@
 
     <!-- 收支图表 -->
     <section class="block">
-      <h2>收支占比</h2>
+      <IndSectionTitle label="收支占比" :led="true" />
       <ChartWrap :option="pieOption" />
     </section>
 
     <!-- 本月预算 -->
     <section class="block">
-      <div class="block-head">
-        <h2>本月预算</h2>
+      <div class="block-head sec-head">
+        <IndSectionTitle label="本月预算" :led="true" />
         <div class="month-pick">
           <NDatePicker v-model:value="budgetMonthTs" type="month" size="small" style="width: 150px" @update:value="onBudgetMonthChange" />
           <NButton size="small" quaternary type="primary" @click="openBudget">设预算</NButton>
@@ -60,8 +66,8 @@
 
     <!-- 消费分类（当月支出构成，跟随预算月份） -->
     <section class="block">
-      <div class="block-head">
-        <h2>当月消费分类</h2>
+      <div class="block-head sec-head">
+        <IndSectionTitle label="当月消费分类" :led="true" />
         <div class="month-pick">
           <NButton size="small" quaternary @click="showPoster = true">生成海报</NButton>
           <span class="sub-text">钱都花哪了，一目了然</span>
@@ -73,8 +79,8 @@
 
     <!-- 月度趋势 -->
     <section class="block">
-      <div class="block-head">
-        <h2>近 6 个月收支趋势</h2>
+      <div class="block-head sec-head">
+        <IndSectionTitle label="近 6 个月收支趋势" :led="true" />
         <span class="sub-text">和 TA 一起看看小金库的走势</span>
       </div>
       <ChartWrap v-if="stats?.trend?.length" :option="trendOption" />
@@ -83,8 +89,8 @@
 
     <!-- 记账列表 + 记一笔 -->
     <section class="block">
-      <div class="block-head">
-        <h2>账单明细</h2>
+      <div class="block-head sec-head">
+        <IndSectionTitle label="账单明细" :led="true" />
         <div class="month-pick">
           <NButton size="small" quaternary @click="exportCsv">导出 CSV</NButton>
           <NButton size="small" quaternary @click="showImport = true">导入 CSV</NButton>
@@ -247,6 +253,8 @@ import ChartWrap from '@/components/ChartWrap.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import ExpensePoster from '@/components/Common/ExpensePoster.vue';
 import { LiquidSlider } from '@/interactions';
 import { useStaggerEnter } from '@/composables/useAnimation';
@@ -591,12 +599,25 @@ onMounted(async () => {
 
 <style scoped>
 .account { max-width: 880px; margin: 0 auto; }
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500;
+  color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .hero { text-align: center; padding: 24px 0 8px; }
 .hero-title { color: var(--color-ink-2); }
 .hero-balance {
   font-size: 48px; font-weight: 900;
   /* 渐变大字：品牌色渐变 + 等宽数字 */
-  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-deep) 55%, var(--color-cocoa) 100%);
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 55%, var(--color-cocoa) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -610,7 +631,9 @@ onMounted(async () => {
 .block h2 { font-size: 16px; margin: 0 0 12px; }
 .block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .block-head h2 { margin: 0; }
-.month-pick { display: flex; gap: 8px; align-items: center; }
+.block-head.sec-head { gap: 12px; }
+.block-head.sec-head :deep(.ind-sec-title) { flex: 1 1 auto; min-width: 0; margin: 0; }
+.month-pick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 /* 预算 */
 .budget-body { display: flex; flex-direction: column; gap: 14px; }
@@ -641,7 +664,8 @@ onMounted(async () => {
 
 .rec-tabs { margin-bottom: 14px; }
 .records { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
-.rec { display: flex; align-items: center; gap: 12px; }
+.rec { display: flex; align-items: center; gap: 12px; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love); }
+.rec:hover { transform: translateY(-3px); box-shadow: var(--elev-3); }
 .rec-left { display: flex; flex-direction: column; gap: 6px; }
 .rec-cat { font-weight: 600; }
 .rec-mid { flex: 1; }
@@ -653,6 +677,9 @@ onMounted(async () => {
 @media (max-width: 767px) {
   .records { grid-template-columns: 1fr; }
   .cat-list { grid-template-columns: 1fr; }
+  .brand { padding: 10px 14px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
 }
 
 /* 美化记账模态框 */

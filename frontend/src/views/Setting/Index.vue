@@ -1,10 +1,15 @@
 <template>
   <IndSkeleton v-if="loading" variant="text" :rows="4" />
   <div v-else class="set-page" ref="container">
-    <header class="page-head"><h1>设置</h1></header>
+    <!-- 品牌条 -->
+    <div class="brand">
+      <h1 class="ind-label">SETTING · 设置</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
+
     <!-- 帐号 -->
     <section class="block love-card">
-      <h2>帐号资料</h2>
+      <IndSectionTitle label="帐号资料" :led="true" />
       <NForm ref="formRef" :model="form" :rules="profileRules" label-placement="top">
         <NFormItem label="昵称" path="nickName">
           <NInput v-model:value="form.nickName" placeholder="昵称" />
@@ -24,7 +29,7 @@
 
     <!-- 我们的专属（共享） -->
     <section class="block love-card">
-      <h2>我们的专属（双方共享）</h2>
+      <IndSectionTitle label="我们的专属（双方共享）" :led="true" />
       <p class="sub-text">相恋纪念日 / 情侣昵称由任一方设置，双方首页与设置同步生效。</p>
       <NForm label-placement="top">
         <NFormItem label="相恋纪念日">
@@ -44,7 +49,7 @@
 
     <!-- TA 的绑定（双向同步） -->
     <section class="block love-card bind-block">
-      <h2>TA 的绑定 · 双向同步</h2>
+      <IndSectionTitle label="TA 的绑定 · 双向同步" :led="true" />
       <p class="sub-text">绑定后，你和 TA 即组成一对专属情侣，首页、相册、日记、纪念日等所有数据仅你们两人实时互通。</p>
 
       <!-- 已绑定 -->
@@ -98,7 +103,7 @@
 
     <!-- 主题 -->
     <section class="block love-card">
-      <h2>主题与动效</h2>
+      <IndSectionTitle label="主题与动效" :led="true" />
       <div class="set-row set-row-top">
         <span>外观主题</span>
         <div class="theme-seg">
@@ -136,7 +141,7 @@
 
     <!-- 消息通知 -->
     <section class="block love-card">
-      <h2>消息通知</h2>
+      <IndSectionTitle label="消息通知" :led="true" />
       <p class="sub-text">开启后，App 在后台时收到 TA 的新消息或动态，会以系统通知提醒你（需先授权通知权限）。</p>
       <div class="set-row">
         <span>系统通知</span>
@@ -155,7 +160,7 @@
 
     <!-- 数据备份 -->
     <section class="block love-card">
-      <h2>数据备份</h2>
+      <IndSectionTitle label="数据备份" :led="true" />
       <p class="sub-text">导出当前账号可见的全部数据（纪念日 / 日记 / 愿望 / 矛盾 / 留言 / 记账 / 约会 / 消息）。</p>
       <NButton :loading="exporting" v-press-bounce @click="doExport">导出全部数据</NButton>
       <NButton class="import-ml" :loading="importing" @click="openImport">导入备份</NButton>
@@ -207,6 +212,8 @@ import { usePwa, notificationsSupported } from '@/composables/usePwa';
 import { feedback } from '@/utils/feedback';
 import ImageField from '@/components/Common/ImageField.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import { FinesseSwitch } from '@/interactions';
 import { maxLenRule } from '@/utils/formRules';
 import type { FormItemRule } from 'naive-ui';
@@ -510,10 +517,22 @@ async function doCommit() {
 
 <style scoped>
 .set-page { max-width: 720px; margin: 0 auto; padding-top: 4px; }
-.page-head { margin-bottom: 18px; }
-.page-head h1 { margin: 0; font-size: 22px; font-weight: 800; color: var(--color-ink); }
+
+/* 品牌条 */
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 18px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
+
 .block { margin-bottom: 18px; }
-.block h2 { font-size: 16px; margin: 0 0 14px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
 .set-row + .set-row { border-top: 1px solid var(--color-ink-soft); }
 .set-row-top { align-items: flex-start; }
@@ -584,6 +603,16 @@ async function doCommit() {
 .join-box :deep(.n-input) { flex: 1; }
 
 .import-ml { margin-left: 8px; }
+
+@media (max-width: 767px) {
+  .brand { padding: 10px 14px; margin-bottom: 14px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .block { margin-bottom: 14px; }
+  .set-row { flex-wrap: wrap; gap: 8px; }
+  .theme-seg, .swatches { justify-content: flex-start; }
+  .theme-hint { text-align: left; }
+}
 </style>
 
 <style>

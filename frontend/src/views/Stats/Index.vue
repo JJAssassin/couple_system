@@ -1,5 +1,11 @@
 <template>
   <div class="stats" ref="container">
+    <!-- 品牌条 -->
+    <div class="brand">
+      <h1 class="ind-label">STATS · 年度数据</h1>
+      <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
+    </div>
+
     <!-- 年度切换 + 主题标题 -->
     <header class="yr-head">
       <button class="yr-nav" aria-label="上一年" @click="shiftYear(-1)">‹</button>
@@ -26,7 +32,7 @@
 
       <!-- 数字卡片：内容产出 -->
       <section class="block">
-        <h2 class="sec-title">我们的痕迹</h2>
+        <IndSectionTitle label="我们的痕迹" :led="true" />
         <div class="cards">
           <div class="card"><div class="num"><NumberRoll :value="report.diaryCount" /></div><div class="lbl">篇日记 · 平均心情 <NumberRoll :value="report.avgMood" :decimals="1" /> 分</div></div>
           <div class="card"><div class="num"><NumberRoll :value="report.imageCount" /></div><div class="lbl">张照片定格瞬间</div></div>
@@ -42,7 +48,7 @@
 
       <!-- 记账总览 -->
       <section class="block">
-        <h2 class="sec-title">一起记账</h2>
+        <IndSectionTitle label="一起记账" :led="true" />
         <div class="cards">
           <div class="card"><div class="num inc">+{{ fmt(report.income) }}</div><div class="lbl">收入</div></div>
           <div class="card"><div class="num exp">-{{ fmt(report.expense) }}</div><div class="lbl">支出</div></div>
@@ -54,14 +60,14 @@
 
       <!-- 心情与矛盾趋势 -->
       <section class="block">
-        <h2 class="sec-title">情绪曲线</h2>
+        <IndSectionTitle label="情绪曲线" :led="true" />
         <div class="chart-card"><div class="chart-title">月度平均心情（1-10）</div><ChartWrap :option="moodOption" height="240px" /></div>
         <div class="chart-card"><div class="chart-title">月度矛盾次数</div><ChartWrap :option="conflictOption" height="240px" /></div>
       </section>
 
       <!-- 纪念日回顾 -->
       <section v-if="report.anniversaries.length" class="block">
-        <h2 class="sec-title">这一年我们纪念过</h2>
+        <IndSectionTitle label="这一年我们纪念过" :led="true" />
         <div class="ann-list">
           <div v-for="a in report.anniversaries" :key="a.name + a.targetDate" class="ann-item">
             <span class="ann-dot">💝</span>
@@ -87,6 +93,8 @@ import GradientText from '@/components/Common/GradientText.vue';
 import CoupleSummaryPoster from '@/components/Common/CoupleSummaryPoster.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IndLed from '@/components/industrial/IndLed.vue';
 import { NumberRoll } from '@/interactions';
 import { fetchYearReport, type YearReport } from '@/api/stats';
 import { listAlbum, listImages } from '@/api/album';
@@ -240,6 +248,21 @@ const conflictOption = computed(() => ({
 
 <style scoped>
 .stats { max-width: 720px; margin: 0 auto; padding: 4px 0 24px; }
+
+/* 品牌条 */
+.brand {
+  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 12px;
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+.brand-status {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 500; color: var(--color-ink-2);
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--color-surface-2); border: 1px solid var(--color-border);
+}
+.ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
+
 .yr-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .yr-nav {
   width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--color-border);
@@ -253,7 +276,6 @@ const conflictOption = computed(() => ({
 .yr-sub { font-size: 12px; color: var(--color-ink-3); margin-top: 2px; }
 
 .block { margin: 22px 0; }
-.sec-title { font-size: 16px; font-weight: 700; color: var(--color-ink); margin: 0 0 12px; }
 
 .hero {
   position: relative; overflow: hidden; text-align: center; padding: 34px 16px;
@@ -277,7 +299,9 @@ const conflictOption = computed(() => ({
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);
   padding: 16px; box-shadow: var(--shadow-card);
   display: flex; flex-direction: column; gap: 4px;
+  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
 }
+.card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); border-color: var(--color-rose-soft); }
 .num { font-size: 24px; font-weight: 800; color: var(--color-ink); }
 .num.inc { color: #16a34a; }
 .num.exp { color: #dc2626; }
@@ -301,4 +325,16 @@ const conflictOption = computed(() => ({
 .skeleton { height: 96px; background: linear-gradient(90deg, var(--color-ink-soft) 25%, var(--color-surface-2) 50%, var(--color-ink-soft) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; }
 @keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 :global(.reduce-motion) .skeleton { animation: none; }
+
+@media (max-width: 767px) {
+  .brand { padding: 10px 14px; margin-bottom: 10px; }
+  .brand .ind-label { font-size: 12px; }
+  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .yr-title { font-size: 19px; }
+  .hero { padding: 26px 14px; }
+  .hero-num { font-size: 40px; }
+  .hero-unit { font-size: 17px; }
+  .cards { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+  .block { margin: 18px 0; }
+}
 </style>

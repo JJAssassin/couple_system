@@ -7,6 +7,13 @@
       <span class="brand-status"><IndLed color="green" :size="9" /> 记录中</span>
     </div>
 
+    <!-- 统计瓷砖 -->
+    <section class="block stats">
+      <IndStatCard label="足迹总数" :value="fpStats.total" sub="种小确幸" />
+      <IndStatCard label="已达成目标" :value="fpStats.reached" :sub="`${fpStats.total ? Math.round((fpStats.reached / fpStats.total) * 100) : 0}% 达成率`" />
+      <IndStatCard label="累计记录" :value="fpStats.records" sub="次 +1" />
+    </section>
+
     <section class="block head-row">
       <IndSectionTitle label="我们的小确幸" :led="true" />
       <button class="add-btn" v-press-bounce @click="openAdd">＋ 新增足迹</button>
@@ -21,7 +28,7 @@
           role="button"
           tabindex="0"
           :aria-label="`记录一次：${f.title}`"
-          :class="{ pop: poppingId === f.id, reached: f.targetCount != null && f.count >= f.targetCount }"
+          :class="{ pop: poppingId === f.id, removing: removingId === f.id, reached: f.targetCount != null && f.count >= f.targetCount }"
           @click="onIncrement(f)"
           @keydown.enter="onIncrement(f)"
           @keydown.space.prevent="onIncrement(f)"
@@ -39,7 +46,10 @@
               确定删除「{{ f.title }}」吗？计数记录会一并清除。
             </n-popconfirm>
           </div>
-          <div class="fp-emoji">{{ f.emoji }}</div>
+          <div class="fp-emoji">
+            <IpIcon v-if="iconFor(f.emoji)" :name="iconFor(f.emoji)!" :size="46" :alt="f.title" />
+            <span v-else>{{ f.emoji }}</span>
+          </div>
           <div class="fp-title">{{ f.title }}</div>
           <div v-if="f.description" class="fp-desc">{{ f.description }}</div>
           <div class="fp-count">{{ f.count }}</div>
@@ -70,15 +80,31 @@
       />
       <div class="lf-field">
         <span class="lf-label">图标 Emoji</span>
-        <div class="emoji-pick">
-          <button
-            v-for="e in emojiPresets"
-            :key="e"
-            class="emoji-chip"
-            :class="{ on: form.emoji === e }"
-            @click="form.emoji = e"
-          >{{ e }}</button>
-          <input v-model="form.emoji" placeholder="✨" maxlength="4" class="emoji-input" />
+        <div class="emoji-section">
+          <span class="emoji-section-title">精选插画</span>
+          <div class="emoji-pick emoji-pick-art">
+            <button
+              v-for="e in ILLUSTRATED_EMOJIS"
+              :key="e.unicode"
+              class="emoji-chip art"
+              :class="{ on: form.emoji === e.unicode }"
+              :title="e.label"
+              @click="form.emoji = e.unicode"
+            ><IpIcon :name="e.icon" :size="26" :alt="e.label" /></button>
+          </div>
+        </div>
+        <div class="emoji-section">
+          <span class="emoji-section-title">更多 Emoji</span>
+          <div class="emoji-pick">
+            <button
+              v-for="e in EXTRA_EMOJIS"
+              :key="e"
+              class="emoji-chip"
+              :class="{ on: form.emoji === e }"
+              @click="form.emoji = e"
+            >{{ e }}</button>
+            <input v-model="form.emoji" placeholder="✨" maxlength="4" class="emoji-input" />
+          </div>
         </div>
       </div>
       <LoveInput
@@ -110,7 +136,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { NPopconfirm } from 'naive-ui';
 import { Pencil, X } from 'lucide-vue-next';
 import { LoveSheet, LoveInput, LoveTextarea, LoveSaveBar } from '@/components/loveform';
@@ -123,6 +149,8 @@ import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import IndStatCard from '@/components/industrial/IndStatCard.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import { feedback } from '@/utils/feedback';
 
 const { useModuleSync } = useRealtime();
@@ -134,9 +162,34 @@ const submitting = ref(false);
 const saved = ref(false);
 const titleInvalid = ref(false);
 const poppingId = ref<number | null>(null);
+const removingId = ref<number | null>(null);
 const editingId = ref<number | null>(null);
 const form = ref({ title: '', emoji: '✨', targetCount: '' as string, description: '' });
-const emojiPresets = ['✨', '🤗', '💋', '💍', '🎬', '🍜', '🌟', '📷', '☕', '🌙'];
+// 精选插画：与留言板 reaction 共用同一套 IpIcon 插画，让足迹图标也升级为精致插画（非纯 Unicode 字形）
+const ILLUSTRATED_EMOJIS = [
+  { unicode: '🤗', icon: 'emoji_hug', label: '抱抱' },
+  { unicode: '💋', icon: 'emoji_kiss', label: '亲亲' },
+  { unicode: '❤️', icon: 'emoji_heart', label: '比心' },
+  { unicode: '😂', icon: 'emoji_laugh', label: '笑哭' },
+  { unicode: '🌟', icon: 'emoji_star', label: '星星' },
+  { unicode: '😮', icon: 'emoji_surprised', label: '惊讶' },
+  { unicode: '😢', icon: 'emoji_cry', label: '哭哭' },
+  { unicode: '😡', icon: 'emoji_angry', label: '生气' },
+];
+const EMOJI_TO_ICON: Record<string, string> = Object.fromEntries(ILLUSTRATED_EMOJIS.map((e) => [e.unicode, e.icon]));
+const EXTRA_EMOJIS = ['✨', '💍', '🎬', '🍜', '☕', '🌙', '📷', '🌹', '🍿', '🎁', '🌈', '🔥'];
+function iconFor(emoji: string): string | undefined {
+  return EMOJI_TO_ICON[emoji];
+}
+
+// 统计瓷砖：足迹总数 / 已达成目标 / 累计记录次数
+const fpStats = computed(() => {
+  const list = items.value;
+  const total = list.length;
+  const reached = list.filter((f) => f.targetCount != null && f.count >= f.targetCount).length;
+  const records = list.reduce((s, f) => s + (f.count || 0), 0);
+  return { total, reached, records };
+});
 
 // 统一管理延迟回调（增量后弹跳复位 / 保存后收起表单），卸载时一次性清理，避免过期定时器在组件销毁后误触发
 const pendingTimers = new Set<number>();
@@ -203,11 +256,17 @@ async function onIncrement(f: FootprintDto) {
 }
 
 async function onDelete(f: FootprintDto) {
-  try {
-    await deleteFootprint(f.id);
-    items.value = items.value.filter((x) => x.id !== f.id);
-    feedback.deleted('足迹');
-  } catch { /* 忽略 */ }
+  // 先播收缩动画，再删库并移除，避免瞬间消失（对标纪念日页删除 pop）
+  removingId.value = f.id;
+  later(async () => {
+    try {
+      await deleteFootprint(f.id);
+      items.value = items.value.filter((x) => x.id !== f.id);
+      feedback.deleted('足迹');
+    } catch {
+      removingId.value = null;
+    }
+  }, 320);
 }
 
 async function submit() {
@@ -274,9 +333,11 @@ onMounted(async () => {
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
   transition: all var(--dur-micro) var(--ease-love);
 }
+.add-btn:hover { background: var(--color-rose); color: #fff; transform: translateY(-1px); box-shadow: 0 8px 18px -8px rgba(255, 111, 125, 0.5); }
 .add-btn:active { transform: scale(0.97); }
 
 .block { margin: 22px 0; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
 .fp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
 .fp-card {
@@ -296,8 +357,23 @@ onMounted(async () => {
   35% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
+.fp-card.removing { animation: fpRemove 0.32s var(--ease-love) forwards; pointer-events: none; }
+@keyframes fpRemove {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(0.86); opacity: 0; }
+}
 .reduce-motion .fp-card.pop { animation: none; }
-.fp-emoji { font-size: 38px; margin-bottom: 8px; }
+.reduce-motion .fp-card.removing { animation: none; }
+.fp-emoji {
+  display: grid; place-items: center; width: 66px; height: 66px; margin: 0 auto 10px; border-radius: 50%;
+  font-size: 32px; line-height: 1;
+  background: linear-gradient(135deg, var(--color-rose-soft), rgba(255, 111, 125, 0.20));
+  border: 1px solid var(--color-rose-soft);
+  box-shadow: 0 6px 16px -6px rgba(255, 111, 125, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: transform var(--dur-pop) var(--ease-love);
+}
+.fp-card:hover .fp-emoji { transform: scale(1.07) rotate(-3deg); }
+.fp-emoji .ip-icon { filter: drop-shadow(0 2px 4px rgba(255, 111, 125, 0.35)); }
 .fp-title { font-size: 14px; font-weight: 600; color: var(--color-ink); margin-bottom: 10px; }
 .fp-desc { font-size: 11px; color: var(--color-ink-3); margin-bottom: 8px; line-height: 1.4; padding: 0 4px; }
 .fp-count { font-size: 42px; font-weight: 800; color: var(--color-accent-text); line-height: 1; text-shadow: 0 0 16px rgba(255, 111, 125, 0.3); }
@@ -323,8 +399,8 @@ onMounted(async () => {
   font-size: 14px; color: var(--color-ink-3); cursor: pointer; line-height: 1; padding: 3px 5px 1px;
   border-radius: 8px; transition: color var(--dur-micro);
 }
-.del-float:hover { color: var(--color-accent-text); }
-.edit-float:hover { color: var(--color-accent-text); }
+.del-float:hover, .edit-float:hover { color: var(--color-accent-text); }
+.del-float:active, .edit-float:active { transform: scale(0.88); }
 
 .emoji-pick { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .emoji-chip {
@@ -342,4 +418,25 @@ onMounted(async () => {
   transition: border-color var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love);
 }
 .emoji-input:focus { outline: none; border-color: var(--color-rose); box-shadow: 0 0 0 3px var(--color-rose-soft); }
+
+.emoji-section { margin-bottom: 14px; }
+.emoji-section:last-child { margin-bottom: 0; }
+.emoji-section-title {
+  display: block; font-size: 12px; font-weight: 600; color: var(--color-ink-3);
+  margin-bottom: 8px; letter-spacing: 0.02em;
+}
+.emoji-pick-art { gap: 10px; }
+.emoji-chip.art {
+  display: grid; place-items: center; padding: 0; background: var(--color-surface-2);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.emoji-chip.art:hover { border-color: var(--color-rose-soft); background: var(--color-rose-soft); transform: translateY(-1px); }
+.emoji-chip.art.on {
+  border-color: var(--color-rose); background: var(--color-rose-soft);
+  box-shadow: 0 0 0 3px var(--color-rose-soft), 0 6px 14px -6px rgba(255, 111, 125, 0.5);
+}
+
+@media (max-width: 767px) {
+  .stats { grid-template-columns: 1fr; }
+}
 </style>
