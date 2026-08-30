@@ -38,12 +38,13 @@
         <div
           v-for="a in filteredAlbums"
           :key="a.id"
+          :data-album-id="a.id"
           class="love-card album-card stagger-item"
           role="button"
           tabindex="0"
-          @click="openAlbum(a)"
-          @keydown.enter.prevent="openAlbum(a)"
-          @keydown.space.prevent="openAlbum(a)"
+          @click="openAlbum(a, $event)"
+          @keydown.enter.prevent="openAlbum(a, $event)"
+          @keydown.space.prevent="openAlbum(a, $event)"
         >
           <div class="album-cover">
             <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" />
@@ -86,6 +87,17 @@
           <template #icon><Trash2 :size="14" :stroke-width="1.8" /></template>
           删除相册
         </NButton>
+      </div>
+
+      <!-- 封面 hero：View Transition 共享元素目标（列表封面放大进入详情） -->
+      <div class="album-hero" v-if="currentAlbum">
+        <div class="album-hero-cover" ref="detailCoverEl">
+          <img v-if="currentAlbum.cover" :src="currentAlbum.cover" :alt="currentAlbum.albumName" class="detail-cover" />
+          <div v-else class="album-cover-ph">{{ currentAlbum.albumName.slice(0, 1) }}</div>
+        </div>
+        <div class="album-hero-meta">
+          <div class="album-hero-count">{{ images.length }} 张照片 · 与 TA 共享</div>
+        </div>
       </div>
 
       <div class="album-toolbar">
@@ -334,6 +346,7 @@ import type { AlbumDto, AlbumReq, ImageDto, ApiResult, PagedResult, AlbumImageBa
 import * as albumApi from '@/api/album';
 import { isMobile } from '@/composables/useDevice';
 import { useStaggerEnter } from '@/composables/useAnimation';
+import { startSharedTransition } from '@/composables/useViewTransition';
 import { useSettingStore } from '@/store/settingStore';
 import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
@@ -391,6 +404,7 @@ function onScrollParallax() {
 const currentAlbum = ref<AlbumDto | null>(null);
 const images = ref<ImageDto[]>([]);
 const imgLoading = ref(false);
+const detailCoverEl = ref<HTMLElement | null>(null); // 详情封面 hero（View Transition 共享元素目标）
 
 const showCreate = ref(false);
 const showDeleteAlbum = ref(false);
@@ -453,10 +467,22 @@ async function loadAlbums() {
   applyParallax();
 }
 
-async function openAlbum(a: AlbumDto) {
-  currentAlbum.value = a;
-  imgLoading.value = true;
-  images.value = [];
+async function openAlbum(a: AlbumDto, e?: Event) {
+  // P2-13：列表封面 → 详情 hero 封面的共享元素放大过渡（不支持/reduce-motion 时自动降级为直切）
+  const src = e
+    ? (e.currentTarget as HTMLElement).querySelector<HTMLElement>('.album-cover img')
+    : null;
+  const swap = () => {
+    currentAlbum.value = a;
+    imgLoading.value = true;
+    images.value = [];
+  };
+  await startSharedTransition({
+    source: src,
+    name: 'album-cover',
+    applyTarget: () => detailCoverEl.value?.querySelector('img') ?? detailCoverEl.value,
+    swap,
+  });
   try {
     const res = await albumApi.listImages(a.id);
     images.value = (res.data as ApiResult<ImageDto[]>).data ?? [];
@@ -466,8 +492,22 @@ async function openAlbum(a: AlbumDto) {
 }
 
 function backToList() {
-  currentAlbum.value = null;
-  loadAlbums();
+  const src = detailCoverEl.value?.querySelector('img') ?? null;
+  const id = currentAlbum.value?.id;
+  const swap = () => {
+    currentAlbum.value = null;
+    loadAlbums();
+  };
+  // 反向：详情 hero → 列表对应封面（列表异步重渲染，目标可能错过快照 → 自动降级淡入）
+  void startSharedTransition({
+    source: src,
+    name: 'album-cover',
+    applyTarget: () =>
+      id
+        ? (document.querySelector(`.album-grid [data-album-id="${id}"] .album-cover img`) as HTMLElement | null)
+        : null,
+    swap,
+  });
 }
 
 async function confirmDeleteAlbum() {
@@ -737,6 +777,18 @@ onUnmounted(() => {
 .album-cover { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--color-ink-soft); }
 .album-cover img { position: absolute; top: -15%; left: 0; width: 100%; height: 130%; object-fit: cover; transition: transform var(--dur-micro) var(--ease-love); animation: img-fade-in var(--dur-pop) var(--ease-love) both; }
 .album-cover-ph { width: 100%; height: 100%; display: grid; place-items: center; color: var(--color-ink-3); }
+
+/* 详情封面 hero（View Transition 共享元素目标：列表封面放大进入） */
+.album-hero { display: flex; align-items: flex-start; gap: 16px; margin: 4px 0 14px; }
+.album-hero-cover { width: 148px; flex-shrink: 0; }
+.album-hero-cover .detail-cover,
+.album-hero-cover .album-cover-ph {
+  width: 148px; height: 148px; object-fit: cover; border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card); display: grid; place-items: center; font-size: 40px; color: var(--color-ink-3);
+  background: var(--color-ink-soft);
+}
+.album-hero-meta { padding-top: 4px; }
+.album-hero-count { font-size: 13px; color: var(--color-ink-3); }
 /* 浮起改用分层景深令牌：暗色下 --elev-3 走深底阴影，修正原硬编码近黑阴影在暗色不可见的问题 */
 html:not(.reduce-motion) .album-card:hover { transform: translateY(-3px) scale(1.015); box-shadow: var(--elev-3); }
 .album-meta { padding: 10px 12px; }
