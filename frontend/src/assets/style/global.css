@@ -79,6 +79,18 @@ body { font-size: 15px; }
 /* 仅鼠标聚焦时不显示环，避免点击自定义元素出现突兀蓝框 */
 :focus:not(:focus-visible) { outline: none; }
 
+/* 输入控件聚焦去重：naive（NInput/NInputNumber/NInputTextarea）与 loveform 输入组件
+   自带完整聚焦态（边框变色 + 外圈光晕），全局 :focus-visible 的 2px 描边+光晕叠上去
+   会形成「内圈 + 外圈」双线框 → 输入类跳过全局环，只保留组件自身单圈聚焦态。 */
+.n-input :focus-visible,
+.n-input-number :focus-visible,
+.n-input-textarea :focus-visible,
+.lf-input-wrap :focus-visible,
+.lf-textarea-wrap :focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* 兼容别名（仍被多处引用，保留：accent / accent-soft） */
 :root {
   --color-accent: var(--color-rose);

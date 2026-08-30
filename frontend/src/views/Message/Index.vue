@@ -11,6 +11,13 @@
       <div class="ops">
         <NButton size="small" v-press-bounce :loading="loading" @click="onRefreshClick">刷新</NButton>
         <NButton size="small" type="primary" :disabled="unread === 0" v-press-bounce @click="markAllRead">全部已读</NButton>
+        <NPopconfirm positive-text="删除" negative-text="取消" @positive-click="deleteReadAll">
+          <template #trigger>
+            <NButton size="small" type="error" ghost :disabled="!readList.length" v-press-bounce>删除已读</NButton>
+          </template>
+          确定删除全部已读消息吗？此操作不可恢复。
+        </NPopconfirm>
+        <NButton size="small" :type="selectMode ? 'primary' : 'default'" v-press-bounce @click="toggleSelectMode">选取</NButton>
       </div>
     </div>
 
@@ -38,12 +45,15 @@
               class="m-card love-card unread"
               role="button"
               tabindex="0"
-              :aria-label="`展开消息：${m.title}`"
-              :class="{ open: expanded.has(m.id) }"
-              @click="open(m)"
-              @keydown.enter="open(m)"
-              @keydown.space.prevent="open(m)"
+              :aria-label="`${selectMode ? '选择消息：' : '展开消息：'}${m.title}`"
+              :class="{ open: expanded.has(m.id), selected: selected.has(m.id) }"
+              @click="onCardClick(m, $event)"
+              @keydown.enter="onCardClick(m, $event)"
+              @keydown.space.prevent="onCardClick(m, $event)"
             >
+              <span v-if="selectMode" class="m-check" :class="{ on: selected.has(m.id) }" aria-hidden="true">
+                <Check v-if="selected.has(m.id)" :size="14" :stroke-width="2.2" />
+              </span>
               <span class="m-ico"><component :is="iconFor(m.messageType)" :size="20" /></span>
               <div class="m-body">
                 <div class="m-top">
@@ -66,12 +76,15 @@
               class="m-card love-card"
               role="button"
               tabindex="0"
-              :aria-label="`展开消息：${m.title}`"
-              :class="{ open: expanded.has(m.id) }"
-              @click="open(m)"
-              @keydown.enter="open(m)"
-              @keydown.space.prevent="open(m)"
+              :aria-label="`${selectMode ? '选择消息：' : '展开消息：'}${m.title}`"
+              :class="{ open: expanded.has(m.id), selected: selected.has(m.id) }"
+              @click="onCardClick(m, $event)"
+              @keydown.enter="onCardClick(m, $event)"
+              @keydown.space.prevent="onCardClick(m, $event)"
             >
+              <span v-if="selectMode" class="m-check" :class="{ on: selected.has(m.id) }" aria-hidden="true">
+                <Check v-if="selected.has(m.id)" :size="14" :stroke-width="2.2" />
+              </span>
               <span class="m-ico dim"><component :is="iconFor(m.messageType)" :size="20" /></span>
               <div class="m-body">
                 <div class="m-top">
@@ -94,13 +107,21 @@
           @load-more="nextPage"
           v-if="list.length"
         />
+
+        <!-- 选取模式：批量操作条 -->
+        <div v-if="selectMode" class="sel-bar" role="toolbar" aria-label="批量操作">
+          <button type="button" class="sel-btn" v-press-bounce @click="toggleAll">{{ allSelected ? '取消全选' : '全选' }}</button>
+          <span class="sel-count">已选 {{ selected.size }} 条</span>
+          <button type="button" class="sel-btn sel-del" :disabled="!selected.size" v-press-bounce @click="deleteSelected">删除</button>
+          <button type="button" class="sel-btn sel-cancel" v-press-bounce @click="toggleSelectMode">取消</button>
+        </div>
       </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, type Component } from 'vue';
-import { NButton } from 'naive-ui';
+import { NButton, NPopconfirm } from 'naive-ui';
 import { gsap } from 'gsap';
 import type { SystemMessageDto } from '@/types';
 import * as msgApi from '@/api/message';
@@ -116,11 +137,53 @@ import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 import { feedback } from '@/utils/feedback';
-import { Mail, Gem, CheckCircle2, Heart, Star, Image as ImageIcon, PenLine } from 'lucide-vue-next';
+import { Mail, Gem, CheckCircle2, Heart, Star, Image as ImageIcon, PenLine, Check } from 'lucide-vue-next';
 
 const setting = useSettingStore();
 
 const expanded = ref<Set<number>>(new Set());
+// 选取模式：删除已读 / 批量选取删除
+const selectMode = ref(false);
+const selected = ref<Set<number>>(new Set());
+const allSelected = computed(
+  () => list.value.length > 0 && list.value.every((m) => selected.value.has(m.id)),
+);
+function toggleSelectMode() {
+  selectMode.value = !selectMode.value;
+  selected.value = new Set();
+}
+function toggleSel(id: number) {
+  const s = new Set(selected.value);
+  s.has(id) ? s.delete(id) : s.add(id);
+  selected.value = s;
+}
+function toggleAll() {
+  selected.value = allSelected.value ? new Set() : new Set(list.value.map((m) => m.id));
+}
+function onCardClick(m: SystemMessageDto, e?: Event) {
+  if (selectMode.value) {
+    e?.preventDefault();
+    toggleSel(m.id);
+    return;
+  }
+  open(m);
+}
+async function deleteReadAll() {
+  await msgApi.deleteRead();
+  feedback.deleted('已读消息');
+  await refresh();
+  syncUnread();
+}
+async function deleteSelected() {
+  const ids = [...selected.value];
+  if (!ids.length) return;
+  await msgApi.batchDeleteMessage(ids);
+  feedback.deleted('消息');
+  selected.value = new Set();
+  selectMode.value = false;
+  await refresh();
+  syncUnread();
+}
 const container = ref<HTMLElement>();
 const unreadRef = ref<HTMLElement>();
 const readRef = ref<HTMLElement>();
@@ -272,6 +335,34 @@ onUnmounted(() => {
 .m-time { font-size: 12px; color: var(--color-ink-3); font-family: var(--font-mono); margin: 2px 0 4px; }
 .m-content { font-size: 13px; color: var(--color-ink-2); line-height: 1.6; white-space: pre-wrap; }
 .m-content.clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* 选取模式：复选框 + 选中态 + 底部批量条 */
+.m-check {
+  flex: 0 0 auto; width: 22px; height: 22px; margin-top: 10px; border-radius: 50%;
+  border: 1.5px solid var(--color-border); background: var(--color-surface);
+  display: grid; place-items: center; color: var(--color-on-primary);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.m-check.on { background: var(--color-rose); border-color: var(--color-rose); }
+.m-card.selected { box-shadow: 0 0 0 1.5px var(--color-rose), var(--elev-2); }
+.sel-bar {
+  position: sticky; bottom: 12px; z-index: 20; margin-top: 18px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: 14px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-float);
+}
+.sel-count { flex: 1; font-size: 13px; color: var(--color-ink-2); }
+.sel-btn {
+  border: 1px solid var(--color-border); background: var(--color-surface-2);
+  color: var(--color-ink); font-size: 13px; font-weight: 600;
+  padding: 7px 14px; border-radius: 999px; cursor: pointer;
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.sel-btn:hover:not(:disabled) { border-color: var(--color-rose); color: var(--color-rose-text); }
+.sel-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.sel-del { color: var(--color-rose-text); }
+.sel-cancel { background: none; }
 
 @media (max-width: 767px) {
   .stats { grid-template-columns: 1fr; }

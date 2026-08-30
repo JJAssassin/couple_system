@@ -20,3 +20,13 @@ export async function readAll() {
   const { data } = await api.put('/message/read/all');
   return (data as ApiResult<number>).data;
 }
+
+export async function deleteRead() {
+  const { data } = await api.post('/message/delete-read');
+  return (data as ApiResult<number>).data;
+}
+
+export async function batchDeleteMessage(ids: number[]) {
+  const { data } = await api.post('/message/batch-delete', { ids });
+  return (data as ApiResult<number>).data;
+}

@@ -555,6 +555,7 @@ public class SystemMessageDto
     public DateTime CreateTime { get; set; }
 }
 public class MessageReadReq { public long Id { get; set; } }
+public class MessageIdsReq { public List<long> Ids { get; set; } = new(); }
 #endregion
 
 #region 时间轴 Timeline（聚合）

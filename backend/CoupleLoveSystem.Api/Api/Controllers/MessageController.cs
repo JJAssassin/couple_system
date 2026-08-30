@@ -30,4 +30,12 @@ public class MessageController : BaseController
     [HttpPut("read/all")]
     public async Task<ActionResult<ApiResult<int>>> ReadAll(CancellationToken ct = default) =>
         Ok(ApiResult<int>.Ok(await _svc.ReadAllAsync(CurrentUserId, ct)));
+
+    [HttpPost("delete-read")]
+    public async Task<ActionResult<ApiResult<int>>> DeleteRead(CancellationToken ct = default) =>
+        Ok(ApiResult<int>.Ok(await _svc.DeleteReadAsync(CurrentUserId, ct)));
+
+    [HttpPost("batch-delete")]
+    public async Task<ActionResult<ApiResult<int>>> BatchDelete([FromBody] MessageIdsReq req, CancellationToken ct = default) =>
+        Ok(ApiResult<int>.Ok(await _svc.BatchDeleteAsync(req.Ids, CurrentUserId, ct)));
 }

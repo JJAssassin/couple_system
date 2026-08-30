@@ -55,6 +55,19 @@ public class MessageService
             .ExecuteUpdateAsync(s => s.SetProperty(m => m.IsRead, true), ct);
     }
 
+    public async Task<int> DeleteReadAsync(long currentUserId, CancellationToken ct = default) =>
+        await _db.SystemMessages
+            .Where(m => m.ReceiverUserId == currentUserId && m.IsRead)
+            .ExecuteDeleteAsync(ct);
+
+    public async Task<int> BatchDeleteAsync(List<long> ids, long currentUserId, CancellationToken ct = default)
+    {
+        if (ids is null || ids.Count == 0) return 0;
+        return await _db.SystemMessages
+            .Where(m => ids.Contains(m.Id) && m.ReceiverUserId == currentUserId)
+            .ExecuteDeleteAsync(ct);
+    }
+
     private static SystemMessageDto Map(CoupleSystemMessage m) => new()
     {
         Id = m.Id,
