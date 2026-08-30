@@ -196,6 +196,8 @@ export interface BoardMessageDto {
   isUnlocked: boolean;
   createUserId: number;
   createTime: string;
+  /** 反应表情：emojiKey → 点过该表情的用户 ID 列表 */
+  reactions?: Record<string, number[]>;
 }
 export interface BoardMessageReq {
   content: string;

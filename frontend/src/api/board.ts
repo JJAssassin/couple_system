@@ -2,6 +2,7 @@ import api from '@/utils/request';
 import type { ApiResult, PagedResult, BoardMessageDto, BoardMessageReq } from '@/types';
 
 export interface BoardMessageIdReq { id: number; }
+export interface BoardReactionReq { id: number; emojiKey: string; }
 
 export async function listBoard(params: { page?: number; pageSize?: number }) {
   const { data } = await api.get('/board/list', { params });
@@ -25,5 +26,9 @@ export async function deleteBoard(id: number) {
 }
 export async function pinBoard(req: BoardMessageIdReq) {
   const { data } = await api.put('/board/pin', req);
+  return (data as ApiResult<BoardMessageDto>).data;
+}
+export async function addReaction(req: BoardReactionReq) {
+  const { data } = await api.post('/board/reaction', req);
   return (data as ApiResult<BoardMessageDto>).data;
 }

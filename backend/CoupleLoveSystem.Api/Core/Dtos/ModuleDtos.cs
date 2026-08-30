@@ -167,6 +167,8 @@ public class BoardMessageDto
     public bool IsUnlocked { get; set; }
     public long CreateUserId { get; set; }
     public DateTime CreateTime { get; set; }
+    /// <summary>反应表情：emojiKey → 点过该表情的用户 ID 列表。空字典=无人反应。</summary>
+    public Dictionary<string, List<long>> Reactions { get; set; } = new();
 }
 public class BoardMessageReq
 {
@@ -185,6 +187,12 @@ public class BoardMessageReq
     public DateTime? ScheduledAt { get; set; }
 }
 public class BoardMessageIdReq { public long Id { get; set; } }
+public class BoardReactionReq
+{
+    public long Id { get; set; }
+    [Required(ErrorMessage = "表情不能为空")]
+    public string EmojiKey { get; set; } = string.Empty;
+}
 #endregion
 
 #region 默契问答 Quiz

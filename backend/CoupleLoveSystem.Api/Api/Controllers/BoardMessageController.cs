@@ -40,4 +40,8 @@ public class BoardMessageController : BaseController
     [HttpPut("pin")]
     public async Task<ActionResult<ApiResult<BoardMessageDto>>> Pin([FromBody] BoardMessageIdReq req, CancellationToken ct) =>
         Ok(ApiResult<BoardMessageDto>.Ok(await _svc.PinAsync(req.Id, CurrentUserId, ct)));
+
+    [HttpPost("reaction")]
+    public async Task<ActionResult<ApiResult<BoardMessageDto>>> Reaction([FromBody] BoardReactionReq req, CancellationToken ct) =>
+        Ok(ApiResult<BoardMessageDto>.Ok(await _svc.ToggleReactionAsync(req.Id, req.EmojiKey, CurrentUserId, ct)));
 }

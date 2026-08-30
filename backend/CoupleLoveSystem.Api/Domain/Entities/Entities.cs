@@ -143,6 +143,7 @@ public class CoupleBoardMessage : BaseEntity, ICoupleScoped
     public bool IsPrivate { get; set; } // 是否私密消息
     public DateTime? ScheduledAt { get; set; } // 定时发布时间（UTC）；null=立即发布
     public bool IsUnlocked { get; set; } // 定时消息是否已解锁（到点后 true）
+    public string? Reactions { get; set; } // 反应表情 JSON：Dictionary<emojiKey, List<userId>>；空=无反应
 }
 
 /// <summary>默契问答题库：选择题，双方基于它发起「默契挑战」。内置题由种子写入（IsBuiltin，不可删），也可自定义添加。</summary>

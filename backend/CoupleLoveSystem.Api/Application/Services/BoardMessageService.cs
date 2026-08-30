@@ -3,6 +3,7 @@ using CoupleLoveSystem.Core.Dtos;
 using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace CoupleLoveSystem.Application.Services;
 
@@ -96,6 +97,37 @@ public class BoardMessageService
         return Map(m);
     }
 
+    /// <summary>切换某用户对某条留言的某表情反应：已点则取消，未点则加上。返回最新留言。</summary>
+    public async Task<BoardMessageDto> ToggleReactionAsync(long id, string emojiKey, long currentUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(emojiKey)) throw new ArgumentException("表情标识不能为空");
+        var m = await _repo.GetByIdAsync(id, ct) ?? throw new NotFoundException("留言不存在");
+        var map = ParseReactions(m.Reactions);
+        if (!map.TryGetValue(emojiKey, out var list) || list is null)
+        {
+            list = new List<long>();
+            map[emojiKey] = list;
+        }
+        if (list.Contains(currentUserId)) list.Remove(currentUserId);
+        else list.Add(currentUserId);
+        if (list.Count == 0) map.Remove(emojiKey);
+        m.Reactions = SerializeReactions(map);
+        m.UpdateUserId = currentUserId;
+        _repo.Update(m);
+        await _repo.SaveChangesAsync(ct);
+        return Map(m);
+    }
+
+    private static Dictionary<string, List<long>> ParseReactions(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new Dictionary<string, List<long>>();
+        try { return JsonSerializer.Deserialize<Dictionary<string, List<long>>>(json) ?? new Dictionary<string, List<long>>(); }
+        catch (JsonException) { return new Dictionary<string, List<long>>(); }
+    }
+
+    private static string SerializeReactions(Dictionary<string, List<long>> map) =>
+        JsonSerializer.Serialize(map);
+
     private static BoardMessageDto Map(CoupleBoardMessage m) => new()
     {
         Id = m.Id,
@@ -110,5 +142,6 @@ public class BoardMessageService
         IsUnlocked = m.IsUnlocked,
         CreateUserId = m.CreateUserId,
         CreateTime = m.CreateTime,
+        Reactions = ParseReactions(m.Reactions),
     };
 }
