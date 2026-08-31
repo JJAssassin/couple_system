@@ -281,6 +281,16 @@ html:not(.reduce-motion) .love-card:hover {
   border-color: color-mix(in srgb, var(--module-accent, var(--color-rose)) 28%, transparent);
 }
 .love-card:active { transform: scale(0.98); }
+/* 卡片被 TiltCard 包裹时，悬停位移完全交给外层 3D 倾斜接管：
+   避免内层卡片的 translateY/scale 与外层 rotate 叠加 → 抖动 / 偏移过大。
+   仅关 transform，保留阴影与描边变化作为悬停反馈。覆盖所有 TiltCard 内卡片
+   （日记/时间轴/相册/纪念日/足迹/矛盾/约会/默契战绩），一处修复全局受益。 */
+html:not(.reduce-motion) .uvi-tilt .love-card:hover,
+html:not(.reduce-motion) .uvi-tilt .love-card-pro:hover,
+html:not(.reduce-motion) .uvi-tilt .anniv-card:hover,
+html:not(.reduce-motion) .uvi-tilt .fp-card:hover {
+  transform: none;
+}
 
 /* 1px 渐变 hairline 描边（Stripe/Linear 手法）：单色描边 → 顶亮底玫瑰的渐变描边。
    ::after + mask-composite 只保留外圈 1px 环，不遮挡内容；pointer-events:none 不挡交互。

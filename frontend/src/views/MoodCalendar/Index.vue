@@ -91,6 +91,40 @@
           <IndStatCard label="最低心情" :value="stats.minMood" />
         </div>
       </section>
+
+      <!-- 月度心情趋势 -->
+      <section v-if="trend" class="mc-section mc-trend-sec">
+        <IndSectionTitle label="心情趋势" :led="true" />
+        <div class="mc-trend">
+          <svg class="mc-trend-svg" viewBox="0 0 280 60" preserveAspectRatio="none" role="img" aria-label="月度平均心情趋势">
+            <path :d="trend.area" class="mc-trend-area" />
+            <polyline :points="trend.line" class="mc-trend-line" />
+          </svg>
+          <div class="mc-trend-axis">
+            <span v-for="(m, i) in monthlyMood" :key="i" class="mc-trend-m">{{ m.month }}月</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 心情分布 -->
+      <section v-if="totalMood" class="mc-section mc-dist-sec">
+        <IndSectionTitle label="心情分布" :led="true" />
+        <div class="mc-dist-bar">
+          <span
+            v-for="b in moodBuckets"
+            :key="b.name"
+            class="mc-dist-seg"
+            :style="{ width: (b.n / totalMood * 100) + '%', background: b.color }"
+            :title="b.label + '：' + b.n + ' 天'"
+          />
+        </div>
+        <div class="mc-dist-legend">
+          <span v-for="b in moodBuckets" :key="b.name" class="mc-dist-leg">
+            <i :style="{ background: b.color }" />{{ b.label }} {{ b.n }}
+          </span>
+        </div>
+      </section>
+
       <IndEmpty v-else-if="calendar" class="mc-section" title="今年还没记录过心情"
         desc="在日记里给每天打个分，这里就会画出你们的色彩～" />
     </template>
@@ -159,6 +193,50 @@ const stats = computed(() => {
     maxMood: Math.max(...scores),
     minMood: Math.min(...scores),
   };
+});
+
+// 月度平均心情趋势：按月份聚合现有 mood 数据，供迷你折线图使用
+const monthlyMood = computed(() => {
+  if (!calendar.value) return [];
+  const months = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, sum: 0, n: 0 }));
+  for (const d of calendar.value.days) {
+    if (d.moodScore == null) continue;
+    const mo = parseInt(d.date.slice(5, 7), 10) - 1;
+    if (mo >= 0 && mo < 12) { months[mo].sum += d.moodScore; months[mo].n++; }
+  }
+  return months.map((m) => ({ month: m.month, avg: m.n ? Math.round((m.sum / m.n) * 10) / 10 : null }));
+});
+
+// 心情分布：按 5 档（糟糕/难过/平静/不错/幸福）归桶，供占比条使用
+const moodBuckets = computed(() => {
+  const buckets = [
+    { name: 'mood_terrible', label: '糟糕', color: moodColor(1), n: 0 },
+    { name: 'mood_sad', label: '难过', color: moodColor(3), n: 0 },
+    { name: 'mood_neutral', label: '平静', color: moodColor(5), n: 0 },
+    { name: 'mood_good', label: '不错', color: moodColor(7), n: 0 },
+    { name: 'mood_great', label: '幸福', color: moodColor(10), n: 0 },
+  ];
+  if (calendar.value) {
+    for (const d of calendar.value.days) {
+      if (d.moodScore == null) continue;
+      const b = d.moodScore <= 2 ? 0 : d.moodScore <= 4 ? 1 : d.moodScore <= 6 ? 2 : d.moodScore <= 8 ? 3 : 4;
+      buckets[b].n++;
+    }
+  }
+  return buckets;
+});
+const totalMood = computed(() => moodBuckets.value.reduce((a, b) => a + b.n, 0));
+
+// 趋势折线（viewBox 280×60）：仅取有数据的月份，连成折线 + 面积
+const trend = computed(() => {
+  const data = monthlyMood.value.filter((m) => m.avg != null) as { month: number; avg: number }[];
+  if (data.length === 0) return null;
+  const w = 280, h = 60, pad = 6;
+  const xs = data.map((_, i) => pad + (i * (w - 2 * pad)) / Math.max(1, data.length - 1));
+  const ys = data.map((d) => h - pad - ((d.avg - 1) / 9) * (h - 2 * pad));
+  const line = data.map((_, i) => `${xs[i].toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+  const area = `M ${xs[0].toFixed(1)},${(h - pad).toFixed(1)} ` + data.map((_, i) => `L ${xs[i].toFixed(1)},${ys[i].toFixed(1)}`).join(' ') + ` L ${xs[xs.length - 1].toFixed(1)},${(h - pad).toFixed(1)} Z`;
+  return { line, area };
 });
 
 function moodColor(score: number): string {
@@ -294,6 +372,18 @@ html:not(.reduce-motion) .mc-cell:not(.empty):hover { transform: scale(1.15); z-
 .mc-legend-faces { display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 .mc-legend-faces :deep(.ip-icon) { border-radius: 5px; }
 .mc-legend-faces-note { font-size: 12px; color: var(--color-ink-3); margin-left: 6px; }
+
+/* 月度心情趋势迷你折线 */
+.mc-trend-svg { width: 100%; height: 72px; display: block; }
+.mc-trend-area { fill: color-mix(in srgb, var(--color-rose) 16%, transparent); }
+.mc-trend-line { fill: none; stroke: var(--color-rose); stroke-width: 2; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.mc-trend-axis { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: var(--color-ink-3); font-family: var(--font-mono); }
+/* 心情分布占比条 */
+.mc-dist-bar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: var(--color-surface-2); }
+.mc-dist-seg { height: 100%; transition: width var(--dur-pop) var(--ease-love); }
+.mc-dist-legend { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; font-size: 12px; color: var(--color-ink-2); }
+.mc-dist-leg { display: inline-flex; align-items: center; gap: 4px; }
+.mc-dist-leg i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
 /* 统计 */
 .mc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }

@@ -354,7 +354,7 @@ html:not(.reduce-motion) .add-btn:hover { background: var(--color-rose); color: 
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
   user-select: none;
 }
-html:not(.reduce-motion) .fp-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
+html:not(.reduce-motion) .fp-card:hover { box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
 .fp-card:active { transform: scale(0.97); }
 .fp-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .fp-card.pop { animation: fpPop 0.42s var(--ease-love); }

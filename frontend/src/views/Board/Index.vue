@@ -91,7 +91,7 @@
             v-for="r in reactionList(m)"
             :key="r.key"
             class="reaction-pill"
-            :class="{ mine: r.mine, 'uvi-heartbeat': r.key === 'emoji_heart' }"
+            :class="{ mine: r.mine, 'uvi-heartbeat': r.key === 'emoji_heart', bump: bumpKeyRef === m.id + ':' + r.key }"
             :aria-pressed="r.mine"
             :aria-label="`${r.count} 人反应，${r.mine ? '你已反应，点击取消' : '点击也反应'}`"
             @click="toggleReaction(m, r.key)"
@@ -227,6 +227,14 @@ const REACTIONS = [
 // 当前展开表情选择器的留言 id（null=全部收起）
 const reactingId = ref<number | null>(null);
 
+// 反应计数变化时的短暂“弹一下”动画：记录刚切换的「留言id:表情key」，CSS 播放一次 bump，360ms 后清除
+const bumpKeyRef = ref<string | null>(null);
+function triggerBump(id: number, key: string) {
+  const k = `${id}:${key}`;
+  bumpKeyRef.value = k;
+  later(() => { if (bumpKeyRef.value === k) bumpKeyRef.value = null; }, 360);
+}
+
 // 统一管理延迟回调（保存后关弹窗 / 删除动画后再移除），卸载时一次性清理，避免过期定时器
 const pendingTimers = new Set<number>();
 function later(fn: () => void, ms: number) {
@@ -279,6 +287,7 @@ async function toggleReaction(m: BoardMessageDto, key: string) {
     const res = await addReaction({ id: m.id, emojiKey: key });
     const idx = messages.value.findIndex(x => x.id === m.id);
     if (idx >= 0) messages.value[idx] = { ...messages.value[idx], reactions: res.reactions };
+    triggerBump(m.id, key);
     hapticForAction('tap');
   } catch {
     feedback.warn('反应失败，请重试');
@@ -470,6 +479,16 @@ html:not(.reduce-motion) .msg:hover { transform: translateY(-3px); box-shadow: v
 .reaction-pill:hover { border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
 .reaction-pill.mine { background: var(--color-rose-soft); border-color: var(--color-rose-text); color: var(--color-rose-text); }
 .reaction-pill .reaction-count { font-variant-numeric: tabular-nums; font-weight: 600; }
+/* 我的反应：更明显的描边光环，区别于他人的中立胶囊 */
+.reaction-pill.mine { box-shadow: 0 0 0 2px var(--color-rose-soft); }
+/* 计数变化弹一下：点击反应时数字+胶囊轻微放大回落 */
+.reaction-pill.bump { animation: reaction-bump 0.36s var(--ease-love); }
+@keyframes reaction-bump {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+html.reduce-motion .reaction-pill.bump { animation: none; }
 
 .msg-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 .react-wrap { position: relative; display: inline-flex; }

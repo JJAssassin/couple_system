@@ -77,7 +77,7 @@
                   :style="{ animationDelay: i * 0.05 + 's' }"
                 >
                   <span class="tl-dot" :class="`t-${item.type}`"></span>
-                  <TiltCard class="tl-card-wrap">
+                  <TiltCard :max="4" class="tl-card-wrap">
                   <div class="love-card tl-card">
                     <div class="tl-head">
                       <NTag :type="tagType(item.type)" size="small">{{ typeLabel(item.type) }}</NTag>
@@ -358,7 +358,7 @@ html.reduce-motion .tl-item { animation: none; }
 .tl-dot.t-conflict { --chip-c: var(--color-semantic-conflict); }
 .tl-card-wrap { display: block; transform-style: preserve-3d; }
 .tl-card { padding: 14px 16px; transition: box-shadow 0.18s var(--ease-love), transform 0.18s var(--ease-love); }
-html:not(.reduce-motion) .tl-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover, 0 8px 24px -10px rgba(31,41,55,0.18)); }
+html:not(.reduce-motion) .tl-card:hover { box-shadow: var(--shadow-card-hover, 0 8px 24px -10px rgba(31,41,55,0.18)); }
 .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
 .tl-date { color: var(--color-ink-3); font-size: 12px; }
 .tl-rel { margin-left: 6px; color: var(--color-accent-text); }

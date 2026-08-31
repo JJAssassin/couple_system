@@ -65,14 +65,16 @@
         <div class="chart-card uvi-glass-pop"><div class="chart-title">月度矛盾次数</div><ChartWrap :option="conflictOption" height="240px" /></div>
       </section>
 
-      <!-- 纪念日回顾 -->
-      <section v-if="report.anniversaries.length" class="block">
-        <IndSectionTitle label="这一年我们纪念过" :led="true" />
-        <div class="ann-list">
-          <div v-for="a in report.anniversaries" :key="a.name + a.targetDate" class="ann-item">
-            <span class="ann-dot">💝</span>
-            <span class="ann-name">{{ a.name }}</span>
-            <span class="ann-date">{{ fmtDate(a.targetDate) }}</span>
+      <!-- 关系里程碑时间轴 -->
+      <section v-if="sortedAnn.length" class="block">
+        <IndSectionTitle label="关系里程碑" :led="true" />
+        <div class="milestone-tl">
+          <div v-for="a in sortedAnn" :key="a.name + a.targetDate" class="ms-item">
+            <span class="ms-dot">💝</span>
+            <div class="ms-body">
+              <div class="ms-name">{{ a.name }}</div>
+              <div class="ms-date">{{ fmtDate(a.targetDate) }}</div>
+            </div>
           </div>
         </div>
       </section>
@@ -149,6 +151,11 @@ const posterData = computed<PosterData>(() => {
       .map((f) => ({ city: f.title, emoji: f.emoji })),
   };
 });
+
+// 关系里程碑时间轴：把当年纪念日按日期升序排列，渲染为竖向时间线
+const sortedAnn = computed(() =>
+  (report.value?.anniversaries ?? []).slice().sort((a, b) => a.targetDate.localeCompare(b.targetDate)),
+);
 
 function fmt(n: number): string {
   const v = Math.abs(Math.round(n * 100) / 100);
@@ -325,6 +332,16 @@ const conflictOption = computed(() => ({
 }
 .ann-name { font-size: 14px; font-weight: 600; color: var(--color-ink); }
 .ann-date { margin-left: auto; font-size: 12px; color: var(--color-ink-3); }
+
+/* 关系里程碑竖向时间轴 */
+.milestone-tl { position: relative; margin-left: 6px; padding-left: 22px; }
+.milestone-tl::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--color-rose-soft), var(--color-border)); border-radius: 2px; }
+.ms-item { position: relative; display: flex; align-items: center; gap: 10px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 11px 14px; margin-bottom: 10px; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
+html:not(.reduce-motion) .ms-item:hover { transform: translateY(-2px); box-shadow: var(--elev-3); }
+.ms-dot { position: absolute; left: -22px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; border-radius: 50%; background: var(--color-surface); border: 2px solid var(--color-rose); display: grid; place-items: center; font-size: 7px; }
+.ms-body { display: flex; flex-direction: column; gap: 1px; }
+.ms-name { font-size: 14px; font-weight: 600; color: var(--color-ink); }
+.ms-date { font-size: 12px; color: var(--color-ink-3); font-family: var(--font-mono); }
 
 .skeleton { height: 96px; background: linear-gradient(90deg, var(--color-ink-soft) 25%, var(--color-surface-2) 50%, var(--color-ink-soft) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; }
 @keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }

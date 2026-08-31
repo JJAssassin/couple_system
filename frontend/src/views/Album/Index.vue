@@ -1,5 +1,5 @@
 <template>
-  <div class="album-page" ref="container">
+  <div class="album-page" :class="gridDensity" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
       <h1 class="ind-label">ALBUM · 双人相册</h1>
@@ -145,6 +145,18 @@
         >
           <template #icon><ImagePlus :size="14" :stroke-width="1.8" /></template>
           批量导入
+        </NButton>
+        <NButton
+          quaternary
+          size="small"
+          :type="gridDensity === 'compact' ? 'primary' : 'default'"
+          :class="{ on: gridDensity === 'compact' }"
+          class="density-toggle"
+          @click="toggleDensity"
+          :aria-label="gridDensity === 'compact' ? '切换为宽松网格' : '切换为紧凑网格'"
+        >
+          <template #icon><LayoutGrid :size="14" :stroke-width="1.8" /></template>
+          {{ gridDensity === 'compact' ? '紧凑' : '宽松' }}
         </NButton>
       </div>
 
@@ -341,7 +353,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import {
   NButton, NModal, NForm, NFormItem, NInput, NUpload, NTag, NSelect,
 } from 'naive-ui';
@@ -357,7 +369,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import { feedback } from '@/utils/feedback';
-import { Heart, Search, GripVertical, Check, CheckSquare, ImagePlus, Trash2 } from 'lucide-vue-next';
+import { Heart, Search, GripVertical, Check, CheckSquare, ImagePlus, Trash2, LayoutGrid } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';
 import ImageField from '@/components/Common/ImageField.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
@@ -427,6 +439,16 @@ function toggleFav(img: ImageDto) {
 const albumKeyword = ref('');
 const imgKeyword = ref('');
 const onlyFav = ref(false);
+
+// #22 网格密度：宽松（默认）/ 紧凑，偏好持久化到 localStorage，跨会话保留
+const GRID_DENSITY_KEY = 'album-grid-density';
+const gridDensity = ref<'comfortable' | 'compact'>(
+  (localStorage.getItem(GRID_DENSITY_KEY) as 'comfortable' | 'compact') || 'comfortable',
+);
+watch(gridDensity, (v) => { try { localStorage.setItem(GRID_DENSITY_KEY, v); } catch { /* 隐私模式忽略 */ } });
+function toggleDensity() {
+  gridDensity.value = gridDensity.value === 'comfortable' ? 'compact' : 'comfortable';
+}
 
 const filteredAlbums = computed(() => {
   const kw = albumKeyword.value.trim().toLowerCase();
@@ -797,7 +819,7 @@ onUnmounted(() => {
 .album-hero-meta { padding-top: 4px; }
 .album-hero-count { font-size: 13px; color: var(--color-ink-3); }
 /* 浮起改用分层景深令牌：暗色下 --elev-3 走深底阴影，修正原硬编码近黑阴影在暗色不可见的问题 */
-html:not(.reduce-motion) .album-card:hover { transform: translateY(-3px) scale(1.015); box-shadow: var(--elev-3); }
+html:not(.reduce-motion) .album-card:hover { box-shadow: var(--elev-3); }
 .album-meta { padding: 10px 12px; }
 .album-name { font-weight: 500; }
 
@@ -881,6 +903,11 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: v
 }
 .album-search { flex: 1 1 220px; min-width: 0; }
 .fav-toggle { flex: 0 0 auto; }
+/* #22 网格密度切换：紧凑模式下照片网格与相册网格更密、间距更小 */
+.density-toggle { flex: 0 0 auto; }
+.album-page.compact .img-grid { grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 5px; }
+.album-page.compact .album-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+.album-page.compact .img-cell { border-radius: var(--radius-sm); }
 @media (max-width: 520px) {
   .album-toolbar { flex-direction: column; align-items: stretch; }
   .album-search { flex: 1 1 100%; }
