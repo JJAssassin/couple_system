@@ -55,17 +55,20 @@
 
     <section class="block head-row">
       <IndSectionTitle label="我们的重要日子" :led="true" />
-      <button class="add-btn" v-press-bounce @click="openCreate">＋ 新增纪念日</button>
+      <button class="add-btn uvi-glow-border" v-press-bounce @click="openCreate">＋ 新增纪念日</button>
     </section>
 
     <section class="block">
       <div v-if="items.length" class="anniv-grid">
-        <div
+        <TiltCard
           v-for="a in items"
           :key="a.id"
-          class="anniv-card"
-          :class="{ pop: poppingId === a.id, near: isNear(a), soon: isSoon(a) }"
+          class="anniv-card-wrap"
         >
+          <div
+            class="anniv-card"
+            :class="{ pop: poppingId === a.id, near: isNear(a), soon: isSoon(a) }"
+          >
           <div v-if="a.coverImage" class="ac-cover" :style="{ backgroundImage: `url(${a.coverImage})` }" />
 
           <div class="ac-top">
@@ -121,6 +124,7 @@
             </n-popconfirm>
           </div>
         </div>
+        </TiltCard>
       </div>
       <IndEmpty v-else title="还没有纪念日" desc="点「新增纪念日」，把恋爱纪念日、生日、初见都记下来，每年自动提醒" />
     </section>
@@ -195,6 +199,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import ImageField from '@/components/Common/ImageField.vue';
 import GradientText from '@/components/Common/GradientText.vue';
+import TiltCard from '@/components/Common/TiltCard.vue';
 import AnniversaryPoster from '@/components/Common/AnniversaryPoster.vue';
 import { feedback } from '@/utils/feedback';
 
@@ -509,8 +514,9 @@ onUnmounted(() => {
 
 /* ---------- 卡片网格 ---------- */
 .anniv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.anniv-card-wrap { display: block; transform-style: preserve-3d; }
 .anniv-card {
-  position: relative; padding: 18px 18px 14px; border-radius: var(--radius-lg);
+  position: relative; height: 100%; padding: 18px 18px 14px; border-radius: var(--radius-lg);
   background: var(--color-surface); border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
