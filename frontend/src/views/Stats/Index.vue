@@ -204,7 +204,7 @@ const { onSync } = useRealtime();
 function reload() {
   fetchYearReport(selectedYear.value).then((r) => { report.value = r; }).catch(() => {});
 }
-['diary', 'album', 'wish', 'quiz', 'board', 'footprint', 'todo', 'conflict', 'budget', 'anniversary']
+['diary', 'album', 'wish', 'quiz', 'board', 'footprint', 'todo', 'conflict', 'budget', 'anniversary', 'date']
   .forEach((m) => onSync(m, reload));
 
 // ---- ECharts options（ChartWrap 提供主题/调色板） ----

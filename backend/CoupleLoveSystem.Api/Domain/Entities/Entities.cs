@@ -232,6 +232,7 @@ public class CoupleBudget : BaseEntity, ICoupleScoped
     public decimal LimitAmount { get; set; }
 }
 
+[Broadcast("date")]
 public class CoupleDateRecord : BaseEntity, ICoupleScoped
 {
     public bool IsCompleted { get; set; }
