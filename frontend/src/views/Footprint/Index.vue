@@ -338,7 +338,7 @@ onMounted(async () => {
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
   transition: all var(--dur-micro) var(--ease-love);
 }
-.add-btn:hover { background: var(--color-rose); color: #fff; transform: translateY(-1px); box-shadow: 0 8px 18px -8px rgba(255, 111, 125, 0.5); }
+html:not(.reduce-motion) .add-btn:hover { background: var(--color-rose); color: #fff; transform: translateY(-1px); box-shadow: 0 8px 18px -8px rgba(255, 111, 125, 0.5); }
 .add-btn:active { transform: scale(0.97); }
 
 .block { margin: 22px 0; }
@@ -354,7 +354,7 @@ onMounted(async () => {
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
   user-select: none;
 }
-.fp-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
+html:not(.reduce-motion) .fp-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
 .fp-card:active { transform: scale(0.97); }
 .fp-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .fp-card.pop { animation: fpPop 0.42s var(--ease-love); }
@@ -378,7 +378,7 @@ onMounted(async () => {
   box-shadow: 0 6px 16px -6px rgba(255, 111, 125, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: transform var(--dur-pop) var(--ease-love);
 }
-.fp-card:hover .fp-emoji { transform: scale(1.07) rotate(-3deg); }
+html:not(.reduce-motion) .fp-card:hover .fp-emoji { transform: scale(1.07) rotate(-3deg); }
 .fp-emoji .ip-icon { filter: drop-shadow(0 2px 4px rgba(255, 111, 125, 0.35)); }
 .fp-title { font-size: 14px; font-weight: 600; color: var(--color-ink); margin-bottom: 10px; }
 .fp-desc { font-size: 11px; color: var(--color-ink-3); margin-bottom: 8px; line-height: 1.4; padding: 0 4px; }
@@ -436,7 +436,7 @@ onMounted(async () => {
   display: grid; place-items: center; padding: 0; background: var(--color-surface-2);
   transition: all var(--dur-micro) var(--ease-love);
 }
-.emoji-chip.art:hover { border-color: var(--color-rose-soft); background: var(--color-rose-soft); transform: translateY(-1px); }
+html:not(.reduce-motion) .emoji-chip.art:hover { border-color: var(--color-rose-soft); background: var(--color-rose-soft); transform: translateY(-1px); }
 .emoji-chip.art.on {
   border-color: var(--color-rose); background: var(--color-rose-soft);
   box-shadow: 0 0 0 3px var(--color-rose-soft), 0 6px 14px -6px rgba(255, 111, 125, 0.5);

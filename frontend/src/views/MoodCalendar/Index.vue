@@ -260,7 +260,7 @@ html.reduce-motion .mc-section { animation: none; }
   transition: transform 0.15s ease;
 }
 .mc-cell:not(.empty) { cursor: pointer; }
-.mc-cell:not(.empty):hover { transform: scale(1.15); z-index: 2; }
+html:not(.reduce-motion) .mc-cell:not(.empty):hover { transform: scale(1.15); z-index: 2; }
 .mc-cell:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 1px; }
 .mc-cell.has-mood { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
 .mc-cell-text { pointer-events: none; }
@@ -293,7 +293,7 @@ html.reduce-motion .mc-section { animation: none; }
 /* 统计 */
 .mc-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
 .mc-stats :deep(.ind-stat) { transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
-.mc-stats :deep(.ind-stat):hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
+html:not(.reduce-motion) .mc-stats :deep(.ind-stat):hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
 
 @media (max-width: 767px) {
   .brand { padding: 10px 14px; margin-bottom: 12px; }

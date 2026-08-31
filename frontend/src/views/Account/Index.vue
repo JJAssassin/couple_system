@@ -745,7 +745,7 @@ onMounted(async () => {
   box-shadow: var(--shadow-card);
   transition: all var(--dur-micro) var(--ease-love);
 }
-.account-btn-primary:hover {
+html:not(.reduce-motion) .account-btn-primary:hover {
   box-shadow: var(--shadow-float);
   transform: translateY(-1px);
 }

@@ -412,7 +412,7 @@ onMounted(async () => {
   background: var(--color-surface-2); border: 1.5px solid var(--color-border);
   transition: transform var(--dur-micro) var(--ease-love), border-color var(--dur-micro) var(--ease-love);
 }
-.opt:hover:not(:disabled) { border-color: var(--color-rose); transform: translateY(-1px); }
+html:not(.reduce-motion) .opt:hover:not(:disabled) { border-color: var(--color-rose); transform: translateY(-1px); }
 .opt:disabled { opacity: .6; cursor: not-allowed; }
 .opt-idx {
   flex: 0 0 26px; height: 26px; display: grid; place-items: center; border-radius: 50%;

@@ -555,7 +555,7 @@ async function doCommit() {
   border: 2px solid var(--color-surface); box-shadow: 0 0 0 1px var(--color-border);
   transition: transform var(--dur-micro) var(--ease-love);
 }
-.sw:hover { transform: scale(1.12); }
+html:not(.reduce-motion) .sw:hover { transform: scale(1.12); }
 .sw.on { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-rose); }
 .native-date {
   padding: 8px 10px; border-radius: var(--radius-md); border: 1px solid var(--color-border);

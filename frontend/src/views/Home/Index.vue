@@ -634,7 +634,7 @@ onUnmounted(() => {
   box-shadow: var(--shadow-card);
   display: flex; flex-direction: column; gap: 4px; cursor: pointer; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
-.today-card:hover { transform: translateY(-3px); }
+.today-card:hover { /* 3D 悬浮由 .uvi-card3d 接管 */ }
 .today-card.ok { animation: cardGlow 2.8s ease-in-out infinite; }
 @keyframes cardGlow {
   0%, 100% { box-shadow: var(--shadow-card); }
@@ -656,7 +656,7 @@ onUnmounted(() => {
   box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love);
 }
-.film-cell:hover img, .film-cell:hover .film-ph { transform: translateY(-3px); }
+html:not(.reduce-motion) .film-cell:hover img, html:not(.reduce-motion) .film-cell:hover .film-ph { transform: translateY(-3px); }
 .film-cap { font-size: 12px; color: var(--color-ink-3); margin-top: 6px; text-align: center; }
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
@@ -672,12 +672,12 @@ onUnmounted(() => {
 .hm-lunar { color: var(--color-rose-text); font-weight: 600; margin-left: 4px; }
 .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
 .stat-link { cursor: pointer; transition: transform var(--dur-pop) var(--ease-love); }
-.stat-link:hover { transform: translateY(-3px); }
+.stat-link:hover { /* 3D 悬浮由 .uvi-card3d 接管 */ }
 
 /* 数据可视化大屏 */
 .viz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 .viz-card { padding: 14px 14px 8px; cursor: pointer; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
-.viz-card:hover { transform: translateY(-3px); box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.3), 0 10px 28px -10px rgba(122, 100, 98, 0.18); }
+.viz-card:hover { box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.3), 0 10px 28px -10px rgba(122, 100, 98, 0.18); }
 .viz-title { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 2px; }
 .viz-hint { margin-top: 10px; font-size: 12px; color: var(--color-ink-3); text-align: center; }
 
@@ -721,7 +721,7 @@ onUnmounted(() => {
   display: inline-flex; align-items: center; justify-content: center;
   transition: all var(--dur-micro) var(--ease-love);
 }
-.quote-shuffle:hover { background: var(--color-rose-soft); border-color: var(--color-rose); transform: scale(1.08); }
+html:not(.reduce-motion) .quote-shuffle:hover { background: var(--color-rose-soft); border-color: var(--color-rose); transform: scale(1.08); }
 .quote-shuffle.beat { animation: q-beat 0.6s var(--ease-love); }
 @keyframes q-beat {
   0%, 100% { transform: scale(1); }
@@ -737,7 +737,7 @@ onUnmounted(() => {
   display: inline-flex; align-items: center; justify-content: center;
   transition: all var(--dur-micro) var(--ease-love);
 }
-.quote-poster-btn:hover { background: var(--color-rose-soft); border-color: var(--color-rose); color: var(--color-rose-text); transform: scale(1.08); }
+html:not(.reduce-motion) .quote-poster-btn:hover { background: var(--color-rose-soft); border-color: var(--color-rose); color: var(--color-rose-text); transform: scale(1.08); }
 
 /* 无障碍：将原 div/span 点击区改为原生 button，统一重置 + 键盘焦点环 */
 button.hero-edit, button.hero-set-cta, button.today-card, button.film-cell, button.stat-link, .viz-card.ind-card-shell {

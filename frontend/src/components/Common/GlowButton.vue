@@ -38,7 +38,7 @@ defineEmits<{ (e: 'click', ev: MouseEvent): void }>();
     transform var(--dur-micro) var(--ease-love),
     box-shadow var(--dur-micro) var(--ease-love);
 }
-.uvi-glow-btn:hover:not(:disabled) {
+html:not(.reduce-motion) .uvi-glow-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, var(--color-rose-hover) 0%, var(--color-rose) 100%);
   transform: translateY(-1px);
   box-shadow: 0 10px 26px -8px rgba(255, 111, 125, 0.6);

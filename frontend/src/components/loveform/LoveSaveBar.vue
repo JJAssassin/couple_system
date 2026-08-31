@@ -71,7 +71,7 @@ const emit = defineEmits<{ (e: 'cancel'): void; (e: 'save'): void }>();
     box-shadow var(--dur-micro) var(--ease-love),
     background var(--dur-pop) var(--ease-love);
 }
-.lsb-save:hover { box-shadow: 0 8px 20px rgba(255, 111, 125, 0.4); transform: translateY(-1px); }
+html:not(.reduce-motion) .lsb-save:hover { box-shadow: 0 8px 20px rgba(255, 111, 125, 0.4); transform: translateY(-1px); }
 .lsb-save:active { transform: translateY(0) scale(0.99); }
 .lsb-save.busy { cursor: progress; }
 .lsb-save.done { background: linear-gradient(135deg, #43c98a, #2fae74); box-shadow: 0 6px 16px rgba(47, 174, 116, 0.3); }

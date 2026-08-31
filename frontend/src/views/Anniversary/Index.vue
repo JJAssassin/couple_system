@@ -521,7 +521,7 @@ onUnmounted(() => {
   box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
 }
-.anniv-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
+html:not(.reduce-motion) .anniv-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); }
 .anniv-card.near { border-color: var(--color-rose-soft); box-shadow: 0 4px 12px rgba(31,41,55,.06), 0 16px 40px -12px rgba(214,100,120,.28); }
 .anniv-card.soon { border-color: color-mix(in srgb, var(--color-rose-soft) 55%, var(--color-border)); }
 .anniv-card.pop { animation: acPop 0.3s var(--ease-love); }

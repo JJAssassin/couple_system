@@ -83,7 +83,7 @@ function go() {
   box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
-.ms:hover {
+html:not(.reduce-motion) .ms:hover {
   transform: translateY(-3px);
 }
 .ms.reached {

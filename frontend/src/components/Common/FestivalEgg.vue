@@ -151,7 +151,7 @@ onMounted(check)
   box-shadow: 0 8px 20px rgba(224, 106, 139, 0.35);
   transition: transform 0.15s var(--ease-love, ease);
 }
-.egg-btn:hover { transform: translateY(-1px) scale(1.02); }
+html:not(.reduce-motion) .egg-btn:hover { transform: translateY(-1px) scale(1.02); }
 .no-anim .egg-heart { animation: none !important; opacity: 0.5; }
 @keyframes egg-fall {
   0% { transform: translateY(-12%) rotate(0deg); opacity: 0; }

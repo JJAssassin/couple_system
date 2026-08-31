@@ -448,7 +448,7 @@ onUnmounted(() => {
 }
 .msg.mine { border-left-color: var(--color-cocoa); }
 .msg.pinned { background: color-mix(in srgb, var(--color-rose-soft) 40%, var(--color-surface)); }
-.msg:hover { transform: translateY(-3px); box-shadow: var(--elev-3); }
+html:not(.reduce-motion) .msg:hover { transform: translateY(-3px); box-shadow: var(--elev-3); }
 .msg.pop { animation: msgPop 0.3s var(--ease-love); }
 @keyframes msgPop { 0% { opacity: 1; } 50% { opacity: 0.25; } 100% { opacity: 1; } }
 .msg-top { display: flex; align-items: center; gap: 8px; }
@@ -497,7 +497,7 @@ onUnmounted(() => {
   border: none; background: transparent; border-radius: var(--radius-sm);
   transition: transform var(--dur-micro) var(--ease-love), background var(--dur-micro) var(--ease-love);
 }
-.reaction-opt:hover { transform: scale(1.18); background: var(--color-surface-2); }
+html:not(.reduce-motion) .reaction-opt:hover { transform: scale(1.18); background: var(--color-surface-2); }
 .reaction-opt.active { background: var(--color-rose-soft); }
 
 .edit-color-block { display: flex; flex-direction: column; gap: 8px; }
