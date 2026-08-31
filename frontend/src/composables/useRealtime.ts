@@ -16,6 +16,12 @@ const starting = ref(false);
 export interface SyncChange { kind: 'created' | 'updated' | 'deleted' | 'reload'; id: number | null; payload?: any; }
 export interface SyncSignal { module: string; changes: SyncChange[]; senderId?: number | null; }
 
+// 聚合视图（时间线 / 年度统计）实时刷新的内容源模块集合。
+// 后端 15 个 [Broadcast] 中进入"聚合流"的实体；两处聚合视图必须订阅同一集合，避免漂移（曾因各自硬编码漏同步）。
+export const AGGREGATE_SYNC_MODULES = [
+  'diary', 'album', 'wish', 'quiz', 'board', 'footprint', 'todo', 'conflict', 'budget', 'anniversary', 'date',
+] as const;
+
 const listeners = new Map<string, Set<(sig: SyncSignal) => void>>();
 // 全局监听：收到任意模块信号时都会触发（无论是否订阅了该模块），用于"伴侣更新"等跨模块提示
 const anyListeners = new Set<(sig: SyncSignal) => void>();

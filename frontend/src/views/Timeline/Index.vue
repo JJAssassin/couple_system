@@ -139,7 +139,7 @@ import IndPager from '@/components/industrial/IndPager.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
-import { useRealtime } from '@/composables/useRealtime';
+import { useRealtime, AGGREGATE_SYNC_MODULES } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 
 const { useModuleSync } = useRealtime();
@@ -264,11 +264,10 @@ function relativeTime(s: string) {
 watch(params, load);
 onMounted(() => {
   load();
-  // 时间线是多源聚合视图，后端不单独广播 'timeline'；改为订阅各内容源模块（与 Stats 聚合刷新同构）。
+  // 时间线是多源聚合视图，后端不单独广播 'timeline'；改为订阅各内容源模块（与 Stats 聚合刷新同构，复用共享常量）。
   // 任一内容源（日记/相册/愿望/默契/留言板/足迹/待办/矛盾/记账/纪念日/约会）变更即整表重载 + 错落入场。
-  const SYNC_MODULES = ['diary', 'album', 'wish', 'quiz', 'board', 'footprint', 'todo', 'conflict', 'budget', 'anniversary', 'date'];
-  SYNC_MODULES.forEach((m) => useModuleSync(m, { items, getId: (i: TimelineItemDto) => i.id, load }));
-  SYNC_MODULES.forEach((m) => useSyncSettle(m, container, items, '.tl-item'));
+  AGGREGATE_SYNC_MODULES.forEach((m) => useModuleSync(m, { items, getId: (i: TimelineItemDto) => i.id, load }));
+  AGGREGATE_SYNC_MODULES.forEach((m) => useSyncSettle(m, container, items, '.tl-item'));
 });
 </script>
 

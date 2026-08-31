@@ -103,7 +103,7 @@ import { listFootprints } from '@/api/footprint';
 import type { ImageDto, FootprintDto } from '@/types';
 import type { PosterData } from '@/types/poster';
 import { useStaggerEnter } from '@/composables/useAnimation';
-import { useRealtime } from '@/composables/useRealtime';
+import { useRealtime, AGGREGATE_SYNC_MODULES } from '@/composables/useRealtime';
 
 const currentYear = new Date().getFullYear();
 const report = ref<YearReport | null>(null);
@@ -204,8 +204,7 @@ const { onSync } = useRealtime();
 function reload() {
   fetchYearReport(selectedYear.value).then((r) => { report.value = r; }).catch(() => {});
 }
-['diary', 'album', 'wish', 'quiz', 'board', 'footprint', 'todo', 'conflict', 'budget', 'anniversary', 'date']
-  .forEach((m) => onSync(m, reload));
+AGGREGATE_SYNC_MODULES.forEach((m) => onSync(m, reload));
 
 // ---- ECharts options（ChartWrap 提供主题/调色板） ----
 const financeOption = computed(() => {
