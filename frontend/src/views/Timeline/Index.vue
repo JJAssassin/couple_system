@@ -264,8 +264,11 @@ function relativeTime(s: string) {
 watch(params, load);
 onMounted(() => {
   load();
-  useModuleSync('timeline', { items, getId: (i: TimelineItemDto) => i.id, load });
-  useSyncSettle('timeline', container, items, '.tl-item');
+  // 时间线是多源聚合视图，后端不单独广播 'timeline'；改为订阅各内容源模块（与 Stats 聚合刷新同构）。
+  // 任一内容源（日记/相册/愿望/默契/留言板/足迹/待办/矛盾/记账/纪念日/约会）变更即整表重载 + 错落入场。
+  const SYNC_MODULES = ['diary', 'album', 'wish', 'quiz', 'board', 'footprint', 'todo', 'conflict', 'budget', 'anniversary', 'date'];
+  SYNC_MODULES.forEach((m) => useModuleSync(m, { items, getId: (i: TimelineItemDto) => i.id, load }));
+  SYNC_MODULES.forEach((m) => useSyncSettle(m, container, items, '.tl-item'));
 });
 </script>
 
