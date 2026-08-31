@@ -246,8 +246,9 @@ onMounted(async () => {
   try { await refresh(); } finally { loading.value = false; }
   const { onSync } = useRealtime();
   // 伴侣新增/完成/删除约会时，整表刷新并让卡片错落入场
-  onSync('dateplan', () => refresh());
-  useSyncSettle('dateplan', container, list, '.love-card');
+  // 注意：后端 CoupleDateRecord 广播模块名为 "date"（Entities.cs [Broadcast("date")]），须与之一致
+  onSync('date', () => refresh());
+  useSyncSettle('date', container, list, '.love-card');
 });
 </script>
 
