@@ -35,7 +35,11 @@
         <div
           class="love-card"
           :class="{ reconciled: c.reconcileTime }"
+          role="button"
+          tabindex="0"
           @click="openDetail(c)"
+          @keydown.enter="openDetail(c)"
+          @keydown.space.prevent="openDetail(c)"
         >
           <div class="card-top">
             <n-tag :type="levelMap[c.conflictLevel]?.type ?? 'default'" size="small" round>
