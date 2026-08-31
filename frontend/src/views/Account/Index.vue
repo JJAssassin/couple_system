@@ -94,7 +94,7 @@
         <div class="month-pick">
           <NButton size="small" quaternary @click="exportCsv">导出 CSV</NButton>
           <NButton size="small" quaternary @click="showImport = true">导入 CSV</NButton>
-          <NButton type="primary" size="small" v-press-bounce @click="openCreate">+ 记一笔</NButton>
+          <NButton type="primary" size="small" class="uvi-shine" v-press-bounce @click="openCreate">+ 记一笔</NButton>
         </div>
       </div>
       <n-tabs v-model:value="recFilter" type="segment" class="rec-tabs">
@@ -103,7 +103,7 @@
         <n-tab-pane name="out" tab="支出" />
       </n-tabs>
       <div v-if="list.length" class="records">
-        <div v-for="r in list" :key="r.id" class="love-card rec">
+        <div v-for="r in list" :key="r.id" class="love-card rec uvi-glass-pop">
           <div class="rec-left">
             <NTag :type="r.recordType === 1 ? 'success' : 'warning'" size="small">
               {{ r.recordType === 1 ? '收入' : '支出' }}
@@ -152,7 +152,7 @@
       <template #footer>
         <div class="account-foot">
           <NButton class="account-btn-cancel" v-press-bounce @click="showModal = false">取消</NButton>
-          <NButton type="primary" :loading="saving" v-press-bounce @click="save" class="account-btn-primary">保存</NButton>
+          <NButton type="primary" :loading="saving" v-press-bounce @click="save" class="account-btn-primary uvi-shine">保存</NButton>
         </div>
       </template>
     </NModal>
@@ -165,7 +165,7 @@
         <NFormItem label="当月总预算（拖动滑块快速设定）" class="budget-form-item">
           <LiquidSlider v-model="budgetTotal" :min="0" :max="20000" :step="100" suffix="元" label="当月总预算" />
         </NFormItem>
-        <NButton type="primary" block v-press-bounce :disabled="bForm.total == null" @click="saveTotal" class="budget-btn-primary">保存总预算</NButton>
+        <NButton type="primary" block v-press-bounce :disabled="bForm.total == null" @click="saveTotal" class="budget-btn-primary uvi-shine">保存总预算</NButton>
       </NForm>
 
       <NDivider>分类预算</NDivider>
@@ -183,7 +183,7 @@
       <div class="cb-add">
         <NInput v-model:value="bForm.catName" placeholder="分类名（如 餐饮）" style="flex: 1" class="budget-input" />
         <NInputNumber v-model:value="bForm.catLimit" :min="0" :precision="2" placeholder="额度" class="budget-input" />
-        <NButton type="primary" size="small" v-press-bounce :disabled="!bForm.catName || bForm.catLimit == null" @click="addCatBudget" class="budget-btn-add">添加</NButton>
+        <NButton type="primary" size="small" v-press-bounce :disabled="!bForm.catName || bForm.catLimit == null" @click="addCatBudget" class="budget-btn-add uvi-shine">添加</NButton>
       </div>
     </NModal>
 
@@ -198,7 +198,7 @@
       <template #footer>
         <div class="account-foot">
           <NButton class="account-btn-cancel" v-press-bounce @click="showPoster = false">关闭</NButton>
-          <NButton type="primary" v-click-burst @click="posterRef?.download" class="account-btn-primary">保存到相册</NButton>
+          <NButton type="primary" v-click-burst @click="posterRef?.download" class="account-btn-primary uvi-shine">保存到相册</NButton>
         </div>
       </template>
     </NModal>
@@ -665,7 +665,7 @@ onMounted(async () => {
 .rec-tabs { margin-bottom: 14px; }
 .records { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .rec { display: flex; align-items: center; gap: 12px; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love); }
-.rec:hover { transform: translateY(-3px); box-shadow: var(--elev-3); }
+.rec:hover { box-shadow: var(--elev-3); }
 .rec-left { display: flex; flex-direction: column; gap: 6px; }
 .rec-cat { font-weight: 600; }
 .rec-mid { flex: 1; }

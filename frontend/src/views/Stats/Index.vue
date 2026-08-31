@@ -8,12 +8,12 @@
 
     <!-- 年度切换 + 主题标题 -->
     <header class="yr-head">
-      <button class="yr-nav" aria-label="上一年" @click="shiftYear(-1)">‹</button>
+      <button class="yr-nav uvi-jelly" aria-label="上一年" @click="shiftYear(-1)">‹</button>
       <div class="yr-title-wrap">
         <h1 class="yr-title">我们这一年</h1>
         <div class="yr-sub">{{ report?.year ?? currentYear }} · 属于我们的数字回忆</div>
       </div>
-      <button class="yr-nav" aria-label="下一年" :disabled="!report || report.year >= currentYear" @click="shiftYear(1)">›</button>
+      <button class="yr-nav uvi-jelly" aria-label="下一年" :disabled="!report || report.year >= currentYear" @click="shiftYear(1)">›</button>
     </header>
 
     <!-- 骨架 / 空 -->
@@ -27,22 +27,22 @@
         <AuroraBackdrop class="hero-aurora" />
         <div class="hero-num"><GradientText tag="span"><NumberRoll :value="report.loveDays" /></GradientText><span class="hero-unit">天</span></div>
         <div class="hero-txt">这一年，我们继续爱着彼此 · 共 {{ report.anniversaryTotal }} 个纪念日</div>
-        <button class="poster-btn" @click="poster?.open()">✨ 生成我们的海报</button>
+        <GlowButton style="width:auto;display:inline-block;margin-top:16px" @click="poster?.open()">✨ 生成我们的海报</GlowButton>
       </section>
 
       <!-- 数字卡片：内容产出 -->
       <section class="block">
         <IndSectionTitle label="我们的痕迹" :led="true" />
         <div class="cards">
-          <div class="card"><div class="num"><NumberRoll :value="report.diaryCount" /></div><div class="lbl">篇日记 · 平均心情 <NumberRoll :value="report.avgMood" :decimals="1" /> 分</div></div>
-          <div class="card"><div class="num"><NumberRoll :value="report.imageCount" /></div><div class="lbl">张照片定格瞬间</div></div>
-          <div class="card"><div class="num"><NumberRoll :value="report.wishDone" />/<NumberRoll :value="report.wishCreated" /></div><div class="lbl">愿望达成</div></div>
-          <div class="card"><div class="num"><NumberRoll :value="report.quizRounds" /></div><div class="lbl">轮默契问答 · 默契率 <NumberRoll :value="report.matchRate" />%</div></div>
-          <div class="card"><div class="num"><NumberRoll :value="report.boardCount" /></div><div class="lbl">条留言悄悄话</div></div>
-          <div class="card"><div class="num"><NumberRoll :value="report.footprintCount" /></div><div class="lbl">个小确幸足迹</div></div>
-          <div class="card"><div class="num"><NumberRoll :value="report.dateCompleted" />/<NumberRoll :value="report.dateCount" /></div><div class="lbl">次约会成行</div></div>
-          <div class="card"><div class="num"><NumberRoll :value="report.todoDone" /></div><div class="lbl">件待办完成</div></div>
-          <div class="card"><div class="num"><NumberRoll :value="report.conflictResolved" />/<NumberRoll :value="report.conflictCount" /></div><div class="lbl">次矛盾已和解</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.diaryCount" /></div><div class="lbl">篇日记 · 平均心情 <NumberRoll :value="report.avgMood" :decimals="1" /> 分</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.imageCount" /></div><div class="lbl">张照片定格瞬间</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.wishDone" />/<NumberRoll :value="report.wishCreated" /></div><div class="lbl">愿望达成</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.quizRounds" /></div><div class="lbl">轮默契问答 · 默契率 <NumberRoll :value="report.matchRate" />%</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.boardCount" /></div><div class="lbl">条留言悄悄话</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.footprintCount" /></div><div class="lbl">个小确幸足迹</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.dateCompleted" />/<NumberRoll :value="report.dateCount" /></div><div class="lbl">次约会成行</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.todoDone" /></div><div class="lbl">件待办完成</div></div>
+          <div class="card uvi-card3d"><div class="num"><NumberRoll :value="report.conflictResolved" />/<NumberRoll :value="report.conflictCount" /></div><div class="lbl">次矛盾已和解</div></div>
         </div>
       </section>
 
@@ -50,19 +50,19 @@
       <section class="block">
         <IndSectionTitle label="一起记账" :led="true" />
         <div class="cards">
-          <div class="card"><div class="num inc">+{{ fmt(report.income) }}</div><div class="lbl">收入</div></div>
-          <div class="card"><div class="num exp">-{{ fmt(report.expense) }}</div><div class="lbl">支出</div></div>
-          <div class="card"><div class="num bal">{{ fmt(report.income - report.expense) }}</div><div class="lbl">结余</div></div>
+          <div class="card uvi-card3d"><div class="num inc">+{{ fmt(report.income) }}</div><div class="lbl">收入</div></div>
+          <div class="card uvi-card3d"><div class="num exp">-{{ fmt(report.expense) }}</div><div class="lbl">支出</div></div>
+          <div class="card uvi-card3d"><div class="num bal">{{ fmt(report.income - report.expense) }}</div><div class="lbl">结余</div></div>
         </div>
-        <div class="chart-card"><div class="chart-title">月度收支</div><ChartWrap :option="financeOption" height="260px" /></div>
+        <div class="chart-card uvi-glass-pop"><div class="chart-title">月度收支</div><ChartWrap :option="financeOption" height="260px" /></div>
         <div v-if="report.topSpend.length" class="chart-card"><div class="chart-title">支出去向 TOP</div><ChartWrap :option="spendOption" height="260px" /></div>
       </section>
 
       <!-- 心情与矛盾趋势 -->
       <section class="block">
         <IndSectionTitle label="情绪曲线" :led="true" />
-        <div class="chart-card"><div class="chart-title">月度平均心情（1-10）</div><ChartWrap :option="moodOption" height="240px" /></div>
-        <div class="chart-card"><div class="chart-title">月度矛盾次数</div><ChartWrap :option="conflictOption" height="240px" /></div>
+        <div class="chart-card uvi-glass-pop"><div class="chart-title">月度平均心情（1-10）</div><ChartWrap :option="moodOption" height="240px" /></div>
+        <div class="chart-card uvi-glass-pop"><div class="chart-title">月度矛盾次数</div><ChartWrap :option="conflictOption" height="240px" /></div>
       </section>
 
       <!-- 纪念日回顾 -->
@@ -95,6 +95,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import GlowButton from '@/components/Common/GlowButton.vue';
 import { NumberRoll } from '@/interactions';
 import { fetchYearReport, type YearReport } from '@/api/stats';
 import { listAlbum, listImages } from '@/api/album';
@@ -269,7 +270,7 @@ const conflictOption = computed(() => ({
   background: var(--color-surface); color: var(--color-ink-2); font-size: 20px; cursor: pointer;
   transition: transform var(--dur-pop) var(--ease-love);
 }
-.yr-nav:hover:not(:disabled) { transform: translateY(-2px); color: var(--color-rose-text); border-color: var(--color-rose); }
+.yr-nav:hover:not(:disabled) { color: var(--color-rose-text); border-color: var(--color-rose); }
 .yr-nav:disabled { opacity: 0.3; cursor: default; }
 .yr-title-wrap { text-align: center; }
 .yr-title { margin: 0; font-size: 22px; font-weight: 800; color: var(--color-ink); }
@@ -286,13 +287,7 @@ const conflictOption = computed(() => ({
 .hero-num { position: relative; font-size: 52px; line-height: 1; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; letter-spacing: -0.03em; }
 .hero-unit { font-size: 20px; margin-left: 6px; color: var(--color-ink-2); }
 .hero-txt { position: relative; margin-top: 10px; font-size: 13px; color: var(--color-ink-2); }
-.poster-btn {
-  position: relative; margin-top: 16px; padding: 10px 26px; border-radius: 999px;
-  border: 1px solid var(--color-rose); background: var(--color-surface);
-  color: var(--color-rose-text); font-size: 14px; font-weight: 600; cursor: pointer;
-  transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
-}
-.poster-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px -10px rgba(255, 111, 125, 0.5); }
+/* 主行动按钮改用 GlowButton 组件（流动渐变描边 + 高光扫过，见模板） */
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .card {
@@ -301,7 +296,7 @@ const conflictOption = computed(() => ({
   display: flex; flex-direction: column; gap: 4px;
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
 }
-.card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); border-color: var(--color-rose-soft); }
+.card:hover { box-shadow: 0 4px 12px rgba(31, 41, 55, 0.06), 0 18px 44px -12px rgba(122, 100, 98, 0.22); border-color: var(--color-rose-soft); }
 .num { font-size: 24px; font-weight: 800; color: var(--color-ink); }
 .num.inc { color: #16a34a; }
 .num.exp { color: #dc2626; }

@@ -8,12 +8,12 @@
 
     <!-- 头部：年份切换 -->
     <header class="mc-head">
-      <button class="mc-nav" aria-label="上一年" @click="shiftYear(-1)">‹</button>
+      <button class="mc-nav uvi-jelly" aria-label="上一年" @click="shiftYear(-1)">‹</button>
       <div class="mc-title-wrap">
         <div class="mc-title">{{ currentYear }} 年</div>
         <div class="mc-sub">每一天都值得被记住</div>
       </div>
-      <button class="mc-nav" aria-label="下一年" :disabled="loading || currentYear >= maxYear" @click="shiftYear(1)">›</button>
+      <button class="mc-nav uvi-jelly" aria-label="下一年" :disabled="loading || currentYear >= maxYear" @click="shiftYear(1)">›</button>
     </header>
 
     <!-- 加载态 -->
@@ -69,7 +69,7 @@
         <IndSectionTitle label="心情图例" :led="true" />
         <div class="mc-legend-inner">
           <span class="mc-legend-label">心情：</span>
-          <span class="mc-legend-item" v-for="s in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :key="s"
+          <span class="mc-legend-item uvi-shine" v-for="s in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]" :key="s"
             :style="{ background: moodColor(s) }">
             {{ s }}
           </span>

@@ -10,7 +10,7 @@
     <div class="page-head">
       <div class="ops">
         <NButton size="small" v-press-bounce :loading="loading" @click="onRefreshClick">刷新</NButton>
-        <NButton size="small" type="primary" :disabled="unread === 0" v-press-bounce @click="markAllRead">全部已读</NButton>
+        <NButton size="small" type="primary" class="uvi-shine" :disabled="unread === 0" v-press-bounce @click="markAllRead">全部已读</NButton>
         <NPopconfirm positive-text="删除" negative-text="取消" @positive-click="deleteReadAll">
           <template #trigger>
             <NButton size="small" type="error" ghost :disabled="!readList.length" v-press-bounce>删除已读</NButton>
@@ -42,7 +42,7 @@
             <div
               v-for="m in unreadList"
               :key="m.id"
-              class="m-card love-card unread"
+              class="m-card love-card unread uvi-glass-pop"
               role="button"
               tabindex="0"
               :aria-label="`${selectMode ? '选择消息：' : '展开消息：'}${m.title}`"
@@ -73,7 +73,7 @@
             <div
               v-for="m in readList"
               :key="m.id"
-              class="m-card love-card"
+              class="m-card love-card uvi-glass-pop"
               role="button"
               tabindex="0"
               :aria-label="`${selectMode ? '选择消息：' : '展开消息：'}${m.title}`"
@@ -110,10 +110,10 @@
 
         <!-- 选取模式：批量操作条 -->
         <div v-if="selectMode" class="sel-bar" role="toolbar" aria-label="批量操作">
-          <button type="button" class="sel-btn" v-press-bounce @click="toggleAll">{{ allSelected ? '取消全选' : '全选' }}</button>
+          <button type="button" class="sel-btn uvi-jelly" v-press-bounce @click="toggleAll">{{ allSelected ? '取消全选' : '全选' }}</button>
           <span class="sel-count">已选 {{ selected.size }} 条</span>
-          <button type="button" class="sel-btn sel-del" :disabled="!selected.size" v-press-bounce @click="deleteSelected">删除</button>
-          <button type="button" class="sel-btn sel-cancel" v-press-bounce @click="toggleSelectMode">取消</button>
+          <button type="button" class="sel-btn sel-del uvi-jelly" :disabled="!selected.size" v-press-bounce @click="deleteSelected">删除</button>
+          <button type="button" class="sel-btn sel-cancel uvi-jelly" v-press-bounce @click="toggleSelectMode">取消</button>
         </div>
       </template>
   </div>
@@ -318,7 +318,7 @@ onUnmounted(() => {
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
 .m-card.unread { box-shadow: 0 0 0 1.5px var(--color-rose), var(--shadow-card); }
-.m-card:hover { transform: translateY(-2px); box-shadow: var(--elev-2); }
+.m-card:hover { box-shadow: var(--elev-2); }
 .m-card.unread:hover { box-shadow: 0 0 0 1.5px var(--color-rose), var(--elev-2); }
 .m-card:active { transform: scale(0.99); }
 .m-card.open { box-shadow: 0 0 0 1.5px var(--color-rose-soft), var(--elev-2); }
