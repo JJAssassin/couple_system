@@ -230,13 +230,32 @@ html:not(.reduce-motion) .uvi-card3d:hover {
 }
 .uvi-toggle.disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ----------------------------- 减动效收敛 -------------------------------- */
-.reduce-motion .uvi-glow-border::after,
-.reduce-motion .uvi-shine::before,
+/* ----------------------------- 减动效：分级收敛（按需，而非一刀切） ----------
+   依据 WCAG 2.3.3 / MDN「prefers-reduced-motion」最佳实践：减少动效只应关掉
+   「会引起前庭不适」的强空间动效与持续循环动画，而非把所有动效都砍成死板。
+   项目全局 .reduce-motion 基线已把 animation/transition 归一为瞬时作为兜底，
+   此处只按「强空间」做显式归零；轻装饰不再二次禁用，避免界面失去生命力。
+
+   · 强空间 / 持续循环（减少模式下关闭）：
+     3D 倾斜(TiltCard)、卡片 3D 悬浮、玻璃悬浮位移、Jelly 缩放、
+     心跳循环、流动描边的色相旋转。
+   · 轻量 / 单次 / 非位移（减少模式下保留，基线收敛为瞬时出现即可）：
+     高光扫过(shine)、流动描边的「静态浮现」(停旋转但 hover 仍显示渐变环)、
+     焦点描边(input-draw，且强化键盘焦点可见性，属可访问性增强)。            */
+
+/* —— 强空间 / 循环：显式关闭 —— */
 .reduce-motion .uvi-jelly,
 .reduce-motion .uvi-heartbeat { animation: none !important; }
-.reduce-motion .uvi-glow-border::after { opacity: 0 !important; }
 .reduce-motion .uvi-card3d:hover,
 .reduce-motion .uvi-glass-pop:hover { transform: none; }
-.reduce-motion .uvi-input-draw:focus-within::after { opacity: 0; }
 .reduce-motion .uvi-tilt { transform: none !important; }
+/* 流动描边：停止色相旋转，但保留 hover 时静态渐变环浮现（非眩晕源） */
+.reduce-motion .uvi-glow-border::after { animation: none !important; }
+/* 焦点描边：减少模式下仍确保可见（覆盖基线瞬时，直接呈现而非动画展开），
+   强化键盘焦点可见性（WCAG 2.4.7） */
+.reduce-motion .uvi-input-draw:focus-within::after {
+  opacity: 1;
+  clip-path: inset(0 0 0 0);
+  transition: none;
+}
+/* 高光扫过(shine)等轻装饰：不在此清单，交由全局基线收敛为瞬时，不二次禁用 */
