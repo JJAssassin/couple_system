@@ -9,7 +9,7 @@
     <!-- 顶部：标题 + 写日记 -->
     <header class="page-head sec-head">
       <IndSectionTitle label="我们的日记" :led="true" />
-      <n-button type="primary" v-press-bounce @click="openWrite">写日记</n-button>
+      <n-button type="primary" class="uvi-glow-border" v-press-bounce @click="openWrite">写日记</n-button>
     </header>
 
     <!-- 分段：全部 / 我写的 / 对方写的 -->
@@ -33,9 +33,12 @@
 
     <!-- 列表 -->
     <div v-else class="cards">
-      <div
+      <TiltCard
         v-for="d in displayList"
         :key="d.id"
+        class="diary-card-wrap"
+      >
+      <div
         class="love-card diary-card"
         role="button"
         tabindex="0"
@@ -58,6 +61,7 @@
         </div>
         <div v-if="d.moodTag" class="mood-tag">#{{ d.moodTag }}</div>
       </div>
+      </TiltCard>
     </div>
 
     <IndPager
@@ -191,6 +195,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import TiltCard from '@/components/Common/TiltCard.vue';
 import {
   LoveSheet, LoveInput, LoveTextarea, LoveMoodPicker,
   LoveChips, LoveSegmented, LoveDateField, LoveSaveBar,
@@ -532,6 +537,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .diary-card { cursor: pointer; transition: box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love); }
+.diary-card-wrap { display: block; transform-style: preserve-3d; }
 .diary-card:hover { box-shadow: var(--elev-3); border-color: var(--color-rose-soft); }
 .diary-card:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
 .row1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }

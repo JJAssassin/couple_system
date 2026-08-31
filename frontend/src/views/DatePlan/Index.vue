@@ -18,10 +18,11 @@
     <section class="block">
       <div class="block-head">
         <IndSectionTitle label="待执行约会" :led="true" />
-        <NButton type="primary" size="small" v-press-bounce @click="openCreate">+ 加约会</NButton>
+        <NButton type="primary" size="small" class="uvi-glow-border" v-press-bounce @click="openCreate">+ 加约会</NButton>
       </div>
       <div v-if="pending.length" class="cards">
-        <div v-for="d in pending" :key="d.id" class="love-card card" :class="{ removing: removingId === d.id }">
+        <TiltCard v-for="d in pending" :key="d.id" class="dateplan-card-wrap">
+        <div class="love-card card" :class="{ removing: removingId === d.id }">
           <div class="card-top">
             <NTag size="small" type="info">计划中</NTag>
             <NPopconfirm @positive-click="remove(d)">
@@ -36,6 +37,7 @@
           <div class="sub-text">预算 ¥{{ (d.budget ?? 0).toFixed(2) }}</div>
           <NButton block type="primary" class="card-btn" v-press-bounce @click="openComplete(d)">标记完成</NButton>
         </div>
+        </TiltCard>
       </div>
       <IndEmpty v-else title="暂无待执行的约会" desc="去计划一次浪漫的约会吧，给彼此一个小期待" />
     </section>
@@ -44,7 +46,8 @@
     <section class="block">
       <IndSectionTitle label="约会回忆" :led="true" />
       <div v-if="history.length" class="cards">
-        <div v-for="d in history" :key="d.id" class="love-card card" :class="{ removing: removingId === d.id }">
+        <TiltCard v-for="d in history" :key="d.id" class="dateplan-card-wrap">
+        <div class="love-card card" :class="{ removing: removingId === d.id }">
           <div class="card-top">
             <NTag size="small" type="success">已完成</NTag>
             <NPopconfirm @positive-click="remove(d)">
@@ -59,6 +62,7 @@
           <div class="sub-text">实际花费 ¥{{ (d.realCost ?? 0).toFixed(2) }}</div>
           <div class="score"><NRate :value="d.experienceScore ?? 0" readonly size="small" /> <span class="sub-text">{{ d.experienceScore ?? 0 }} 分</span></div>
         </div>
+        </TiltCard>
       </div>
       <IndEmpty v-else title="还没有完成的约会" desc="完成一次约会后，回忆会在这里温柔存放" />
     </section>
@@ -104,6 +108,7 @@ import IndPager from '@/components/industrial/IndPager.vue';
 import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import TiltCard from '@/components/Common/TiltCard.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { usePagedList } from '@/composables/usePagedList';
 import { useRealtime } from '@/composables/useRealtime';
@@ -257,6 +262,7 @@ onMounted(async () => {
 .block-head h2 { margin: 0; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 .card { display: flex; flex-direction: column; gap: 6px; }
+.dateplan-card-wrap { display: block; transform-style: preserve-3d; }
 .card-top { display: flex; align-items: center; justify-content: space-between; }
 .card-plan { font-weight: 600; }
 .card-loc { color: var(--color-cocoa); }

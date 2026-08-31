@@ -87,7 +87,7 @@
       <div v-else class="starter love-card">
         <p class="starter-tip">来一局？随机抽一道题，两个人分别作答。</p>
         <div class="starter-actions">
-          <n-button type="primary" round :loading="starting" v-press-bounce @click="onStart(null)">
+          <n-button type="primary" round class="uvi-glow-border" :loading="starting" v-press-bounce @click="onStart(null)">
             <template #icon><Dices :size="16" /></template>
             随机抽一题
           </n-button>
@@ -117,9 +117,12 @@
         desc="答完第一局，这里就会记录你们的默契瞬间～"
       />
       <div v-else class="rounds">
-        <div
+        <TiltCard
           v-for="r in revealedRounds"
           :key="r.id"
+          class="quiz-round-wrap"
+        >
+        <div
           class="round love-card"
           :class="{ matched: r.isMatched }"
         >
@@ -149,6 +152,7 @@
             删除这条战绩？默契率会跟着重算。
           </n-popconfirm>
         </div>
+        </TiltCard>
       </div>
     </section>
 
@@ -219,6 +223,7 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import TiltCard from '@/components/Common/TiltCard.vue';
 import { feedback } from '@/utils/feedback';
 import { fireHearts } from '@/composables/useConfetti';
 
@@ -430,6 +435,7 @@ onMounted(async () => {
 
 .rounds { display: flex; flex-direction: column; gap: 12px; }
 .round { padding: 14px 16px; position: relative; border-left: 4px solid var(--color-border); }
+.quiz-round-wrap { display: block; transform-style: preserve-3d; }
 .round.matched { border-left-color: var(--color-rose); }
 .round-top { display: flex; align-items: center; gap: 10px; }
 .result {

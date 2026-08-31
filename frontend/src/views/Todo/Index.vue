@@ -11,7 +11,7 @@
       <div class="head-left">
         <IndProgressRing :value="rate" :size="62" :stroke="8" sublabel="完成率" />
       </div>
-      <n-button type="primary" round v-press-bounce @click="openAdd">+ 加待办</n-button>
+      <n-button type="primary" round class="uvi-glow-border" v-press-bounce @click="openAdd">+ 加待办</n-button>
     </header>
 
     <!-- 筛选条 -->

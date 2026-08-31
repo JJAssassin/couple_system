@@ -15,7 +15,7 @@
 
     <header class="page-head">
       <IndSectionTitle label="复盘记录" :led="true" />
-      <n-button type="primary" round v-press-bounce @click="openAdd">+ 记录矛盾</n-button>
+      <n-button type="primary" round class="uvi-glow-border" v-press-bounce @click="openAdd">+ 记录矛盾</n-button>
     </header>
 
     <IndSkeleton v-if="loading" variant="list" :rows="6" />
@@ -27,9 +27,12 @@
 
     <div v-else>
       <div class="cards">
-        <div
+        <TiltCard
           v-for="c in list"
           :key="c.id"
+          class="conflict-card-wrap"
+        >
+        <div
           class="love-card"
           :class="{ reconciled: c.reconcileTime }"
           @click="openDetail(c)"
@@ -43,6 +46,7 @@
           <div class="card-summary title-clamp">{{ c.summary }}</div>
           <div v-if="c.reconcileTime" class="card-reconciled sub-text">已和解</div>
         </div>
+        </TiltCard>
       </div>
       <IndPager
         mode="more"
@@ -141,6 +145,7 @@ import IndPager from '@/components/industrial/IndPager.vue';
 import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import TiltCard from '@/components/Common/TiltCard.vue';
 import { feedback } from '@/utils/feedback';
 import { usePagedList } from '@/composables/usePagedList';
 import { isMobile } from '@/composables/useDevice';
@@ -318,6 +323,7 @@ onUnmounted(() => {
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.conflict-card-wrap { display: block; transform-style: preserve-3d; }
 .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .card-time { font-size: 12px; }
 .card-summary { margin-top: 8px; font-size: 15px; color: var(--color-ink); }
