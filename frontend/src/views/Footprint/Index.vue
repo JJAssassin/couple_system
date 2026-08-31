@@ -21,10 +21,13 @@
 
     <section class="block">
       <div v-if="items.length" class="fp-grid">
-        <div
+        <TiltCard
           v-for="f in items"
           :key="f.id"
-          class="fp-card"
+          class="fp-card-wrap"
+        >
+          <div
+            class="fp-card"
           role="button"
           tabindex="0"
           :aria-label="`记录一次：${f.title}`"
@@ -64,6 +67,7 @@
           <div class="fp-time" v-if="f.lastIncrementTime">最近 · {{ fmt(f.lastIncrementTime) }}</div>
           <div class="fp-time" v-else>还没记录过</div>
         </div>
+        </TiltCard>
       </div>
       <IndEmpty v-else title="还没有足迹" desc="点「新增足迹」，把抱抱、亲亲、一起看过的电影都变成可 +1 的小确幸吧" />
     </section>
@@ -151,6 +155,7 @@ import IndLed from '@/components/industrial/IndLed.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IpIcon from '@/components/Common/IpIcon.vue';
+import TiltCard from '@/components/Common/TiltCard.vue';
 import { feedback } from '@/utils/feedback';
 
 const { useModuleSync } = useRealtime();
@@ -340,8 +345,9 @@ onMounted(async () => {
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
 .fp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
+.fp-card-wrap { display: block; transform-style: preserve-3d; }
 .fp-card {
-  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 26px 16px 20px; cursor: pointer; text-align: center; border-radius: var(--radius-lg);
   background: var(--color-surface); border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);

@@ -77,6 +77,7 @@
                   :style="{ animationDelay: i * 0.05 + 's' }"
                 >
                   <span class="tl-dot" :class="`t-${item.type}`"></span>
+                  <TiltCard class="tl-card-wrap">
                   <div class="love-card tl-card">
                     <div class="tl-head">
                       <NTag :type="tagType(item.type)" size="small">{{ typeLabel(item.type) }}</NTag>
@@ -105,6 +106,7 @@
                       </button>
                     </template>
                   </div>
+                  </TiltCard>
                 </div>
               </div>
             </div>
@@ -136,6 +138,7 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import TiltCard from '@/components/Common/TiltCard.vue';
 import { useRealtime } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 
@@ -351,6 +354,7 @@ html.reduce-motion .tl-item { animation: none; }
 .tl-dot.t-diary { --chip-c: var(--color-semantic-diary); }
 .tl-dot.t-wish { --chip-c: var(--color-semantic-wish); }
 .tl-dot.t-conflict { --chip-c: var(--color-semantic-conflict); }
+.tl-card-wrap { display: block; transform-style: preserve-3d; }
 .tl-card { padding: 14px 16px; transition: box-shadow 0.18s var(--ease-love), transform 0.18s var(--ease-love); }
 .tl-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover, 0 8px 24px -10px rgba(31,41,55,0.18)); }
 .tl-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }

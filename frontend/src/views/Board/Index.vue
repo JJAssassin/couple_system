@@ -54,7 +54,7 @@
         </div>
         <div class="composer-actions">
           <ImageField v-model="draftImage" />
-          <n-button type="primary" round :disabled="!draft.trim()" :loading="sending" v-click-burst @click="send">
+          <n-button type="primary" round class="uvi-shine" :disabled="!draft.trim()" :loading="sending" v-click-burst @click="send">
             {{ activeTab === 'public' ? '贴上墙' : '发送私信' }}
           </n-button>
         </div>
