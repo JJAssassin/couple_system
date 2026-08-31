@@ -62,6 +62,48 @@
                 </div>
                 <div class="m-time">{{ fmt(m.createTime) }}</div>
                 <div class="m-content" :class="{ clamp: !expanded.has(m.id) }">{{ m.content || '（无正文）' }}</div>
+
+                <!-- 已产生的反应胶囊 -->
+                <div v-if="reactionList(m).length" class="msg-reactions">
+                  <button
+                    v-for="r in reactionList(m)"
+                    :key="r.key"
+                    class="reaction-pill"
+                    :class="{ mine: r.mine, 'uvi-heartbeat': r.key === 'emoji_heart' }"
+                    :aria-pressed="r.mine"
+                    :aria-label="`${r.count} 人反应，${r.mine ? '你已反应，点击取消' : '点击也反应'}`"
+                    @click.stop="toggleReaction(m, r.key)"
+                  >
+                    <IpIcon :name="r.key" :size="16" />
+                    <span class="reaction-count">{{ r.count }}</span>
+                  </button>
+                </div>
+
+                <div class="msg-actions">
+                  <div class="react-wrap">
+                    <button
+                      class="msg-btn react-trigger"
+                      :class="{ on: reactingId === m.id }"
+                      :aria-expanded="reactingId === m.id"
+                      aria-label="添加反应"
+                      @click.stop="hapticForAction('tap'); reactingId = reactingId === m.id ? null : m.id"
+                    >
+                      <IpIcon name="emoji_heart" :size="15" /> 反应
+                    </button>
+                    <div v-if="reactingId === m.id" class="reaction-picker" role="menu">
+                      <button
+                        v-for="r in REACTIONS"
+                        :key="r.key"
+                        class="reaction-opt"
+                        :class="{ active: hasReacted(m, r.key), 'uvi-heartbeat': r.key === 'emoji_heart' }"
+                        :aria-label="`反应：${r.label}`"
+                        @click.stop="toggleReaction(m, r.key)"
+                      >
+                        <IpIcon :name="r.key" :size="20" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -92,6 +134,48 @@
                 </div>
                 <div class="m-time">{{ fmt(m.createTime) }}</div>
                 <div class="m-content" :class="{ clamp: !expanded.has(m.id) }">{{ m.content || '（无正文）' }}</div>
+
+                <!-- 已产生的反应胶囊 -->
+                <div v-if="reactionList(m).length" class="msg-reactions">
+                  <button
+                    v-for="r in reactionList(m)"
+                    :key="r.key"
+                    class="reaction-pill"
+                    :class="{ mine: r.mine, 'uvi-heartbeat': r.key === 'emoji_heart' }"
+                    :aria-pressed="r.mine"
+                    :aria-label="`${r.count} 人反应，${r.mine ? '你已反应，点击取消' : '点击也反应'}`"
+                    @click.stop="toggleReaction(m, r.key)"
+                  >
+                    <IpIcon :name="r.key" :size="16" />
+                    <span class="reaction-count">{{ r.count }}</span>
+                  </button>
+                </div>
+
+                <div class="msg-actions">
+                  <div class="react-wrap">
+                    <button
+                      class="msg-btn react-trigger"
+                      :class="{ on: reactingId === m.id }"
+                      :aria-expanded="reactingId === m.id"
+                      aria-label="添加反应"
+                      @click.stop="hapticForAction('tap'); reactingId = reactingId === m.id ? null : m.id"
+                    >
+                      <IpIcon name="emoji_heart" :size="15" /> 反应
+                    </button>
+                    <div v-if="reactingId === m.id" class="reaction-picker" role="menu">
+                      <button
+                        v-for="r in REACTIONS"
+                        :key="r.key"
+                        class="reaction-opt"
+                        :class="{ active: hasReacted(m, r.key), 'uvi-heartbeat': r.key === 'emoji_heart' }"
+                        :aria-label="`反应：${r.label}`"
+                        @click.stop="toggleReaction(m, r.key)"
+                      >
+                        <IpIcon :name="r.key" :size="20" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -138,8 +222,13 @@ import { useRealtime } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 import { feedback } from '@/utils/feedback';
 import { Mail, Gem, CheckCircle2, Heart, Star, Image as ImageIcon, PenLine, Check } from 'lucide-vue-next';
+import IpIcon from '@/components/Common/IpIcon.vue';
+import { hapticForAction } from '@/composables/useHaptic';
+import { useAuthStore } from '@/store/authStore';
 
 const setting = useSettingStore();
+const auth = useAuthStore();
+const meId = computed(() => auth.profile?.id ?? 0);
 
 const expanded = ref<Set<number>>(new Set());
 // 选取模式：删除已读 / 批量选取删除
@@ -262,6 +351,51 @@ async function markAllRead() {
   feedback.info('已把所有消息标记为已读');
 }
 
+// 反应：与留言板共享 8 个表情，名称对应 src/assets/icons/ip/emoji_*.png
+const REACTIONS = [
+  { key: 'emoji_heart', label: '比心' },
+  { key: 'emoji_kiss', label: '亲亲' },
+  { key: 'emoji_hug', label: '抱抱' },
+  { key: 'emoji_laugh', label: '笑哭' },
+  { key: 'emoji_star', label: '星星' },
+  { key: 'emoji_surprised', label: '惊讶' },
+  { key: 'emoji_cry', label: '哭哭' },
+  { key: 'emoji_angry', label: '生气' },
+];
+// 当前展开表情选择器的消息 id（null=全部收起）
+const reactingId = ref<number | null>(null);
+
+// 把消息的 reactions 字典整理成「有数量」的列表，并标记当前用户是否已点
+function reactionList(m: SystemMessageDto) {
+  const r = m.reactions ?? {};
+  return Object.entries(r)
+    .filter(([, users]) => (users?.length ?? 0) > 0)
+    .map(([key, users]) => ({ key, count: users.length, mine: users.includes(meId.value) }))
+    .sort((a, b) => b.count - a.count);
+}
+function hasReacted(m: SystemMessageDto, key: string) {
+  return (m.reactions?.[key] ?? []).includes(meId.value);
+}
+// 切换某条消息的某个表情：已点则取消，未点则加上；用返回的最新 reactions 就地更新，避免整页刷新打断滚动
+async function toggleReaction(m: SystemMessageDto, key: string) {
+  reactingId.value = null;
+  try {
+    const res = await msgApi.addReaction({ id: m.id, emojiKey: key });
+    const idx = list.value.findIndex(x => x.id === m.id);
+    if (idx >= 0) list.value[idx] = { ...list.value[idx], reactions: res.reactions };
+    hapticForAction('tap');
+  } catch {
+    feedback.warn('反应失败，请重试');
+  }
+}
+// 点击空白处收起表情选择器
+function onDocClick(e: MouseEvent) {
+  if (reactingId.value == null) return;
+  const el = e.target as HTMLElement | null;
+  if (el && el.closest('.react-wrap')) return;
+  reactingId.value = null;
+}
+
 useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 const { useModuleSync } = useRealtime();
 onMounted(async () => {
@@ -281,9 +415,11 @@ onMounted(async () => {
       unread.value = (await msgApi.unreadCount()) ?? 0;
     } catch { /* 忽略 */ }
   }, 30000);
+  window.addEventListener('pointerdown', onDocClick);
 });
 onUnmounted(() => {
   if (timer) window.clearInterval(timer);
+  window.removeEventListener('pointerdown', onDocClick);
 });
 </script>
 
@@ -363,6 +499,46 @@ onUnmounted(() => {
 .sel-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .sel-del { color: var(--color-rose-text); }
 .sel-cancel { background: none; }
+
+/* 反应：胶囊 + 表情选择器，与留言板视觉一致 */
+.msg-reactions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.reaction-pill {
+  display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+  border: 1px solid var(--color-border); padding: 3px 9px 3px 6px; border-radius: 999px;
+  font-size: 12px; background: var(--color-surface-2); color: var(--color-ink-2);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.reaction-pill:hover { border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.reaction-pill.mine { background: var(--color-rose-soft); border-color: var(--color-rose-text); color: var(--color-rose-text); }
+.reaction-pill .reaction-count { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+.msg-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.react-wrap { position: relative; display: inline-flex; }
+.msg-btn {
+  display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+  border: 1px solid var(--color-border); padding: 6px 12px; border-radius: var(--radius-md);
+  font-size: 13px; background: var(--color-surface-2); color: var(--color-ink-2);
+  box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
+  transition: all var(--dur-micro) var(--ease-love);
+}
+.msg-btn:active { transform: scale(0.98); }
+.msg-btn:hover { color: var(--color-rose-text); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+.msg-btn.react-trigger.on { color: var(--color-rose-text); border-color: var(--color-rose-soft); background: var(--color-rose-soft); }
+
+/* 表情选择器弹层 */
+.reaction-picker {
+  position: absolute; top: calc(100% + 6px); left: 0; z-index: 20;
+  display: flex; gap: 2px; padding: 6px;
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); box-shadow: var(--elev-3);
+}
+.reaction-opt {
+  display: grid; place-items: center; width: 32px; height: 32px; cursor: pointer;
+  border: none; background: transparent; border-radius: var(--radius-sm);
+  transition: transform var(--dur-micro) var(--ease-love), background var(--dur-micro) var(--ease-love);
+}
+html:not(.reduce-motion) .reaction-opt:hover { transform: scale(1.18); background: var(--color-surface-2); }
+.reaction-opt.active { background: var(--color-rose-soft); }
 
 @media (max-width: 767px) {
   .stats { grid-template-columns: 1fr; }

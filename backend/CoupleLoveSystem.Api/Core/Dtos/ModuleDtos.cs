@@ -553,9 +553,17 @@ public class SystemMessageDto
     public MessageType MessageType { get; set; }
     public bool IsRead { get; set; }
     public DateTime CreateTime { get; set; }
+    /// <summary>反应表情：emojiKey → 点过该表情的用户 ID 列表。空字典=无人反应。</summary>
+    public Dictionary<string, List<long>> Reactions { get; set; } = new();
 }
 public class MessageReadReq { public long Id { get; set; } }
 public class MessageIdsReq { public List<long> Ids { get; set; } = new(); }
+public class MessageReactionReq
+{
+    public long Id { get; set; }
+    [Required(ErrorMessage = "表情不能为空")]
+    public string EmojiKey { get; set; } = string.Empty;
+}
 #endregion
 
 #region 时间轴 Timeline（聚合）

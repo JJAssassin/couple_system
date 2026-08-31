@@ -444,6 +444,7 @@ export interface SystemMessageDto {
   messageType: number;
   isRead: boolean;
   createTime: string;
+  reactions?: Record<string, number[]>;
 }
 
 export interface TimelineItemDto {

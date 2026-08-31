@@ -1,6 +1,8 @@
 import api from '@/utils/request';
 import type { ApiResult, PagedResult, SystemMessageDto } from '@/types';
 
+export interface MessageReactionReq { id: number; emojiKey: string; }
+
 export async function listMessage(params: { page?: number; pageSize?: number }) {
   const { data } = await api.get('/message/list', { params });
   return (data as ApiResult<PagedResult<SystemMessageDto>>).data;
@@ -29,4 +31,9 @@ export async function deleteRead() {
 export async function batchDeleteMessage(ids: number[]) {
   const { data } = await api.post('/message/batch-delete', { ids });
   return (data as ApiResult<number>).data;
+}
+
+export async function addReaction(req: MessageReactionReq) {
+  const { data } = await api.post('/message/reaction', req);
+  return (data as ApiResult<SystemMessageDto>).data;
 }

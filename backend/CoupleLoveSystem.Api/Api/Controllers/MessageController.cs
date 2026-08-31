@@ -38,4 +38,8 @@ public class MessageController : BaseController
     [HttpPost("batch-delete")]
     public async Task<ActionResult<ApiResult<int>>> BatchDelete([FromBody] MessageIdsReq req, CancellationToken ct = default) =>
         Ok(ApiResult<int>.Ok(await _svc.BatchDeleteAsync(req.Ids, CurrentUserId, ct)));
+
+    [HttpPost("reaction")]
+    public async Task<ActionResult<ApiResult<SystemMessageDto>>> Reaction([FromBody] MessageReactionReq req, CancellationToken ct = default) =>
+        Ok(ApiResult<SystemMessageDto>.Ok(await _svc.ToggleReactionAsync(req.Id, req.EmojiKey, CurrentUserId, ct)));
 }

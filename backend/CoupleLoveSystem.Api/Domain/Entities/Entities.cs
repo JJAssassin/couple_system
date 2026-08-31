@@ -245,6 +245,7 @@ public class CoupleDateRecord : BaseEntity, ICoupleScoped
     public string? Remark { get; set; }
 }
 
+[Broadcast("message")]
 public class CoupleSystemMessage : BaseEntity, ICoupleScoped
 {
     public long ReceiverUserId { get; set; }
@@ -252,6 +253,8 @@ public class CoupleSystemMessage : BaseEntity, ICoupleScoped
     public string? Content { get; set; }
     public MessageType MessageType { get; set; }
     public bool IsRead { get; set; }
+    /// <summary>反应表情：emojiKey → 点过该表情的用户 ID 列表（JSON 存储）。空=无人反应。</summary>
+    public string? Reactions { get; set; }
 }
 
 /// <summary>情侣级共享设置：用固定 Key="global" 的单行承载共享态（相恋日期、情侣名等）。

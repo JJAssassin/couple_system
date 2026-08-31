@@ -3,6 +3,7 @@ using CoupleLoveSystem.Domain.Entities;
 using CoupleLoveSystem.Infrastructure.Persistence;
 using CoupleLoveSystem.Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace CoupleLoveSystem.Application.Services;
 
@@ -68,6 +69,40 @@ public class MessageService
             .ExecuteDeleteAsync(ct);
     }
 
+    /// <summary>切换某用户对某条消息的某表情反应：已点则取消，未点则加上。返回最新消息。</summary>
+    public async Task<SystemMessageDto> ToggleReactionAsync(long id, string emojiKey, long currentUserId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(emojiKey)) throw new ArgumentException("表情标识不能为空");
+        var m = await _db.SystemMessages.FirstOrDefaultAsync(x => x.Id == id, ct)
+            ?? throw new NotFoundException("消息不存在");
+        if (m.ReceiverUserId != currentUserId)
+            throw new ForbiddenException("无权操作该消息");
+        var map = ParseReactions(m.Reactions);
+        if (!map.TryGetValue(emojiKey, out var list) || list is null)
+        {
+            list = new List<long>();
+            map[emojiKey] = list;
+        }
+        if (list.Contains(currentUserId)) list.Remove(currentUserId);
+        else list.Add(currentUserId);
+        if (list.Count == 0) map.Remove(emojiKey);
+        m.Reactions = SerializeReactions(map);
+        m.UpdateUserId = currentUserId;
+        _db.SystemMessages.Update(m);
+        await _db.SaveChangesAsync(ct);
+        return Map(m);
+    }
+
+    private static Dictionary<string, List<long>> ParseReactions(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new Dictionary<string, List<long>>();
+        try { return JsonSerializer.Deserialize<Dictionary<string, List<long>>>(json) ?? new Dictionary<string, List<long>>(); }
+        catch (JsonException) { return new Dictionary<string, List<long>>(); }
+    }
+
+    private static string SerializeReactions(Dictionary<string, List<long>> map) =>
+        JsonSerializer.Serialize(map);
+
     private static SystemMessageDto Map(CoupleSystemMessage m) => new()
     {
         Id = m.Id,
@@ -76,6 +111,7 @@ public class MessageService
         Content = m.Content,
         MessageType = m.MessageType,
         IsRead = m.IsRead,
-        CreateTime = m.CreateTime
+        CreateTime = m.CreateTime,
+        Reactions = ParseReactions(m.Reactions),
     };
 }
