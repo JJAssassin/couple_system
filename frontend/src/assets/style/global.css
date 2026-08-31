@@ -465,19 +465,26 @@ html:not(.reduce-motion) .love-card-pro:hover {
   to   { opacity: 1; }
 }
 
-/* 通用可访问性：尊重 reduce-motion，关闭非必要位移动画 */
+/* 通用可访问性：尊重 reduce-motion（分级收敛，而非一刀切）
+   - 关闭会引起前庭不适的「位移型」过渡（transform/translate/scale 等），但保留
+     颜色/透明度/阴影等轻量过渡，使界面在减少模式下仍有 hover 反馈、焦点环平滑，
+     不至于死板（对应 WCAG 2.3.3 / MDN 最佳实践）。
+   - 关键帧动画收敛为瞬时且仅播放一次，消除循环/长位移引起的眩晕。 */
 .reduce-motion *, .reduce-motion *::before, .reduce-motion *::after {
   animation-duration: 0.001ms !important;
   animation-iteration-count: 1 !important;
-  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+  transition-property: color, background-color, border-color, outline-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, filter !important;
 }
-/* 系统级偏好镜像：即使用户未开应用内开关，OS 设为 reduce 时也强制关闭非必要动效 */
+/* 系统级偏好镜像：即使用户未开应用内开关，OS 设为 reduce 时也强制分级收敛 */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+    transition-property: color, background-color, border-color, outline-color,
+      text-decoration-color, fill, stroke, opacity, box-shadow, filter !important;
   }
 }
 
