@@ -107,6 +107,7 @@ import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IpIcon from '@/components/Common/IpIcon.vue';
 import { useRouter } from 'vue-router';
 import { fetchMoodCalendar, type MoodDay } from '@/api/stats';
+import { useRealtime } from '@/composables/useRealtime';
 
 const router = useRouter();
 
@@ -208,6 +209,10 @@ function shiftYear(delta: number) {
 }
 
 onMounted(load);
+
+// 心情数据来自 CoupleDiary（后端 [Broadcast("diary")]），伴侣增删改日记时实时刷新日历
+const { onSync } = useRealtime();
+onSync('diary', () => load());
 </script>
 
 <style scoped>

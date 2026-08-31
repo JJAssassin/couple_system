@@ -103,6 +103,7 @@ import { listFootprints } from '@/api/footprint';
 import type { ImageDto, FootprintDto } from '@/types';
 import type { PosterData } from '@/types/poster';
 import { useStaggerEnter } from '@/composables/useAnimation';
+import { useRealtime } from '@/composables/useRealtime';
 
 const currentYear = new Date().getFullYear();
 const report = ref<YearReport | null>(null);
@@ -196,6 +197,15 @@ async function loadPosterAssets() {
   }
 }
 onMounted(() => { load(); loadPosterAssets(); });
+
+// 年度数据由多模块聚合而成；伴侣在当年新增日记/照片/愿望/记账/矛盾等内容时实时刷新。
+// 历史年份数据已封版，刷新无副作用。reload() 直接赋值，避免实时刷新时骨架闪烁。
+const { onSync } = useRealtime();
+function reload() {
+  fetchYearReport(selectedYear.value).then((r) => { report.value = r; }).catch(() => {});
+}
+['diary', 'album', 'wish', 'quiz', 'board', 'footprint', 'todo', 'conflict', 'budget', 'anniversary']
+  .forEach((m) => onSync(m, reload));
 
 // ---- ECharts options（ChartWrap 提供主题/调色板） ----
 const financeOption = computed(() => {
