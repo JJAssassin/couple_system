@@ -16,8 +16,10 @@ const starting = ref(false);
 export interface SyncChange { kind: 'created' | 'updated' | 'deleted' | 'reload'; id: number | null; payload?: any; }
 export interface SyncSignal { module: string; changes: SyncChange[]; senderId?: number | null; }
 
-// 聚合视图（时间线 / 年度统计）实时刷新的内容源模块集合。
-// 后端 15 个 [Broadcast] 中进入"聚合流"的实体；两处聚合视图必须订阅同一集合，避免漂移（曾因各自硬编码漏同步）。
+// [约定] 聚合视图（Stats / Timeline）实时刷新的唯一内容源模块集合。
+// 后端 15 个 [Broadcast] 中进入"聚合流"的实体；Stats 与 Timeline 必须订阅同一集合，避免漂移。
+// 规则：新增聚合内容源时，必须同步把对应广播模块名追加到本数组，否则聚合视图不会随伴侣刷新。
+// 单实体视图不要进这个数组，应直接订阅自身模块。
 export const AGGREGATE_SYNC_MODULES = [
   'diary', 'album', 'wish', 'quiz', 'board', 'footprint', 'todo', 'conflict', 'budget', 'anniversary', 'date',
 ] as const;

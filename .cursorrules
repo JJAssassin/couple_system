@@ -1,0 +1,12 @@
+# Cursor Rules for couple-love-system
+
+## Real-time sync module conventions
+
+When adding a new couple-domain entity that should broadcast changes:
+
+1. Add `[Broadcast("<module>")]` on the backend entity in `backend/CoupleLoveSystem.Api/Domain/Entities/Entities.cs`.
+2. For a single-entity view, subscribe directly to its own module via `useModuleSync` or `onSync` in that view.
+3. **If the new entity also participates in aggregate views (Stats or Timeline): append its module name to `AGGREGATE_SYNC_MODULES` in `frontend/src/composables/useRealtime.ts`.**
+4. Never duplicate the aggregate module list inline in Stats or Timeline; always import and reuse `AGGREGATE_SYNC_MODULES`.
+
+Rationale: Stats and Timeline are aggregate views. Keeping one shared array prevents module-name drift and silent real-time sync gaps like `dateplan`/`timeline`.
