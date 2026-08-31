@@ -12,6 +12,7 @@
         <NButton type="primary" size="small" v-press-bounce @click="showCreate = true">＋ 新建相册</NButton>
       </div>
 
+      <IndSectionTitle label="我们的相册" :led="true" />
       <div class="album-toolbar">
         <NInput
           v-model:value="albumKeyword"
@@ -368,6 +369,7 @@ import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import { feedback } from '@/utils/feedback';
 import { Heart, Search, GripVertical, Check, CheckSquare, ImagePlus, Trash2, LayoutGrid } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';

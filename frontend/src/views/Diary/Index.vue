@@ -116,6 +116,14 @@
     <n-drawer v-model:show="showDetail" :width="drawerWidth" placement="right">
       <n-drawer-content :title="current?.title || '日记详情'" closable>
         <div v-if="current" class="detail">
+          <div class="detail-actions">
+            <n-popconfirm @positive-click="onDelete">
+              <template #trigger>
+                <n-button size="small" type="error" tertiary>删除</n-button>
+              </template>
+              确定删除这篇日记吗？此操作不可恢复。
+            </n-popconfirm>
+          </div>
           <div class="sub-text detail-meta">
             <span v-if="current.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(current.diaryDate) }}</span>
             <span v-if="current.weather" class="meta"><CloudSun :size="13" :stroke-width="1.8" /> {{ current.weather }}</span>
@@ -178,12 +186,12 @@
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import {
-  NButton, NDrawer, NDrawerContent, NTag, NDivider, NInput,
+  NButton, NDrawer, NDrawerContent, NPopconfirm, NTag, NDivider, NInput,
 } from 'naive-ui';
 import type { DiaryDto, DiaryReq, DiaryCommentDto, PermissionType } from '@/types';
 import { Calendar, CloudSun, Heart, PenLine } from 'lucide-vue-next';
 import {
-  listDiary, createDiary, listComments, addComment,
+  listDiary, createDiary, listComments, addComment, deleteDiary,
 } from '@/api/diary';
 import { isMobile } from '@/composables/useDevice';
 import { useStaggerEnter } from '@/composables/useAnimation';
@@ -483,6 +491,21 @@ async function sendComment() {
   }
 }
 
+// 删除当前日记：后端 DELETE /api/diary/delete 已存在，前端 api 已有 deleteDiary(id)，
+// 仅补 UI 入口 + 二次确认弹窗（对齐基准「删除弹窗」）。删除后本地移除并收起抽屉。
+async function onDelete() {
+  if (!current.value) return;
+  const id = current.value.id;
+  try {
+    await deleteDiary(id);
+    list.value = list.value.filter((d) => d.id !== id);
+    showDetail.value = false;
+    feedback.deleted('日记');
+  } catch {
+    /* 拦截器已提示 */
+  }
+}
+
 // ---------- 展示辅助 ----------
 const permMeta: Record<PermissionType, { label: string; type: 'success' | 'warning' | 'info' }> = {
   1: { label: '公开', type: 'success' },
@@ -547,6 +570,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .meta :deep(svg) { color: var(--color-rose-text); flex: 0 0 auto; }
 .mood-tag { color: var(--color-rose-text); font-size: 12px; margin-top: 6px; }
 
+.detail-actions { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 .detail-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
 .diary-content { line-height: 1.8; word-break: break-word; }
 .diary-content :deep(img) { max-width: 100%; border-radius: 8px; }
