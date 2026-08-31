@@ -59,7 +59,7 @@
     <section class="block" v-if="quote.content">
       <IndSectionTitle label="每日一句" :led="true" />
       <IndCard class="quote-card">
-        <button class="quote-shuffle" :class="{ beat: quoteBeat }" @click="shuffleQuote" title="换一句情话" aria-label="换一句情话">
+        <button class="quote-shuffle uvi-jelly" :class="{ beat: quoteBeat }" @click="shuffleQuote" title="换一句情话" aria-label="换一句情话">
           <Heart :size="15" />
         </button>
         <button class="quote-poster-btn" type="button" title="做成金句海报" aria-label="做成金句海报" @click="posterRef?.open()">
@@ -76,7 +76,7 @@
     <section class="block">
       <IndSectionTitle label="今日与你" :led="true" />
       <div class="today-grid">
-        <button class="today-card" type="button" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" aria-label="查看最近纪念日" @click="go('anniversary')">
+        <button class="today-card uvi-card3d" type="button" :class="{ ok: nearest.length && nearest[0].daysLeft <= 7 }" aria-label="查看最近纪念日" @click="go('anniversary')">
           <span class="tc-ico"><component :is="icAnniversary" :size="22" /></span>
           <div class="tc-label">最近纪念日</div>
           <div v-if="nearest.length" class="tc-val" :class="{ 'tc-big': nearest[0].daysLeft <= 7 }">
@@ -85,7 +85,7 @@
           </div>
           <div v-else class="tc-val">未设置</div>
         </button>
-        <button class="today-card" type="button" :class="{ ok: unread > 0 }" aria-label="查看未读消息" @click="go('message')">
+        <button class="today-card uvi-card3d" type="button" :class="{ ok: unread > 0 }" aria-label="查看未读消息" @click="go('message')">
           <span class="tc-ico"><component :is="icMessage" :size="22" /></span>
           <div class="tc-label">未读消息</div>
           <div class="tc-val">{{ unread > 0 ? unread + ' 条' : '暂无' }}</div>
@@ -97,7 +97,7 @@
     <section class="block" v-if="albums.length">
       <IndSectionTitle label="回忆胶片" :led="true" />
       <div class="film">
-        <button v-for="a in albums" :key="a.id" class="film-cell" type="button" :aria-label="'查看相册 ' + a.albumName" @click="go('album')">
+        <button v-for="a in albums" :key="a.id" class="film-cell uvi-card3d" type="button" :aria-label="'查看相册 ' + a.albumName" @click="go('album')">
           <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" class="img-fade" @error="onAlbumCoverError(a)" />
           <div v-else class="film-ph">{{ a.albumName.slice(0, 1) }}</div>
           <div class="film-cap">{{ a.albumName }} · {{ a.imageCount }}张</div>
@@ -143,13 +143,13 @@
 
     <!-- 关键指标 -->
     <section class="block stat-row">
-      <button class="stat-link" type="button" aria-label="查看愿望完成率" @click="go('wish')">
+      <button class="stat-link uvi-card3d" type="button" aria-label="查看愿望完成率" @click="go('wish')">
         <IndStatCard label="愿望完成率" :value="dashboard.wishCompleteRate + '%'" />
       </button>
-      <button class="stat-link" type="button" aria-label="查看共同余额" @click="go('account')">
+      <button class="stat-link uvi-card3d" type="button" aria-label="查看共同余额" @click="go('account')">
         <IndStatCard label="共同余额" :value="'¥' + (dashboard.accountSummary?.balance ?? 0).toFixed(2)" />
       </button>
-      <button class="stat-link" type="button" aria-label="查看连续互动" @click="go('diary')">
+      <button class="stat-link uvi-card3d" type="button" aria-label="查看连续互动" @click="go('diary')">
         <IndStatCard label="连续互动" :value="dashboard.activeStreakDays + ' 天'" />
       </button>
     </section>
@@ -158,11 +158,11 @@
     <section class="block">
       <IndSectionTitle label="关系数据 · 一目了然" :led="true" />
       <div class="viz-grid">
-        <IndCard as="button" type="button" class="viz-card" aria-label="查看愿望完成率" @click="go('wish')">
+        <IndCard as="button" type="button" class="viz-card uvi-card3d" aria-label="查看愿望完成率" @click="go('wish')">
           <div class="viz-title">愿望完成率</div>
           <ChartWrap :option="wishGaugeOption" height="210px" />
         </IndCard>
-        <IndCard as="button" type="button" class="viz-card" aria-label="查看共同收支" @click="go('account')">
+        <IndCard as="button" type="button" class="viz-card uvi-card3d" aria-label="查看共同收支" @click="go('account')">
           <div class="viz-title">共同收支</div>
           <ChartWrap :option="accountDonutOption" height="210px" />
         </IndCard>

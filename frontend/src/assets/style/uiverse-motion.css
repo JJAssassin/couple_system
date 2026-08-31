@@ -1,0 +1,242 @@
+/* =====================================================================
+   UIverse Motion Kit —— 取自 uiverse.io 的动效灵感，重新调色到本项目
+   浪漫柔光（aurora / 玫瑰 / 雾蓝 / 可可）设计语言后落地为一套可复用工具类
+   与组件。所有效果均尊重 .reduce-motion 与系统级 prefers-reduced-motion。
+
+   来源映射（真实 uiverse 组件 → 本文件实现）：
+   - 流动渐变描边按钮   ankul003/bitter-mayfly-5  (conic-gradient + hue-rotate)
+   - 高光扫过按钮       satyamchaudharydev  (shine sweep)
+   - Jelly 果冻按钮      vinodjangid07/Bouncy Jelly  (jello-horizontal)
+   - 玻璃卡片悬浮       SteveBloX/dangerous-warthog-85 (glass hover scale)
+   - 焦点描边由中心展开  codeconvey CSS input border animation (effect-7 中心向外)
+   - iOS 风开关         zanina-yassine/afraid-eel-50 (sliding switch)
+   - 心跳脉冲           （为留言反应新增，呼应 FloatingHearts 体系）
+   - 3D 倾斜卡片        TiltCard.vue（鼠标跟随 perspective 倾斜 + 光泽）
+   ===================================================================== */
+
+/* ----------------------------- 1. 流动渐变描边 -----------------------------
+   默认隐藏，hover/focus 时浮现并旋转色相，形成「极光流动边框」；
+   描边用 mask-composite 只保留 1px 外环，中心透出，不遮挡文字。 */
+.uvi-glow-border {
+  --uvi-bw: 2px;
+  --uvi-br: var(--radius-lg, 16px);
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--uvi-br);
+}
+.uvi-glow-border > * { position: relative; z-index: 2; }
+.uvi-glow-border::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: var(--uvi-bw);
+  border-radius: inherit;
+  background: conic-gradient(
+    from 0deg,
+    var(--color-rose),
+    var(--color-rose-vivid),
+    #c9b6ff,
+    #93d4ff,
+    var(--color-mist),
+    var(--color-rose)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  filter: hue-rotate(0deg);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: opacity 0.3s var(--ease-love);
+  animation: uvi-rotate-hue 4s linear infinite;
+  animation-play-state: paused;
+}
+.uvi-glow-border:hover::after,
+.uvi-glow-border:focus-visible::after {
+  opacity: 1;
+  animation-play-state: running;
+}
+@keyframes uvi-rotate-hue { to { filter: hue-rotate(1turn); } }
+
+/* ----------------------------- 2. 高光扫过 --------------------------------- */
+.uvi-shine { position: relative; overflow: hidden; }
+.uvi-shine::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -130%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.55) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+  opacity: 0;
+  z-index: 3;
+}
+.uvi-shine:hover::before { animation: uvi-shine 0.9s var(--ease-love) forwards; }
+@keyframes uvi-shine {
+  0%   { left: -130%; opacity: 0; }
+  30%  { opacity: 0.9; }
+  100% { left: 130%; opacity: 0; }
+}
+
+/* ----------------------------- 3. Jelly 果冻悬浮 --------------------------- */
+.uvi-jelly:hover { animation: uvi-jelly 0.9s var(--ease-love) both; }
+@keyframes uvi-jelly {
+  0%   { transform: scale3d(1, 1, 1); }
+  30%  { transform: scale3d(1.25, 0.75, 1); }
+  40%  { transform: scale3d(0.75, 1.25, 1); }
+  50%  { transform: scale3d(1.15, 0.85, 1); }
+  65%  { transform: scale3d(0.95, 1.05, 1); }
+  75%  { transform: scale3d(1.05, 0.95, 1); }
+  100% { transform: scale3d(1, 1, 1); }
+}
+
+/* ----------------------------- 4. 玻璃卡片悬浮（增强） --------------------- */
+.uvi-glass-pop {
+  transition:
+    transform var(--dur-pop) var(--spring-smooth),
+    box-shadow var(--dur-pop) var(--spring-smooth),
+    border-color var(--dur-pop) var(--spring-smooth);
+}
+html:not(.reduce-motion) .uvi-glass-pop:hover {
+  transform: translateY(-6px) scale(1.012);
+  border-color: color-mix(in srgb, var(--module-accent, var(--color-rose)) 30%, transparent);
+  box-shadow: var(--elev-3);
+}
+
+/* ----------------------------- 5. 焦点描边：由中心向外展开 ---------------- */
+/* 用于包裹 <input> 的容器（input 本身无法承载 ::after 伪元素）。 */
+.uvi-input-draw {
+  position: relative;
+  display: block;
+  border-radius: 11px;
+}
+.uvi-input-draw::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  border: 2px solid var(--color-rose);
+  pointer-events: none;
+  clip-path: inset(0 50% 0 50%);
+  opacity: 0;
+  transition: clip-path 0.35s var(--ease-love), opacity 0.2s var(--ease-love);
+}
+.uvi-input-draw:focus-within::after {
+  clip-path: inset(0 0 0 0);
+  opacity: 1;
+}
+
+/* ----------------------------- 6. 心跳脉冲（留言反应） -------------------- */
+.uvi-heartbeat { animation: uvi-heartbeat 1.6s var(--ease-love) infinite; }
+@keyframes uvi-heartbeat {
+  0%, 100% { transform: scale(1); }
+  14%      { transform: scale(1.28); }
+  28%      { transform: scale(1); }
+  42%      { transform: scale(1.18); }
+  56%      { transform: scale(1); }
+}
+
+/* ----------------------------- 7. CSS-only 3D 卡片悬浮 --------------------- */
+.uvi-card3d {
+  transform-style: preserve-3d;
+  transition:
+    transform 0.4s var(--spring-smooth),
+    box-shadow 0.4s var(--spring-smooth);
+}
+html:not(.reduce-motion) .uvi-card3d:hover {
+  transform: perspective(700px) rotateX(3deg) rotateY(-3deg) translateY(-4px);
+  box-shadow: var(--elev-3);
+}
+
+/* ----------------------------- 8. TiltCard（3D 倾斜 + 光泽） -------------- */
+.uvi-tilt {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: perspective(800px) rotateX(var(--uvi-rx, 0deg)) rotateY(var(--uvi-ry, 0deg));
+  transition: transform 0.4s var(--spring-smooth);
+  will-change: transform;
+}
+.uvi-tilt.is-tilting { transition: none; }
+.uvi-tilt .uvi-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at var(--uvi-gx, 50%) var(--uvi-gy, 50%),
+    rgba(255, 255, 255, 0.55),
+    transparent 45%
+  );
+  opacity: var(--uvi-glare, 0);
+  transition: opacity 0.3s var(--ease-love);
+  z-index: 4;
+}
+
+/* ----------------------------- 9. iOS 风开关（LoveToggle） ---------------- */
+.uvi-toggle {
+  --uvi-tg-w: 51px;
+  --uvi-tg-h: 31px;
+  position: relative;
+  display: inline-flex;
+  cursor: pointer;
+  line-height: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.uvi-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+}
+.uvi-toggle__track {
+  display: block;
+  width: var(--uvi-tg-w);
+  height: var(--uvi-tg-h);
+  border-radius: 999px;
+  background: var(--color-mist);
+  transition: background 0.25s var(--ease-love);
+  position: relative;
+}
+.uvi-toggle__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 8px rgba(31, 41, 55, 0.18), 0 3px 1px rgba(31, 41, 55, 0.06);
+  transition: transform 0.28s var(--spring-bounce);
+}
+.uvi-toggle.on .uvi-toggle__track {
+  background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
+}
+.uvi-toggle.on .uvi-toggle__knob { transform: translateX(20px); }
+.uvi-toggle input:focus-visible ~ .uvi-toggle__track {
+  box-shadow: 0 0 0 3px var(--color-rose-soft);
+}
+.uvi-toggle.disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ----------------------------- 减动效收敛 -------------------------------- */
+.reduce-motion .uvi-glow-border::after,
+.reduce-motion .uvi-shine::before,
+.reduce-motion .uvi-jelly,
+.reduce-motion .uvi-heartbeat { animation: none !important; }
+.reduce-motion .uvi-glow-border::after { opacity: 0 !important; }
+.reduce-motion .uvi-card3d:hover,
+.reduce-motion .uvi-glass-pop:hover { transform: none; }
+.reduce-motion .uvi-input-draw:focus-within::after { opacity: 0; }
+.reduce-motion .uvi-tilt { transform: none !important; }

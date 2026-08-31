@@ -6,6 +6,7 @@ import './assets/style/global.css';
 import '@fontsource/noto-serif-sc/500.css'; // 情感衬线（按 unicode-range 切片，浏览器按需加载）
 import '@fontsource/noto-serif-sc/700.css';
 import './interactions/finesse.css'; // 12 项微交互动效层（keyframes + 指令注入元素样式）
+import './assets/style/uiverse-motion.css'; // UIverse Motion Kit：取自 uiverse.io 的动效，重调为浪漫柔光设计语言
 import HeroIcon from './components/Common/HeroIcon.vue';
 import { registerFinesseDirectives } from './interactions';
 

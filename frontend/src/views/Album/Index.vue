@@ -35,26 +35,30 @@
       />
 
       <div v-else class="album-grid" ref="albumGrid">
-        <div
+        <TiltCard
           v-for="a in filteredAlbums"
           :key="a.id"
           :data-album-id="a.id"
-          class="love-card album-card stagger-item"
-          role="button"
-          tabindex="0"
-          @click="openAlbum(a, $event)"
-          @keydown.enter.prevent="openAlbum(a, $event)"
-          @keydown.space.prevent="openAlbum(a, $event)"
+          class="album-tilt"
         >
-          <div class="album-cover">
-            <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" />
-            <div v-else class="album-cover-ph"></div>
+          <div
+            class="love-card album-card stagger-item"
+            role="button"
+            tabindex="0"
+            @click="openAlbum(a, $event)"
+            @keydown.enter.prevent="openAlbum(a, $event)"
+            @keydown.space.prevent="openAlbum(a, $event)"
+          >
+            <div class="album-cover">
+              <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" />
+              <div v-else class="album-cover-ph"></div>
+            </div>
+            <div class="album-meta">
+              <div class="album-name title-clamp">{{ a.albumName }}</div>
+              <div class="sub-text">{{ a.imageCount }} 张 · 与 TA 共享</div>
+            </div>
           </div>
-          <div class="album-meta">
-            <div class="album-name title-clamp">{{ a.albumName }}</div>
-            <div class="sub-text">{{ a.imageCount }} 张 · 与 TA 共享</div>
-          </div>
-        </div>
+        </TiltCard>
       </div>
     </section>
 
@@ -356,6 +360,7 @@ import { feedback } from '@/utils/feedback';
 import { Heart, Search, GripVertical, Check, CheckSquare, ImagePlus, Trash2 } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';
 import ImageField from '@/components/Common/ImageField.vue';
+import TiltCard from '@/components/Common/TiltCard.vue';
 import draggable from 'vuedraggable';
 
 const setting = useSettingStore();
@@ -773,6 +778,8 @@ onUnmounted(() => {
 @keyframes img-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
 .album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+.album-tilt { display: block; transform-style: preserve-3d; }
+.album-tilt > .album-card { width: 100%; height: 100%; }
 .album-card { padding: 0; overflow: hidden; cursor: pointer; transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
 .album-cover { position: relative; aspect-ratio: 1 / 1; overflow: hidden; background: var(--color-ink-soft); }
 .album-cover img { position: absolute; top: -15%; left: 0; width: 100%; height: 130%; object-fit: cover; transition: transform var(--dur-micro) var(--ease-love); animation: img-fade-in var(--dur-pop) var(--ease-love) both; }

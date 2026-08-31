@@ -8,10 +8,14 @@
       <p class="sub-text">登录，开启专属回忆</p>
       <form @submit.prevent="onSubmit">
         <label for="login-user">账号</label>
-        <input id="login-user" v-model="userName" placeholder="partner_a / partner_b" autocomplete="username" />
+        <span class="uvi-input-draw">
+          <input id="login-user" v-model="userName" placeholder="partner_a / partner_b" autocomplete="username" />
+        </span>
         <label for="login-pass">密码</label>
-        <input id="login-pass" v-model="password" type="password" placeholder="默认 123456" autocomplete="current-password" />
-        <button type="submit" :disabled="loading">{{ loading ? '登录中…' : '登 录' }}</button>
+        <span class="uvi-input-draw">
+          <input id="login-pass" v-model="password" type="password" placeholder="默认 123456" autocomplete="current-password" />
+        </span>
+        <GlowButton type="submit" :disabled="loading">{{ loading ? '登录中…' : '登 录' }}</GlowButton>
       </form>
       <p class="hint">初始账号 partner_a / partner_b，密码 123456</p>
     </div>
@@ -24,6 +28,7 @@ import { Heart } from 'lucide-vue-next';
 import { useAuthStore } from '@/store/authStore';
 import { useNotifyStore } from '@/store/notifyStore';
 import { feedback } from '@/utils/feedback';
+import GlowButton from '@/components/Common/GlowButton.vue';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -76,12 +81,5 @@ input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px sol
   border-radius: 10px; font-size: 14px; outline: none; background: var(--color-surface-2); color: var(--color-ink);
   transition: border-color var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love); }
 input:focus { border-color: var(--color-rose); box-shadow: 0 0 0 3px var(--color-rose-soft); }
-button { width: 100%; margin-top: 22px; padding: 12px; border: none; border-radius: 10px;
-  background: var(--color-rose); color: var(--color-on-primary); font-size: 15px; font-weight: 600; cursor: pointer;
-  box-shadow: 0 6px 18px -6px rgba(255, 111, 125, 0.5);
-  transition: background var(--dur-micro) var(--ease-love), transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love); }
-button:hover:not(:disabled) { background: var(--color-rose-hover); transform: translateY(-1px); box-shadow: 0 10px 24px -8px rgba(255, 111, 125, 0.6); }
-button:active:not(:disabled) { transform: scale(.98); }
-button:disabled { opacity: .6; cursor: default; }
 .hint { margin-top: 16px; font-size: 12px; color: var(--color-ink-3); }
 </style>

@@ -117,7 +117,7 @@
       </p>
       <div class="set-row">
         <span>减少动效</span>
-        <FinesseSwitch :model-value="setting.reduceMotion" label="减少动效" @update:model-value="(v: boolean) => setting.setReduceMotion(v)" />
+        <LoveToggle :model-value="setting.reduceMotion" label="减少动效" @update:model-value="(v: boolean) => setting.setReduceMotion(v)" />
       </div>
       <div class="set-row">
         <span>主题色</span>
@@ -215,6 +215,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import { FinesseSwitch } from '@/interactions';
+import LoveToggle from '@/components/Common/LoveToggle.vue';
 import { maxLenRule } from '@/utils/formRules';
 import type { FormItemRule } from 'naive-ui';
 import { useStaggerEnter } from '@/composables/useAnimation';

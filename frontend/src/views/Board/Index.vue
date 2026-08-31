@@ -91,7 +91,7 @@
             v-for="r in reactionList(m)"
             :key="r.key"
             class="reaction-pill"
-            :class="{ mine: r.mine }"
+            :class="{ mine: r.mine, 'uvi-heartbeat': r.key === 'emoji_heart' }"
             :aria-pressed="r.mine"
             :aria-label="`${r.count} 人反应，${r.mine ? '你已反应，点击取消' : '点击也反应'}`"
             @click="toggleReaction(m, r.key)"
@@ -117,7 +117,7 @@
                 v-for="r in REACTIONS"
                 :key="r.key"
                 class="reaction-opt"
-                :class="{ active: hasReacted(m, r.key) }"
+                :class="{ active: hasReacted(m, r.key), 'uvi-heartbeat': r.key === 'emoji_heart' }"
                 :aria-label="`反应：${r.label}`"
                 @click="toggleReaction(m, r.key)"
               >
