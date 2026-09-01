@@ -2,6 +2,7 @@
   <div class="wish-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_wish" :size="28" class="brand-icon" alt="愿望" />
       <h1 class="ind-label">WISH · 愿望清单</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -10,6 +11,14 @@
     <header class="page-head">
       <div class="head-left">
         <IndProgressRing :value="rate" :size="62" :stroke="8" sublabel="完成率" />
+        <div class="head-stat" v-if="wishOverdueCount">
+          <span class="overdue-num">{{ wishOverdueCount }}</span>
+          <span class="head-stat-label">项已逾期</span>
+        </div>
+        <div class="head-stat warn" v-if="wishDueSoonCount">
+          <span class="duesoon-num">{{ wishDueSoonCount }}</span>
+          <span class="head-stat-label">项临近</span>
+        </div>
       </div>
       <n-button type="primary" round class="uvi-glow-border" v-press-bounce @click="openAdd">+ 加愿望</n-button>
     </header>
@@ -71,11 +80,13 @@
                     <span class="wish-title title-clamp">{{ w.title }}</span>
                     <n-tag :type="statusMap[w.status]?.type ?? 'default'" size="small" round>{{ statusMap[w.status]?.label ?? '未知' }}</n-tag>
                   </div>
-                  <div class="wish-meta sub-text">
-                    <span>优先级 {{ '★'.repeat(w.priority) || '—' }}</span>
-                    <span v-if="w.expectTime">期望 {{ fmt(w.expectTime) }}</span>
-                    <span v-if="w.claimUserName">认领人：{{ w.claimUserName }}</span>
-                  </div>
+              <div class="wish-meta sub-text">
+                <span>优先级 {{ '★'.repeat(w.priority) || '—' }}</span>
+                <span v-if="w.expectTime">期望 {{ fmt(w.expectTime) }}</span>
+                <span v-if="isWishDueSoon(w)" class="wish-due-soon">{{ wishDueText(w) }}</span>
+                <span v-if="isWishOverdue(w)" class="wish-overdue" :class="'lv' + wishOverdueLevel(w)">逾期 {{ wishOverdueDays(w) }} 天</span>
+                <span v-if="w.claimUserName">认领人：{{ w.claimUserName }}</span>
+              </div>
                   <div class="progress anim"><div class="bar" :style="{ width: progressOf(w) + '%' }"></div></div>
                   <div class="wish-actions" @click.stop>
                     <n-button size="small" tertiary @click="openEdit(w)">编辑</n-button>
@@ -118,6 +129,8 @@
                 <div class="wish-meta sub-text">
                   <span>优先级 {{ '★'.repeat(w.priority) || '—' }}</span>
                   <span v-if="w.expectTime">期望 {{ fmt(w.expectTime) }}</span>
+                  <span v-if="isWishDueSoon(w)" class="wish-due-soon">{{ wishDueText(w) }}</span>
+                  <span v-if="isWishOverdue(w)" class="wish-overdue" :class="'lv' + wishOverdueLevel(w)">逾期 {{ wishOverdueDays(w) }} 天</span>
                   <span v-if="w.claimUserName">认领人：{{ w.claimUserName }}</span>
                 </div>
                 <div class="progress" :class="{ anim: w.status === 3 }"><div class="bar" :style="{ width: progressOf(w) + '%' }"></div></div>
@@ -245,6 +258,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import ImageField from '@/components/Common/ImageField.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import { SkeletonSettle, FlipCard, SwipeCard } from '@/interactions';
 import draggable from 'vuedraggable';
 import { GripVertical } from 'lucide-vue-next';
@@ -297,7 +311,12 @@ const filtered = computed(() =>
 );
 
 const displayCount = ref(12);
-const displayList = computed(() => filtered.value.slice(0, displayCount.value));
+// 逾期置顶 → 临近 → 其余；稳定排序，组内保留后端手动顺序（拖拽编排不被打乱），与 Todo 一致。
+const displayList = computed(() => {
+  const arr = filtered.value.slice(0, displayCount.value);
+  const grp = (w: WishDto) => (isWishOverdue(w) ? 0 : isWishDueSoon(w) ? 1 : 2);
+  return [...arr].sort((a, b) => grp(a) - grp(b));
+});
 const hasMore = computed(() => displayCount.value < filtered.value.length);
 function loadMore() {
   displayCount.value += 12;
@@ -355,6 +374,40 @@ function fmt(s: string) {
   const d = new Date(s);
   return `${d.getMonth() + 1}月${d.getDate()}日`;
 }
+
+// 期望时间预警（纯前端、零后端改动，与 Todo 逾期语言一致）：
+// 未完成/未归档且已过期望日 → 逾期；0~3 天内 → 临近。
+function wishDaysUntil(w: WishDto) {
+  if (!w.expectTime) return Infinity;
+  return Math.round((new Date(w.expectTime).getTime() - Date.now()) / 86_400_000);
+}
+function isWishOverdue(w: WishDto) {
+  if (w.status === 3 || w.status === 4 || !w.expectTime) return false;
+  return wishDaysUntil(w) < 0;
+}
+function wishOverdueDays(w: WishDto) {
+  return Math.max(1, -wishDaysUntil(w));
+}
+function isWishDueSoon(w: WishDto) {
+  if (w.status === 3 || w.status === 4 || !w.expectTime) return false;
+  const d = wishDaysUntil(w);
+  return d >= 0 && d <= 3;
+}
+function wishDueText(w: WishDto) {
+  const d = wishDaysUntil(w);
+  if (d <= 0) return '今天期望';
+  if (d === 1) return '明天期望';
+  return `${d} 天后期望`;
+}
+// 逾期时长分级：1=≤3天(柔和) 2=≤14天(标准) 3=>14天(加重)
+function wishOverdueLevel(w: WishDto) {
+  const d = wishOverdueDays(w);
+  if (d <= 3) return 1;
+  if (d <= 14) return 2;
+  return 3;
+}
+const wishOverdueCount = computed(() => wishes.value.filter(isWishOverdue).length);
+const wishDueSoonCount = computed(() => wishes.value.filter(isWishDueSoon).length);
 
 // ---- 表单（新增 / 编辑）----
 const showForm = ref(false);
@@ -517,6 +570,24 @@ onMounted(async () => {
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .head-left { display: flex; align-items: center; gap: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
+/* 逾期/临近统计（与 Todo 一致） */
+.head-stat { display: flex; flex-direction: column; line-height: 1.1; }
+.overdue-num { font-size: 20px; font-weight: 700; color: var(--color-rose); font-family: var(--font-mono); }
+.head-stat.warn { margin-left: 14px; }
+.duesoon-num { font-size: 20px; font-weight: 700; color: #D98E3C; font-family: var(--font-mono); }
+.head-stat-label { font-size: 12px; color: var(--color-ink-3); }
+/* 期望时间预警角标（与 Todo 一致：玫瑰逾期 / 琥珀临近） */
+.wish-due-soon {
+  color: #fff; background: linear-gradient(135deg, #E8B06A 0%, #D98E3C 100%);
+  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+}
+.wish-overdue {
+  color: #fff; background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
+  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+}
+.wish-overdue.lv1 { background: linear-gradient(135deg, var(--color-rose-soft) 0%, var(--color-rose) 100%); }
+.wish-overdue.lv3 { background: linear-gradient(135deg, var(--color-rose-vivid) 0%, #E0394F 100%); }
 .filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
 .type-tabs { flex: 1 1 320px; min-width: 0; }
 .status-select { flex: 0 0 auto; width: 118px; }

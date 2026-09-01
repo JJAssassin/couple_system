@@ -3,6 +3,7 @@
   <div v-else class="dateplan" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_dateplan" :size="28" class="brand-icon" alt="约会" />
       <h1 class="ind-label">DATE PLAN · 约会计划</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 记录中</span>
     </div>
@@ -11,7 +12,7 @@
     <section class="block stats">
       <IndStatCard label="已完成约会" :value="stats.totalDates" sub="次浪漫回忆" />
       <IndStatCard label="平均体验分" :value="stats.avgScore.toFixed(1)" sub="满分 5★" />
-      <IndStatCard label="待执行" :value="pending.length" sub="个小期待" />
+      <IndStatCard label="待执行" :value="pending.length" :sub="pendingSub" />
     </section>
 
     <!-- 待执行 -->
@@ -33,6 +34,10 @@
             </NPopconfirm>
           </div>
           <div class="card-plan">{{ fmtTime(d.planTime) }}</div>
+          <div class="card-badges" v-if="isDueSoon(d) || isOverdue(d)">
+            <span v-if="isDueSoon(d)" class="date-due-soon">{{ dueText(d) }}</span>
+            <span v-if="isOverdue(d)" class="date-overdue" :class="'lv' + overdueLevel(d)">已过期 {{ overdueDays(d) }} 天</span>
+          </div>
           <div class="card-loc">{{ d.location || '地点待定' }}</div>
           <div class="sub-text">预算 ¥{{ (d.budget ?? 0).toFixed(2) }}</div>
           <NButton block type="primary" class="card-btn" v-press-bounce @click="openComplete(d)">标记完成</NButton>
@@ -108,6 +113,7 @@ import IndPager from '@/components/industrial/IndPager.vue';
 import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { usePagedList } from '@/composables/usePagedList';
@@ -133,10 +139,55 @@ const { list, page, pageSize, total, loading: listLoading, hasMore, refresh: ref
   },
   { pageSize: 15, mode: 'more' }
 );
-const pending = computed(() => list.value.filter((d) => !d.isCompleted));
+const pending = computed(() => {
+  const arr = list.value.filter((d) => !d.isCompleted);
+  // 逾期置顶 → 临近 → 其余；稳定排序，组内保留后端分页顺序（与 Todo/Wish 一致）
+  const grp = (d: DateRecordDto) => (isOverdue(d) ? 0 : isDueSoon(d) ? 1 : 2);
+  return [...arr].sort((a, b) => grp(a) - grp(b));
+});
 const history = computed(() => list.value.filter((d) => d.isCompleted));
 
 const fmtTime = (iso?: string) => (iso ? new Date(iso).toLocaleString('zh-CN') : '时间待定');
+
+// 计划时间预警（纯前端、零后端改动，与 Todo/Wish 逾期语言一致）：
+// 未完成且已过计划时间 → 已过期；0~3 天内 → 临近。
+function daysUntil(d: DateRecordDto) {
+  if (!d.planTime) return Infinity;
+  return Math.round((new Date(d.planTime).getTime() - Date.now()) / 86_400_000);
+}
+function isOverdue(d: DateRecordDto) {
+  if (d.isCompleted || !d.planTime) return false;
+  return daysUntil(d) < 0;
+}
+function overdueDays(d: DateRecordDto) {
+  return Math.max(1, -daysUntil(d));
+}
+function isDueSoon(d: DateRecordDto) {
+  if (d.isCompleted || !d.planTime) return false;
+  const x = daysUntil(d);
+  return x >= 0 && x <= 3;
+}
+function dueText(d: DateRecordDto) {
+  const x = daysUntil(d);
+  if (x <= 0) return '今天约会';
+  if (x === 1) return '明天约会';
+  return `${x} 天后约会`;
+}
+// 逾期时长分级：1=≤3天(柔和) 2=≤14天(标准) 3=>14天(加重)
+function overdueLevel(d: DateRecordDto) {
+  const x = overdueDays(d);
+  if (x <= 3) return 1;
+  if (x <= 14) return 2;
+  return 3;
+}
+const overdueCount = computed(() => pending.value.filter(isOverdue).length);
+const dueSoonCount = computed(() => pending.value.filter(isDueSoon).length);
+// 待执行统计副标题：有逾期/临近时给出醒目提示
+const pendingSub = computed(() => {
+  if (overdueCount.value) return `${overdueCount.value} 个已过期`;
+  if (dueSoonCount.value) return `${dueSoonCount.value} 个临近`;
+  return '个小期待';
+});
 
 // 统一延时器管理：避免组件卸载后 setTimeout 仍回调（跨页已确认的真实泄漏模式）
 const pendingTimers = new Set<number>();
@@ -254,7 +305,20 @@ onMounted(async () => {
 
 <style scoped>
 .dateplan { max-width: 880px; margin: 0 auto; }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+/* 计划时间预警角标（与 Todo/Wish 一致：玫瑰逾期 / 琥珀临近） */
+.card-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.date-due-soon {
+  color: #fff; background: linear-gradient(135deg, #E8B06A 0%, #D98E3C 100%);
+  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; align-self: flex-start;
+}
+.date-overdue {
+  color: #fff; background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
+  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; align-self: flex-start;
+}
+.date-overdue.lv1 { background: linear-gradient(135deg, var(--color-rose-soft) 0%, var(--color-rose) 100%); }
+.date-overdue.lv3 { background: linear-gradient(135deg, var(--color-rose-vivid) 0%, #E0394F 100%); }
 .block { margin: 22px 0; }
 .block h2 { font-size: 16px; margin: 0 0 12px; }
 .page-head { margin-bottom: 4px; }

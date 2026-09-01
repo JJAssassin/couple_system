@@ -2,6 +2,7 @@
   <div class="album-page" :class="gridDensity" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_album" :size="28" class="brand-icon" alt="相册" />
       <h1 class="ind-label">ALBUM · 双人相册</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -225,7 +226,10 @@
               @keydown.space.prevent="onCellClick(img)"
             >
               <img class="thumb" :src="img.url || img.imagePath" :alt="img.remark || 'photo'" loading="lazy" />
-              <div class="img-cap" v-if="img.remark" v-show="!selectMode">{{ img.remark }}</div>
+              <div class="img-cap" v-show="!selectMode && (img.remark || imgWhen(img))">
+                <span class="img-cap-remark" v-if="img.remark">{{ img.remark }}</span>
+                <span class="img-cap-time" v-if="imgWhen(img)">{{ imgWhen(img) }}</span>
+              </div>
               <button class="img-fav" v-if="!selectMode" :class="{ on: favs.has(img.id) }" @click.stop="toggleFav(img)" :aria-label="favs.has(img.id) ? '取消收藏' : '收藏'"><Heart :size="14" :fill="favs.has(img.id) ? 'currentColor' : 'none'" /></button>
               <NButton v-if="!selectMode" class="img-del" size="tiny" quaternary circle :disabled="removingId === img.id" :aria-busy="removingId === img.id" :aria-label="removingId === img.id ? '正在删除' : '删除照片'" @click.stop="removeImage(img)">✕</NButton>
               <span class="drag-handle" v-if="!selectMode" @click.stop><GripVertical :size="16" :stroke-width="1.8" /></span>
@@ -370,6 +374,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import { feedback } from '@/utils/feedback';
 import { Heart, Search, GripVertical, Check, CheckSquare, ImagePlus, Trash2, LayoutGrid } from 'lucide-vue-next';
 import { requiredRule } from '@/utils/formRules';
@@ -469,6 +474,24 @@ const filteredImages = computed(() => {
   }
   return r;
 });
+
+// 照片时间感知（纯前端、零后端改动）：优先用拍摄时间 shootTime，回退上传时间 createTime；
+// 渲染为相对时间（今天/昨天/N 天前…），与 Footprint 一致，让回忆一眼可读"多久以前"。
+function relTime(s: string) {
+  const t = new Date(s).getTime();
+  const diffDay = Math.floor((Date.now() - t) / 86_400_000);
+  const d = new Date(s);
+  const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diffDay <= 0) return `今天 ${hm}`;
+  if (diffDay === 1) return `昨天 ${hm}`;
+  if (diffDay < 30) return `${diffDay} 天前`;
+  if (diffDay < 365) return `${Math.floor(diffDay / 30)} 个月前`;
+  return `${Math.floor(diffDay / 365)} 年前`;
+}
+function imgWhen(img: ImageDto) {
+  const t = img.shootTime || img.createTime;
+  return t ? relTime(t) : '';
+}
 
 const lightboxIndex = ref(-1);
 const lbImages = computed(() =>
@@ -783,6 +806,7 @@ onUnmounted(() => {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .brand-status {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500;
@@ -834,9 +858,12 @@ html:not(.reduce-motion) .img-cell:hover :deep(img) { transform: scale(1.05); }
 /* 批量选择态：高亮描边 + 轻微回缩，带平滑过渡（替代原来生硬 snap） */
 .img-cell.selected { box-shadow: 0 0 0 2px var(--color-accent); transform: scale(0.97); }
 .img-cap {
-  position: absolute; left: 0; right: 0; bottom: 0; padding: 6px 8px; font-size: 12px; color: #fff;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.55)); pointer-events: none;
+  position: absolute; left: 0; right: 0; bottom: 0; padding: 8px; font-size: 12px; color: #fff;
+  display: flex; flex-direction: column; gap: 2px; align-items: flex-start;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.6)); pointer-events: none;
 }
+.img-cap-remark { font-weight: 500; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
+.img-cap-time { font-size: 11px; opacity: 0.85; font-family: var(--font-mono); }
 .img-fav {
   position: absolute; top: 6px; left: 6px; border: none; background: rgba(0, 0, 0, 0.4);
   width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 1;

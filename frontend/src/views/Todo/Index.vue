@@ -14,6 +14,10 @@
           <span class="overdue-num">{{ overdueCount }}</span>
           <span class="head-stat-label">项已逾期</span>
         </div>
+        <div class="head-stat warn" v-if="dueSoonCount">
+          <span class="duesoon-num">{{ dueSoonCount }}</span>
+          <span class="head-stat-label">项临近</span>
+        </div>
       </div>
       <n-button type="primary" round class="uvi-glow-border" v-press-bounce @click="openAdd">+ 加待办</n-button>
     </header>
@@ -77,7 +81,8 @@
               <div class="todo-meta sub-text">
                 <span>优先级 {{ '★'.repeat(t.priority) || '—' }}</span>
                 <span v-if="t.dueTime">期限 {{ fmt(t.dueTime) }}</span>
-                <span v-if="isOverdue(t)" class="overdue">逾期 {{ overdueDays(t) }} 天</span>
+                <span v-if="isDueSoon(t)" class="due-soon">{{ dueSoonText(t) }}</span>
+                <span v-if="isOverdue(t)" class="overdue" :class="'lv' + overdueLevel(t)">逾期 {{ overdueDays(t) }} 天</span>
                 <span v-if="t.assigneeName">负责人：{{ t.assigneeName }}</span>
               </div>
 
@@ -289,9 +294,41 @@ function overdueDays(t: TodoDto) {
 }
 const overdueCount = computed(() => todos.value.filter((t) => isOverdue(t)).length);
 
+// 距到期天数（有符号）：0=今天，正数=未来，负数=已逾期
+function dueInDays(t: TodoDto) {
+  if (!t.dueTime) return Infinity;
+  return Math.round((new Date(t.dueTime).getTime() - Date.now()) / 86_400_000);
+}
+// 临近预警：未完成、未逾期、且 0~3 天内到期
+function isDueSoon(t: TodoDto) {
+  if (t.isDone || !t.dueTime) return false;
+  const d = dueInDays(t);
+  return d >= 0 && d <= 3;
+}
+function dueSoonText(t: TodoDto) {
+  const d = dueInDays(t);
+  if (d <= 0) return '今天到期';
+  if (d === 1) return '明天到期';
+  return `${d} 天后到期`;
+}
+// 逾期时长分级：1=≤3天(柔和) 2=≤14天(标准) 3=>14天(加重)
+function overdueLevel(t: TodoDto) {
+  const d = overdueDays(t);
+  if (d <= 3) return 1;
+  if (d <= 14) return 2;
+  return 3;
+}
+const dueSoonCount = computed(() => todos.value.filter((t) => isDueSoon(t)).length);
+
 const displayCount = ref(12);
 const displayList = computed(() => filtered.value.slice(0, displayCount.value));
-const activeList = computed(() => displayList.value.filter((t) => !t.isDone));
+// 未完成列表：逾期置顶 → 临近(≤3天) → 其余；稳定排序，组内保留后端手动顺序（拖拽编排不被打乱）。
+// 注意：该排序仅作用于展示；用户拖拽后 onTodoReorder 把当前顺序回写后端，重载后按 isOverdue/isDueSoon 重新归组，行为一致。
+const activeList = computed(() => {
+  const arr = displayList.value.filter((t) => !t.isDone);
+  const grp = (t: TodoDto) => (isOverdue(t) ? 0 : isDueSoon(t) ? 1 : 2);
+  return [...arr].sort((a, b) => grp(a) - grp(b));
+});
 const doneList = computed(() => displayList.value.filter((t) => t.isDone));
 const hasMore = computed(() => displayCount.value < filtered.value.length);
 function loadMore() { displayCount.value += 12; }
@@ -503,14 +540,25 @@ onMounted(async () => {
 .todo-desc { margin: 8px 0 0; }
 .todo-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
 .todo-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
-/* 逾期：玫瑰描边 + 角标，温和但不容忽视（不改色板） */
+/* 逾期：玫瑰描边 + 角标，按逾期时长分级（不改核心色板） */
 .todo.overdue { border-color: var(--color-rose); box-shadow: 0 0 0 1px var(--color-rose-soft); }
+.todo.overdue.lv1 { border-color: var(--color-rose-soft); box-shadow: 0 0 0 1px var(--color-rose-soft); }
+.todo.overdue.lv3 { border-color: var(--color-rose-vivid); box-shadow: 0 0 0 2px var(--color-rose); }
 .overdue {
   color: #fff; background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
 }
+.overdue.lv1 { background: linear-gradient(135deg, var(--color-rose-soft) 0%, var(--color-rose) 100%); }
+.overdue.lv3 { background: linear-gradient(135deg, var(--color-rose-vivid) 0%, #E0394F 100%); }
+/* 临近预警：温润琥珀色，与逾期玫瑰色区分（谨慎引入的辅助色，不破坏浪漫主色板） */
+.due-soon {
+  color: #fff; background: linear-gradient(135deg, #E8B06A 0%, #D98E3C 100%);
+  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+}
 .head-stat { display: flex; flex-direction: column; line-height: 1.1; margin-left: 2px; }
 .overdue-num { font-size: 20px; font-weight: 700; color: var(--color-rose); font-family: var(--font-mono); }
+.head-stat.warn { margin-left: 14px; }
+.duesoon-num { font-size: 20px; font-weight: 700; color: #D98E3C; font-family: var(--font-mono); }
 .head-stat-label { font-size: 12px; color: var(--color-ink-3); }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 .todo-form { display: flex; flex-direction: column; gap: 18px; }

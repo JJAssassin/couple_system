@@ -3,6 +3,7 @@
   <div v-else class="footprint-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_footprint" :size="28" class="brand-icon" alt="足迹" />
       <h1 class="ind-label">FOOTPRINT · 足迹</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 记录中</span>
     </div>
@@ -64,7 +65,7 @@
               <template v-else>目标</template>
             </div>
           </div>
-          <div class="fp-time" v-if="f.lastIncrementTime">最近 · {{ fmt(f.lastIncrementTime) }}</div>
+          <div class="fp-time" v-if="f.lastIncrementTime" :title="fmt(f.lastIncrementTime)">最近 · {{ relTime(f.lastIncrementTime) }}</div>
           <div class="fp-time" v-else>还没记录过</div>
         </div>
         </TiltCard>
@@ -249,6 +250,19 @@ function fmt(s: string) {
   const d = new Date(s);
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
+// 相对时间（纯前端、零后端改动）：把"最近记录时间"从绝对 M/D HH:mm 升级为
+// 今天/昨天/N 天前/几个月前/几年前，更贴合"回忆"语境；精确时间保留在 title 悬停提示。
+function relTime(s: string) {
+  const t = new Date(s).getTime();
+  const diffDay = Math.floor((Date.now() - t) / 86_400_000);
+  const d = new Date(s);
+  const hm = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diffDay <= 0) return `今天 ${hm}`;
+  if (diffDay === 1) return `昨天 ${hm}`;
+  if (diffDay < 30) return `${diffDay} 天前`;
+  if (diffDay < 365) return `${Math.floor(diffDay / 30)} 个月前`;
+  return `${Math.floor(diffDay / 365)} 年前`;
+}
 
 async function onIncrement(f: FootprintDto) {
   poppingId.value = f.id;
@@ -322,6 +336,7 @@ onMounted(async () => {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .brand-status {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500;

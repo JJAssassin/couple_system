@@ -150,6 +150,10 @@ export default defineConfig({
       devOptions: { enabled: false },
     }),
   ],
+  // dev 预构建目标与 build.target 对齐（es2022），避免开发/生产语法降级不一致。
+  optimizeDeps: {
+    esbuildOptions: { target: 'es2022' },
+  },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
   },
@@ -174,7 +178,9 @@ export default defineConfig({
   },
   build: {
     emptyOutDir: true,
-    target: 'es2020',
+    // 升级到 es2022：启用原生 class fields / 顶层 await 等，产物更小、运行更高效；
+    // 覆盖所有现役浏览器（2022+），对个人情侣 PWA 无兼容风险。
+    target: 'es2022',
     sourcemap: false,
     cssCodeSplit: true,
     chunkSizeWarningLimit: 900,

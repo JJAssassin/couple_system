@@ -48,6 +48,13 @@
             @keydown.enter.prevent="cell.day && goDiary(cell.day.date)"
             @keydown.space.prevent="cell.day && goDiary(cell.day.date)"
           >
+            <IpIcon
+              v-if="cell.day?.moodScore != null"
+              :name="moodFace(cell.day.moodScore)"
+              :size="20"
+              class="mc-cell-face"
+              :alt="`心情 ${cell.day.moodScore} 分`"
+            />
             <span v-if="cell.day" class="mc-cell-text">{{ cell.day.date.split('-')[2] }}</span>
           </div>
         </div>
@@ -338,7 +345,7 @@ html.reduce-motion .mc-section { animation: none; }
   aspect-ratio: 1 / 1;
   border-radius: 4px;
   background: var(--color-surface-2);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   font-size: 10px; color: var(--color-ink-3);
   transition: transform 0.15s ease;
 }
@@ -346,6 +353,7 @@ html.reduce-motion .mc-section { animation: none; }
 html:not(.reduce-motion) .mc-cell:not(.empty):hover { transform: scale(1.15); z-index: 2; }
 .mc-cell:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 1px; }
 .mc-cell.has-mood { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.mc-cell-face { flex: 0 0 auto; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
 .mc-cell-text { pointer-events: none; }
 
 /* Tooltip */
