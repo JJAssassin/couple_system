@@ -2,6 +2,7 @@
   <div class="todo-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_todo" :size="28" class="brand-icon" alt="待办清单" />
       <h1 class="ind-label">TODO · 待办清单</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -223,6 +224,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import { feedback } from '@/utils/feedback';
 import { toLocalISO } from '@/utils/format';
 import {
@@ -494,6 +496,7 @@ onMounted(async () => {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .brand-status {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500;

@@ -2,6 +2,7 @@
   <div class="mood-calendar" ref="container">
     <!-- 品牌条 -->
     <div class="brand">
+      <IpIcon name="module_moodcalendar" :size="28" class="brand-icon" alt="心情日历" />
       <h1 class="ind-label">MOOD CALENDAR · 心情日历</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -309,6 +310,7 @@ onSync('diary', () => load());
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .brand-status {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500; color: var(--color-ink-2);

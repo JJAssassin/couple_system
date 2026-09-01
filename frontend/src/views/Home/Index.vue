@@ -4,6 +4,7 @@
     <div class="home" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_home" :size="28" class="brand-icon" alt="首页" />
       <h1 class="ind-label">HOME · 首页</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -224,6 +225,7 @@ import { useRealtime } from '@/composables/useRealtime';
 import * as coupleApi from '@/api/couple';
 import { getDailyQuote } from '@/api/quote';
 import PullRefresh from '@/components/Common/PullRefresh.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import { hapticForAction } from '@/composables/useHaptic';
 
 const { onSync } = useRealtime();
@@ -514,6 +516,7 @@ onUnmounted(() => {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .brand-status {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500;

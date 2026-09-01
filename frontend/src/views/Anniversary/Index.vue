@@ -3,6 +3,7 @@
   <div v-else class="anniv-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_anniversary" :size="28" class="brand-icon" alt="纪念日" />
       <h1 class="ind-label">ANNIVERSARY · 纪念日</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -201,6 +202,7 @@ import ImageField from '@/components/Common/ImageField.vue';
 import GradientText from '@/components/Common/GradientText.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
 import AnniversaryPoster from '@/components/Common/AnniversaryPoster.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import { feedback } from '@/utils/feedback';
 
 const { useModuleSync } = useRealtime();
@@ -463,6 +465,7 @@ onUnmounted(() => {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .brand-status {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500;

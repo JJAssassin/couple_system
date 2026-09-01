@@ -2,6 +2,7 @@
   <div class="conflict-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_conflict" :size="28" class="brand-icon" alt="矛盾复盘" />
       <h1 class="ind-label">CONFLICT · 矛盾复盘</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 记录中</span>
     </div>
@@ -45,7 +46,7 @@
             <n-tag :type="levelMap[c.conflictLevel]?.type ?? 'default'" size="small" round>
               {{ levelMap[c.conflictLevel]?.label ?? '未知' }}
             </n-tag>
-            <span class="card-time sub-text">{{ fmt(c.occurTime) }}</span>
+            <span class="card-time sub-text">{{ fmt(c.occurTime) }}<span v-if="relDays(c.occurTime) > 1" class="cf-rel"> · {{ relTime(c.occurTime) }}</span></span>
           </div>
           <div class="card-summary title-clamp">{{ c.summary }}</div>
           <div v-if="c.reconcileTime" class="card-reconciled sub-text">已和解</div>
@@ -102,7 +103,7 @@
               {{ levelMap[detail.conflictLevel]?.label ?? '未知' }}
             </n-tag>
           </div>
-          <div class="detail-row"><span class="k">发生时间</span><span>{{ fmt(detail.occurTime) }}</span></div>
+          <div class="detail-row"><span class="k">发生时间</span><span>{{ fmt(detail.occurTime) }}<span v-if="relDays(detail.occurTime) > 1" class="cf-rel"> · {{ relTime(detail.occurTime) }}</span></span></div>
           <div class="detail-block"><span class="k">A 方想法</span><p>{{ detail.myThoughtA || '—' }}</p></div>
           <div class="detail-block"><span class="k">B 方想法</span><p>{{ detail.myThoughtB || '—' }}</p></div>
           <div class="detail-row">
@@ -150,6 +151,7 @@ import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import { feedback } from '@/utils/feedback';
 import { usePagedList } from '@/composables/usePagedList';
 import { isMobile } from '@/composables/useDevice';
@@ -197,6 +199,23 @@ const cfStats = computed(() => {
 function fmt(s: string) {
   const d = new Date(s);
   return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+// 矛盾复盘相对时间：fmt 已含完整日期+时分，故仅对 >1 天的旧记录附「N天前」辅助提示（relDays 守卫避免 today/yesterday 冗余）
+function relTime(s: string): string {
+  const d = new Date(s);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const day = 86400000;
+  if (diff < 0) return '未来';
+  if (diff < day && now.getDate() === d.getDate())
+    return `今天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 2 * day) return `昨天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 30 * day) return `${Math.floor(diff / day)} 天前`;
+  if (diff < 365 * day) return `${Math.floor(diff / (30 * day))} 个月前`;
+  return `${Math.floor(diff / (365 * day))} 年前`;
+}
+function relDays(s: string): number {
+  return (Date.now() - new Date(s).getTime()) / 86400000;
 }
 
 // ---- 表单 ----
@@ -330,6 +349,8 @@ onUnmounted(() => {
 .conflict-card-wrap { display: block; transform-style: preserve-3d; }
 .card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .card-time { font-size: 12px; }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
+.cf-rel { color: var(--color-rose); opacity: 0.85; }
 .card-summary { margin-top: 8px; font-size: 15px; color: var(--color-ink); }
 .card-reconciled { margin-top: 8px; color: var(--color-rose-text); font-size: 13px; }
 .love-card.reconciled { border-color: rgba(67, 209, 122, 0.42); box-shadow: 0 0 0 1px rgba(67, 209, 122, 0.28), var(--elev-2); }
