@@ -10,6 +10,10 @@
     <header class="page-head">
       <div class="head-left">
         <IndProgressRing :value="rate" :size="62" :stroke="8" sublabel="完成率" />
+        <div class="head-stat" v-if="overdueCount">
+          <span class="overdue-num">{{ overdueCount }}</span>
+          <span class="head-stat-label">项已逾期</span>
+        </div>
       </div>
       <n-button type="primary" round class="uvi-glow-border" v-press-bounce @click="openAdd">+ 加待办</n-button>
     </header>
@@ -58,7 +62,7 @@
             hint-color="#7BC47F"
             @dismiss="onSwipeDone(t)"
           >
-            <div class="love-card todo">
+            <div class="love-card todo" :class="{ overdue: isOverdue(t) }">
               <button class="drag-handle" type="button" aria-label="拖动排序" @pointerdown.stop @click.stop>
                 <GripVertical :size="16" />
               </button>
@@ -73,6 +77,7 @@
               <div class="todo-meta sub-text">
                 <span>优先级 {{ '★'.repeat(t.priority) || '—' }}</span>
                 <span v-if="t.dueTime">期限 {{ fmt(t.dueTime) }}</span>
+                <span v-if="isOverdue(t)" class="overdue">逾期 {{ overdueDays(t) }} 天</span>
                 <span v-if="t.assigneeName">负责人：{{ t.assigneeName }}</span>
               </div>
 
@@ -262,6 +267,7 @@ const filtered = computed(() =>
     if (activeTab.value !== 'all' && t.category !== activeTab.value) return false;
     if (statusFilter.value === 'all') return true;
     if (statusFilter.value === 'done') return t.isDone;
+    if (statusFilter.value === 'overdue') return !t.isDone && isOverdue(t);
     return !t.isDone; // active
   })
 );
@@ -271,6 +277,17 @@ const rate = computed(() => {
   const done = todos.value.filter((t) => t.isDone).length;
   return Math.round((done / todos.value.length) * 100);
 });
+
+// 逾期：未完成且已过期限（仅按本地时间判断，纯前端、无需后端改动）
+function isOverdue(t: TodoDto) {
+  if (t.isDone || !t.dueTime) return false;
+  return new Date(t.dueTime).getTime() < Date.now();
+}
+function overdueDays(t: TodoDto) {
+  if (!t.dueTime) return 0;
+  return Math.max(1, Math.ceil((Date.now() - new Date(t.dueTime).getTime()) / 86_400_000));
+}
+const overdueCount = computed(() => todos.value.filter((t) => isOverdue(t)).length);
 
 const displayCount = ref(12);
 const displayList = computed(() => filtered.value.slice(0, displayCount.value));
@@ -302,6 +319,7 @@ async function onTodoReorder(group: 'active' | 'done') {
 const statusFilterOptions = [
   { label: '进行中', value: 'active' },
   { label: '已完成', value: 'done' },
+  { label: '逾期', value: 'overdue' },
   { label: '全部', value: 'all' },
 ];
 
@@ -485,6 +503,15 @@ onMounted(async () => {
 .todo-desc { margin: 8px 0 0; }
 .todo-meta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
 .todo-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+/* 逾期：玫瑰描边 + 角标，温和但不容忽视（不改色板） */
+.todo.overdue { border-color: var(--color-rose); box-shadow: 0 0 0 1px var(--color-rose-soft); }
+.overdue {
+  color: #fff; background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
+  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+}
+.head-stat { display: flex; flex-direction: column; line-height: 1.1; margin-left: 2px; }
+.overdue-num { font-size: 20px; font-weight: 700; color: var(--color-rose); font-family: var(--font-mono); }
+.head-stat-label { font-size: 12px; color: var(--color-ink-3); }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
 .todo-form { display: flex; flex-direction: column; gap: 18px; }
 

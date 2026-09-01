@@ -5,6 +5,47 @@ import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import { fileURLToPath, URL } from 'node:url';
 import { VitePWA } from 'vite-plugin-pwa';
+import { gzipSync, brotliCompressSync, constants as zlibConstants } from 'node:zlib';
+import { promises as fs } from 'node:fs';
+import path from 'node:path';
+
+// 构建期静态资源压缩（零依赖，使用 Node 内置 zlib）：为 dist 内每个资源产出 .gz 与 .br 副本，
+// 由静态服务器/CDN 按需返回以显著降低传输体积。需服务器开启 precompressed 协商（如 nginx gzip_static / brotli_static）。
+function compressStaticAssets() {
+  const COMPRESS_EXT = /\.(js|css|html|svg|json|ico|png|woff2?)$/;
+  const BROTLI_EXT = /\.(js|css|html|svg|json)$/;
+  const walk = async (dir: string): Promise<string[]> => {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const nested = await Promise.all(
+      entries.map((e) => {
+        const p = path.join(dir, e.name);
+        return e.isDirectory() ? walk(p) : [p];
+      })
+    );
+    return nested.flat();
+  };
+  return {
+    name: 'compress-static-assets',
+    apply: 'build' as const,
+    async closeBundle() {
+      const outDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'dist');
+      const all = await walk(outDir);
+      const targets = all.filter((f) => COMPRESS_EXT.test(f));
+      for (const f of targets) {
+        const buf = await fs.readFile(f);
+        await fs.writeFile(`${f}.gz`, gzipSync(buf, { level: 9 }));
+        if (BROTLI_EXT.test(f)) {
+          await fs.writeFile(
+            `${f}.br`,
+            brotliCompressSync(buf, {
+              params: { [zlibConstants.BROTLI_PARAM_QUALITY]: 11, [zlibConstants.BROTLI_PARAM_MODE]: zlibConstants.BROTLI_MODE_TEXT },
+            })
+          );
+        }
+      }
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
@@ -13,6 +54,7 @@ export default defineConfig({
     // NaiveUI 按需引入：编译期自动注入模板中用到的 n-* 组件（含 App.vue 的 Provider），
     // 配合 main.ts 去掉全量 app.use(NaiveUi)，把 naive chunk 从整库 ~1.3MB 砍到仅用到的组件。
     Components({ resolvers: [NaiveUiResolver()], dts: false }),
+    compressStaticAssets(),
     VitePWA({
       registerType: 'autoUpdate',
       disable: true,
@@ -131,7 +173,7 @@ export default defineConfig({
     }
   },
   build: {
-    emptyOutDir: false,
+    emptyOutDir: true,
     target: 'es2020',
     sourcemap: false,
     cssCodeSplit: true,
