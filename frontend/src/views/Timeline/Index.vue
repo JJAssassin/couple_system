@@ -5,6 +5,7 @@
     <template v-else>
       <!-- 品牌条 -->
       <div class="brand">
+        <IpIcon name="module_timeline" :size="28" class="brand-icon" alt="时间轴" />
         <h1 class="ind-label">TIMELINE · 我们的时间轴</h1>
         <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
       </div>
@@ -138,6 +139,7 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
 import { useRealtime, AGGREGATE_SYNC_MODULES } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
@@ -278,6 +280,7 @@ onMounted(() => {
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .brand-status {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 500; color: var(--color-ink-2);

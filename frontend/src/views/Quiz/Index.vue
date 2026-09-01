@@ -2,6 +2,7 @@
   <div class="quiz-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_quiz" :size="28" class="brand-icon" alt="默契问答" />
       <h1 class="ind-label">QUIZ · 默契问答</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 同步中</span>
     </div>
@@ -132,7 +133,7 @@
               {{ r.isMatched ? '默契' : '没对上' }}
             </span>
             <span v-if="r.category" class="cat">{{ r.category }}</span>
-            <span class="time sub-text">{{ fmt(r.createTime) }}</span>
+            <span class="time sub-text">{{ fmt(r.createTime) }}<span v-if="relDays(r.createTime) > 1" class="quiz-rel"> · {{ relTime(r.createTime) }}</span></span>
           </div>
           <p class="round-q">{{ r.questionText }}</p>
           <div class="picks">
@@ -223,6 +224,7 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
 import { feedback } from '@/utils/feedback';
 import { fireHearts } from '@/composables/useConfetti';
@@ -273,6 +275,23 @@ const rateTip = computed(() => {
 function fmt(s: string) {
   const d = new Date(s);
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+// 历史战绩相对时间：fmt 已含时分，故仅对 >1 天的旧记录附「N天前」辅助提示（relDays 守卫避免 today/yesterday 冗余）
+function relTime(s: string): string {
+  const d = new Date(s);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const day = 86400000;
+  if (diff < 0) return '未来';
+  if (diff < day && now.getDate() === d.getDate())
+    return `今天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 2 * day) return `昨天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 30 * day) return `${Math.floor(diff / day)} 天前`;
+  if (diff < 365 * day) return `${Math.floor(diff / (30 * day))} 个月前`;
+  return `${Math.floor(diff / (365 * day))} 年前`;
+}
+function relDays(s: string): number {
+  return (Date.now() - new Date(s).getTime()) / 86400000;
 }
 function nameOf(uid?: number | null) {
   if (uid == null) return '—';
@@ -376,6 +395,8 @@ onMounted(async () => {
   font-size: 12px; font-weight: 500; color: var(--color-ink-2);
   padding: 4px 12px; border-radius: 999px; background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
+.quiz-rel { color: var(--color-rose); opacity: 0.85; }
 .page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
 .sub { font-size: 13px; color: var(--color-ink-3); }
 

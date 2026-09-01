@@ -3,6 +3,7 @@
     <div class="board-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_board" :size="28" class="brand-icon" alt="留言板" />
       <h1 class="ind-label">BOARD · 留言板</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -80,7 +81,7 @@
           <span v-if="m.pinned" class="pin-tag"><Pin :size="13" :stroke-width="2.2" /> 置顶</span>
           <span v-if="m.createUserId === meId" class="mine-tag">我</span>
           <span class="author">{{ m.authorName || (m.createUserId === meId ? '我' : 'TA') }}</span>
-          <span class="time sub-text">{{ fmt(m.createTime) }}</span>
+          <span class="time sub-text">{{ fmt(m.createTime) }}<span v-if="relDays(m.createTime) > 1" class="board-rel"> · {{ relTime(m.createTime) }}</span></span>
         </div>
         <img v-if="m.imageUrl" :src="m.imageUrl" class="msg-img" alt="配图" loading="lazy" />
         <p class="msg-body" :style="m.color ? { color: m.color } : {}">{{ m.content }}</p>
@@ -298,6 +299,23 @@ function fmt(s: string) {
   const d = new Date(s);
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
+// 留言相对时间：fmt 已含时分，故仅对 >1 天的旧留言附「N天前」辅助提示（relDays 守卫避免 today/yesterday 冗余）
+function relTime(s: string): string {
+  const d = new Date(s);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const day = 86400000;
+  if (diff < 0) return '未来';
+  if (diff < day && now.getDate() === d.getDate())
+    return `今天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 2 * day) return `昨天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 30 * day) return `${Math.floor(diff / day)} 天前`;
+  if (diff < 365 * day) return `${Math.floor(diff / (30 * day))} 个月前`;
+  return `${Math.floor(diff / (365 * day))} 年前`;
+}
+function relDays(s: string): number {
+  return (Date.now() - new Date(s).getTime()) / 86400000;
+}
 
 async function send() {
   const content = draft.value.trim();
@@ -421,6 +439,8 @@ onUnmounted(() => {
   padding: 4px 12px; border-radius: 999px;
   background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
+.board-rel { color: var(--color-rose); opacity: 0.85; }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .lead { margin: 0 0 18px; font-size: 13px; color: var(--color-ink-3); }
 

@@ -3,6 +3,7 @@
   <div v-else class="account" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_account" :size="28" class="brand-icon" alt="共同小金库" />
       <h1 class="ind-label">ACCOUNT · 共同小金库</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -114,7 +115,7 @@
             <div class="rec-amt" :class="r.recordType === 1 ? 'in' : 'out'">
               {{ r.recordType === 1 ? '+' : '-' }}¥{{ r.amount.toFixed(2) }}
             </div>
-            <div class="sub-text">{{ fmtTime(r.recordTime) }}<span v-if="r.remark"> · {{ r.remark }}</span></div>
+            <div class="sub-text">{{ fmtTime(r.recordTime) }}<span v-if="relTime(r.recordTime)" class="rec-rel"> · {{ relTime(r.recordTime) }}</span><span v-if="r.remark"> · {{ r.remark }}</span></div>
           </div>
           <div class="rec-ops">
             <NButton size="small" quaternary @click="openEdit(r)">改</NButton>
@@ -255,6 +256,7 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndPager from '@/components/industrial/IndPager.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import ExpensePoster from '@/components/Common/ExpensePoster.vue';
 import { LiquidSlider } from '@/interactions';
 import { useStaggerEnter } from '@/composables/useAnimation';
@@ -301,6 +303,20 @@ const container = ref<HTMLElement>();
 useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
 
 const fmtTime = (iso: string) => new Date(iso).toLocaleDateString('zh-CN');
+// 账单相对时间：近期交易附「今天/昨天/N天前」辅助提示，精确日期仍为主
+function relTime(s: string): string {
+  const d = new Date(s);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const day = 86400000;
+  if (diff < 0) return '未来';
+  if (diff < day && now.getDate() === d.getDate())
+    return `今天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 2 * day) return `昨天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 30 * day) return `${Math.floor(diff / day)} 天前`;
+  if (diff < 365 * day) return `${Math.floor(diff / (30 * day))} 个月前`;
+  return `${Math.floor(diff / (365 * day))} 年前`;
+}
 
 const typeOptions = [
   { label: '收入', value: 1 },
@@ -611,6 +627,7 @@ onMounted(async () => {
   padding: 4px 12px; border-radius: 999px;
   background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .hero { text-align: center; padding: 24px 0 8px; }
 .hero-title { color: var(--color-ink-2); }
@@ -669,6 +686,7 @@ onMounted(async () => {
 .rec-left { display: flex; flex-direction: column; gap: 6px; }
 .rec-cat { font-weight: 600; }
 .rec-mid { flex: 1; }
+.rec-rel { color: var(--color-rose); opacity: 0.85; }
 .rec-amt { font-size: 18px; font-weight: 600; }
 .rec-amt.in { color: var(--color-income); }
 .rec-amt.out { color: var(--color-rose-text); }

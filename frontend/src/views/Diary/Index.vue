@@ -2,6 +2,7 @@
   <div class="diary-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_diary" :size="28" class="brand-icon" alt="双人日记" />
       <h1 class="ind-label">DIARY · 双人日记</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -54,7 +55,7 @@
           </n-tag>
         </div>
         <div class="row2 sub-text">
-          <span v-if="d.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(d.diaryDate) }}</span>
+          <span v-if="d.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(d.diaryDate) }}<span v-if="relDate(d.diaryDate)" class="diary-rel"> · {{ relDate(d.diaryDate) }}</span></span>
           <span v-if="d.weather" class="meta"><CloudSun :size="13" :stroke-width="1.8" /> {{ d.weather }}</span>
           <span class="meta"><Heart :size="13" :stroke-width="1.8" /> 心情 {{ d.moodScore }}/10</span>
           <span class="meta author"><PenLine :size="13" :stroke-width="1.8" /> {{ authorLabel(d.createUserId) }}</span>
@@ -125,7 +126,7 @@
             </n-popconfirm>
           </div>
           <div class="sub-text detail-meta">
-            <span v-if="current.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(current.diaryDate) }}</span>
+            <span v-if="current.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(current.diaryDate) }}<span v-if="relDate(current.diaryDate)" class="diary-rel"> · {{ relDate(current.diaryDate) }}</span></span>
             <span v-if="current.weather" class="meta"><CloudSun :size="13" :stroke-width="1.8" /> {{ current.weather }}</span>
             <span class="meta"><Heart :size="13" :stroke-width="1.8" /> 心情 {{ current.moodScore }}/10</span>
             <n-tag :type="permMeta[current.permissionType]?.type ?? 'default'" size="small" round>
@@ -204,6 +205,7 @@ import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import {
   LoveSheet, LoveInput, LoveTextarea, LoveMoodPicker,
   LoveChips, LoveSegmented, LoveDateField, LoveSaveBar,
@@ -516,6 +518,20 @@ const permMeta: Record<PermissionType, { label: string; type: 'success' | 'warni
 function fmtDate(s?: string) {
   return s ? s.slice(0, 10) : '';
 }
+// 日记日期相对时间（date-only，无时分）：fmtDate 已是 YYYY-MM-DD 精确日期，附「今天/昨天/N天前」补足"多久前的回忆"语义
+function relDate(s?: string): string {
+  if (!s) return '';
+  const d = new Date(s);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const day = 86400000;
+  if (diff < 0) return '未来';
+  if (diff < day && now.getDate() === d.getDate()) return '今天';
+  if (diff < 2 * day) return '昨天';
+  if (diff < 30 * day) return `${Math.floor(diff / day)} 天前`;
+  if (diff < 365 * day) return `${Math.floor(diff / (30 * day))} 个月前`;
+  return `${Math.floor(diff / (365 * day))} 年前`;
+}
 // 把本地时间戳格式化为「本地时刻」ISO（不带 Z），避免 toISOString() 转 UTC 导致东八区等正偏移时区日期前移一天
 function toLocalISO(ts: number): string {
   const d = new Date(ts);
@@ -544,6 +560,8 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
   padding: 4px 12px; border-radius: 999px;
   background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
+.diary-rel { color: var(--color-rose); opacity: 0.85; }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
 .page-head h1 { font-size: 22px; margin: 0; }

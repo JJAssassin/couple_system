@@ -2,6 +2,7 @@
   <div class="stats" ref="container">
     <!-- 品牌条 -->
     <div class="brand">
+      <IpIcon name="module_stats" :size="28" class="brand-icon" alt="年度数据" />
       <h1 class="ind-label">STATS · 年度数据</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -97,6 +98,7 @@ import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
 import GlowButton from '@/components/Common/GlowButton.vue';
 import { NumberRoll } from '@/interactions';
 import { fetchYearReport, type YearReport } from '@/api/stats';
@@ -278,6 +280,7 @@ const conflictOption = computed(() => ({
   padding: 4px 12px; border-radius: 999px;
   background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 
 .yr-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

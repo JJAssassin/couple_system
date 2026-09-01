@@ -2,6 +2,7 @@
   <div class="msg-page" ref="container">
     <!-- 品牌条 -->
     <div class="brand block">
+      <IpIcon name="module_message" :size="28" class="brand-icon" alt="消息中心" />
       <h1 class="ind-label">MESSAGE · 消息中心</h1>
       <span class="brand-status"><IndLed color="green" :size="9" /> 已同步</span>
     </div>
@@ -60,7 +61,7 @@
                   <span class="m-title">{{ m.title }}</span>
                   <span class="m-dot" />
                 </div>
-                <div class="m-time">{{ fmt(m.createTime) }}</div>
+                <div class="m-time">{{ fmt(m.createTime) }}<span v-if="relDays(m.createTime) > 1" class="msg-rel"> · {{ relTime(m.createTime) }}</span></div>
                 <div class="m-content" :class="{ clamp: !expanded.has(m.id) }">{{ m.content || '（无正文）' }}</div>
 
                 <!-- 已产生的反应胶囊 -->
@@ -132,7 +133,7 @@
                 <div class="m-top">
                   <span class="m-title">{{ m.title }}</span>
                 </div>
-                <div class="m-time">{{ fmt(m.createTime) }}</div>
+                <div class="m-time">{{ fmt(m.createTime) }}<span v-if="relDays(m.createTime) > 1" class="msg-rel"> · {{ relTime(m.createTime) }}</span></div>
                 <div class="m-content" :class="{ clamp: !expanded.has(m.id) }">{{ m.content || '（无正文）' }}</div>
 
                 <!-- 已产生的反应胶囊 -->
@@ -310,6 +311,23 @@ function fmt(s: string) {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getMonth() + 1}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
+// 消息相对时间：fmt 已含时分，故仅对 >1 天的旧消息附「N天前」辅助提示（relDays 守卫避免 today/yesterday 冗余）
+function relTime(s: string): string {
+  const d = new Date(s);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  const day = 86400000;
+  if (diff < 0) return '未来';
+  if (diff < day && now.getDate() === d.getDate())
+    return `今天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 2 * day) return `昨天 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  if (diff < 30 * day) return `${Math.floor(diff / day)} 天前`;
+  if (diff < 365 * day) return `${Math.floor(diff / (30 * day))} 个月前`;
+  return `${Math.floor(diff / (365 * day))} 年前`;
+}
+function relDays(s: string): number {
+  return (Date.now() - new Date(s).getTime()) / 86400000;
+}
 
 async function onRefreshClick() {
   await refresh();
@@ -439,6 +457,8 @@ onUnmounted(() => {
   padding: 4px 12px; border-radius: 999px;
   background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
+.brand-icon { margin-right: 2px; flex: 0 0 auto; }
+.msg-rel { color: var(--color-rose); opacity: 0.85; }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 .lead { margin: 0 0 18px; font-size: 13px; color: var(--color-ink-3); }
 
