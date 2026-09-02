@@ -38,7 +38,7 @@ init();
 .pwa-install {
   position: fixed;
   left: 50%;
-  bottom: 84px;
+  bottom: calc(72px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   z-index: 1200;
   display: flex;

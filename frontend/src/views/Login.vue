@@ -56,15 +56,17 @@ async function onSubmit() {
 }
 </script>
 <style scoped>
-.login-wrap { position: relative; min-height: 100dvh; display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, var(--color-cream), var(--color-mist)); padding: 16px; overflow: hidden; }
+.login-wrap { position: relative; min-height: 100dvh; display: flex;
+  background: linear-gradient(135deg, var(--color-cream), var(--color-mist));
+  padding: calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 16px);
+  overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .login-aurora { position: absolute; inset: -20% -10% auto -10%; height: 60vh; pointer-events: none;
   background:
     radial-gradient(50% 100% at 28% 0%, color-mix(in srgb, var(--color-rose) 16%, transparent), transparent 70%),
     radial-gradient(46% 100% at 78% 12%, color-mix(in srgb, var(--color-cocoa) 12%, transparent), transparent 70%);
   filter: blur(18px); opacity: .9; }
 .login-card {
-  position: relative; z-index: 1; width: min(340px, 100%); background: var(--color-surface); border-radius: 20px; padding: 36px 28px 30px;
+  position: relative; z-index: 1; margin: auto; width: min(340px, 100%); background: var(--color-surface); border-radius: 20px; padding: 36px 28px 30px;
   box-shadow: 0 20px 60px rgba(122,100,98,.12); text-align: center; border: 1px solid var(--color-border);
   animation: login-pop var(--dur-page) var(--ease-love) both;
 }

@@ -186,7 +186,7 @@ async function share() {
   position: fixed; inset: 0; z-index: 1400;
   background: rgba(60, 30, 35, 0.55);
   display: flex; align-items: center; justify-content: center;
-  padding: 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
 }
 .poster-wrap { display: flex; flex-direction: column; align-items: center; max-height: 92vh; overflow: auto; }
 .poster-canvas { width: min(92vw, 430px); border-radius: 18px; box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.45); }

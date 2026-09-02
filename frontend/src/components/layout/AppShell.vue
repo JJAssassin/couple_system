@@ -201,9 +201,11 @@ function logout() {
 </script>
 
 <style scoped>
-.shell { display: flex; min-height: 100dvh; background: transparent; }
+/* 固定为视口高度，内容区在内部滚动（iOS 独立模式 body 滚动不可靠，
+   必须内部滚动容器，否则超出视口的内容不可达 / 被 Home Indicator 遮挡） */
+.shell { display: flex; height: 100dvh; background: transparent; }
 .shell-side { flex: 0 0 auto; }
-.shell-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.shell-main { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
 
 /* 顶部磨砂条 */
 .topbar {
@@ -247,10 +249,17 @@ function logout() {
 .avatar-mate { margin-left: -10px; background: linear-gradient(135deg, var(--color-cocoa), var(--color-ink-2)); }
 .avatar-mate.online { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px #43d17a; }
 
-.content { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 32px 24px 48px; }
+/* 内容区内部滚动：min-height:0 允许在 flex 列中收缩并出现滚动条；
+   -webkit-overflow-scrolling 提供 iOS 惯性滚动；overscroll-behavior 防止滚动链抖动 */
+.content {
+  flex: 1; width: 100%; max-width: 1200px; margin: 0 auto;
+  padding: 32px 24px 48px;
+  min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+}
 @media (max-width: 767px) {
   .topbar { padding: env(safe-area-inset-top) 14px 0; gap: 10px; }
-  .content { padding: 20px 16px 84px; }
+  /* 移动端：底部预留 TabBar(58px) + iOS 底部安全区，确保最后一块内容可滚到、不被遮挡 */
+  .content { padding: 20px 16px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
   .crumb-root { display: none; }
   .crumb-cur { display: none; }
   .tb-right { gap: 6px; }

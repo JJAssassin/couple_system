@@ -297,7 +297,7 @@ async function handleShare() {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
 }
 .ps-dialog {
   width: min(420px, 94vw);

@@ -309,7 +309,7 @@ async function share() {
   position: fixed; inset: 0; z-index: 1400;
   background: rgba(60, 30, 35, 0.55);
   display: flex; align-items: center; justify-content: center;
-  padding: 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
 }
 .poster-wrap {
   display: flex; flex-direction: column; align-items: center;

@@ -218,7 +218,8 @@ function later() {
 .upd-mask {
   position: fixed; inset: 0; z-index: 1500;
   background: rgba(60, 30, 35, 0.5);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
 }
 .upd-card {
   width: min(92vw, 360px); background: var(--color-surface);

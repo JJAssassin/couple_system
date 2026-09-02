@@ -113,7 +113,8 @@ if (!auth.accessToken) {
 .svr-mask {
   position: fixed; inset: 0; z-index: 1600;
   background: rgba(60, 30, 35, 0.55);
-  display: flex; align-items: center; justify-content: center; padding: 24px;
+  display: flex; align-items: center; justify-content: center;
+  padding: calc(24px + env(safe-area-inset-top)) 24px calc(24px + env(safe-area-inset-bottom));
 }
 .svr-card {
   width: min(92vw, 380px);

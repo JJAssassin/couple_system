@@ -78,11 +78,14 @@ const { dialogAttrs } = useDialogA11y({
 
 <style scoped>
 .ob-mask {
-  position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center;
-  background: rgba(20, 18, 22, 0.5); backdrop-filter: blur(4px); padding: 20px;
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex;
+  background: rgba(20, 18, 22, 0.5); backdrop-filter: blur(4px);
+  padding: calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px);
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
 }
 .ob-card {
-  width: min(440px, 94vw); background: var(--color-cream); border-radius: 24px;
+  width: min(440px, 94vw); margin: auto; background: var(--color-cream); border-radius: 24px;
   padding: 18px 24px 22px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   text-align: center; overflow: hidden;
 }

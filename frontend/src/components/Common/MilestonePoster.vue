@@ -168,7 +168,7 @@ async function handleShare() {
 .mp-mask {
   position: fixed; inset: 0; z-index: 1000;
   background: rgba(40, 32, 30, 0.55);
-  display: flex; align-items: center; justify-content: center; padding: 16px;
+  display: flex; align-items: center; justify-content: center; padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
 }
 .mp-dialog {
   width: min(430px, 94vw); max-height: 92vh;

@@ -225,7 +225,9 @@ onUnmounted(() => {
 <style scoped>
 .sidebar {
   position: relative; width: 240px; min-height: 100dvh;
-  background: var(--color-surface); padding: calc(20px + env(safe-area-inset-top)) 14px 20px;
+  /* 底部预留安全区：iOS 独立模式下抽屉 bottom:0 贴屏幕最底，
+     不补 env(safe-area-inset-bottom) 会让最后一项（设置）落在 Home Indicator 之下被遮挡 */
+  background: var(--color-surface); padding: calc(20px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));
   display: flex; flex-direction: column;
   border-right: 1px solid var(--color-border);
 }
