@@ -814,7 +814,7 @@ html:not(.reduce-motion) .account-btn-primary:hover {
     height: 100dvh;
     margin: 0;
     border-radius: 0 !important;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important;
+    padding: calc(0px + env(safe-area-inset-top)) calc(0px + env(safe-area-inset-right)) calc(0px + env(safe-area-inset-bottom)) calc(0px + env(safe-area-inset-left)) !important;
   }
   /* 弹窗固定为整屏高度时，body 必须可滚动，否则软键盘顶起后保存按钮被裁掉/点不到 */
   :global(.account-modal .n-modal-body),

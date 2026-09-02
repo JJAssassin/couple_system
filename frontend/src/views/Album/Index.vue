@@ -873,7 +873,7 @@ html:not(.reduce-motion) .img-cell:hover :deep(img) { transform: scale(1.05); }
 html:not(.reduce-motion) .img-cell:hover .img-fav, .img-fav.on { opacity: 1; }
 .img-del { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,.45); color: #fff; }
 
-.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding-bottom: env(safe-area-inset-bottom); }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding-bottom: calc(0px + env(safe-area-inset-bottom)); }
 .del-album-warn { margin: 0 0 4px; color: var(--color-ink-2); line-height: 1.6; font-size: 14px; }
 .del-album-warn strong { color: var(--color-rose-text); }
 .album-del-btn { margin-left: 2px; }
@@ -945,7 +945,7 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: v
 }
 
 @media (max-width: 767px) {
-  :global(.album-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important; }
+  :global(.album-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; padding: calc(0px + env(safe-area-inset-top)) calc(0px + env(safe-area-inset-right)) calc(0px + env(safe-area-inset-bottom)) calc(0px + env(safe-area-inset-left)) !important; }
   .album-grid { grid-template-columns: repeat(2, 1fr); }
   .img-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
   /* 移动端固定上传 / 批量栏会盖住最后一行，给内容区留底白 */

@@ -563,12 +563,12 @@ onMounted(async () => {
 .head-stat.warn { margin-left: 14px; }
 .duesoon-num { font-size: 20px; font-weight: 700; color: #D98E3C; font-family: var(--font-mono); }
 .head-stat-label { font-size: 12px; color: var(--color-ink-3); }
-.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding-bottom: env(safe-area-inset-bottom); }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding-bottom: calc(0px + env(safe-area-inset-bottom)); }
 .todo-form { display: flex; flex-direction: column; gap: 18px; }
 
 @media (max-width: 767px) { .cards { grid-template-columns: 1fr; } .brand { padding: 10px 14px; } .brand .ind-label { font-size: 12px; } .brand-status { padding: 3px 9px; font-size: 11px; } }
 :global(.todo-modal) { padding: 0 !important; }
 @media (max-width: 767px) {
-  :global(.todo-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important; }
+  :global(.todo-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; padding: calc(0px + env(safe-area-inset-top)) calc(0px + env(safe-area-inset-right)) calc(0px + env(safe-area-inset-bottom)) calc(0px + env(safe-area-inset-left)) !important; }
 }
 </style>

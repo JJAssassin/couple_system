@@ -224,14 +224,29 @@ onUnmounted(() => {
 </script>
 <style scoped>
 .sidebar {
-  position: relative; width: 240px; min-height: 100dvh;
-  /* 底部预留安全区：iOS 独立模式下抽屉 bottom:0 贴屏幕最底，
-     不补 env(safe-area-inset-bottom) 会让最后一项（设置）落在 Home Indicator 之下被遮挡 */
+  position: relative; width: 240px; height: 100%;
+  /* 高度锁定为父容器（桌面 .shell / 移动 .drawer）的确定高度，而非 min-height:100dvh——
+     否则内容超长时 sidebar 会被撑高、超出抽屉视口，nav 反而不触发滚动、底部「设置」被裁到视口外不可达。
+     配合 nav{flex:1;overflow-y:auto} 让导航在固定高度内滚动；底部 env(safe-area-inset-bottom) 内边距
+     保证最后一项「设置」停在 Home Indicator 之上。 */
   background: var(--color-surface); padding: calc(20px + env(safe-area-inset-top)) 14px calc(20px + env(safe-area-inset-bottom));
   display: flex; flex-direction: column;
+  overflow: hidden;
   border-right: 1px solid var(--color-border);
 }
 .sidebar.collapsed { width: 72px; padding: calc(20px + env(safe-area-inset-top)) 10px; align-items: center; }
+
+/* 导航区独立滚动：17 个导航项在矮屏/横屏/大字体下会超出视口高度，
+   固定 brand + partner-chip 在顶部，nav 在剩余空间内滚动；
+   .sidebar 已设底部 env(safe-area-inset-bottom) 内边距，保证最后一项「设置」不被 Home Indicator 遮挡 */
+nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: 8px;
+}
 
 .brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; }
 .brand-mark {

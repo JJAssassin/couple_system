@@ -42,7 +42,7 @@
             <component :is="setting.dark ? Sun : Moon" :size="18" :stroke-width="1.8" />
           </button>
 
-          <div class="avatars" :title="partnerName ? `你 & ${partnerName}` : '你'">
+          <div class="avatars" :title="partnerName ? `你 & ${partnerName}` : '你'" role="button" tabindex="0" aria-label="进入设置" @click="goSetting" @keydown.enter.prevent="goSetting" @keydown.space.prevent="goSetting">
             <span class="avatar" :class="{ 'has-img': !!meAvatar }">
               <img v-if="meAvatar" :src="assetUrl(meAvatar)" alt="" />
               <template v-else>{{ meInitial }}</template>
@@ -198,6 +198,10 @@ function logout() {
   auth.logout();
   router.push('/login');
 }
+// 顶栏双人头像点击 → 进入设置（移动端侧栏底部「设置」在矮屏易被 Home Indicator 遮挡时的快捷入口）
+function goSetting() {
+  if (route.path !== '/setting') router.push('/setting');
+}
 </script>
 
 <style scoped>
@@ -215,7 +219,7 @@ function logout() {
   /* 灵动岛/状态栏安全区：导航条整体下沉，内容落在可见区，不再被遮挡 */
   height: calc(60px + env(safe-area-inset-top));
   padding: 0 24px;
-  padding-top: env(safe-area-inset-top);
+  padding-top: calc(0px + env(safe-area-inset-top));
   background: color-mix(in srgb, var(--color-surface) 78%, transparent);
   backdrop-filter: saturate(180%) blur(12px);
   -webkit-backdrop-filter: saturate(180%) blur(12px);
@@ -238,7 +242,7 @@ function logout() {
 .tb-icon:hover { color: var(--color-rose-text); background: var(--color-rose-soft); }
 .tb-logout:hover { color: var(--color-rose-text); }
 
-.avatars { display: flex; align-items: center; }
+.avatars { display: flex; align-items: center; cursor: pointer; }
 .avatar {
   width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
   font-size: 13px; font-weight: 600; color: var(--color-on-primary); overflow: hidden;
@@ -257,7 +261,7 @@ function logout() {
   min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
 }
 @media (max-width: 767px) {
-  .topbar { padding: env(safe-area-inset-top) 14px 0; gap: 10px; }
+  .topbar { padding: calc(0px + env(safe-area-inset-top)) 14px 0; gap: 10px; }
   /* 移动端：底部预留 TabBar(58px) + iOS 底部安全区，确保最后一块内容可滚到、不被遮挡 */
   .content { padding: 20px 16px; padding-bottom: calc(80px + env(safe-area-inset-bottom)); }
   .crumb-root { display: none; }
@@ -279,7 +283,7 @@ function logout() {
 .tabbar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
   display: flex; align-items: stretch; justify-content: space-around;
-  height: 58px; padding-bottom: env(safe-area-inset-bottom);
+  height: 58px; padding-bottom: calc(0px + env(safe-area-inset-bottom));
   background: color-mix(in srgb, var(--color-surface) 88%, transparent);
   backdrop-filter: saturate(180%) blur(12px);
   -webkit-backdrop-filter: saturate(180%) blur(12px);
