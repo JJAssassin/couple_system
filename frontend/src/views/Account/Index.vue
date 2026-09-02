@@ -814,14 +814,21 @@ html:not(.reduce-motion) .account-btn-primary:hover {
     height: 100dvh;
     margin: 0;
     border-radius: 0 !important;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left) !important;
   }
   /* 弹窗固定为整屏高度时，body 必须可滚动，否则软键盘顶起后保存按钮被裁掉/点不到 */
   :global(.account-modal .n-modal-body),
   :global(.budget-modal .n-modal-body),
   :global(.poster-modal .n-modal-body) {
-    max-height: calc(100dvh - 120px);
+    max-height: calc(100dvh - 120px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+  }
+  /* 底部保存/取消栏避开 Home Indicator */
+  :global(.account-modal .n-modal-footer),
+  :global(.budget-modal .n-modal-footer),
+  :global(.poster-modal .n-modal-footer) {
+    padding-bottom: calc(16px + env(safe-area-inset-bottom));
   }
 }
 
