@@ -1,0 +1,74 @@
+# Android APK build toolchain (compile-only).
+#
+# The web assets are synced into the native android/ project on the HOST
+# via `cap sync android` (which needs Node, so we do it on the host). This
+# image only provides the Android SDK + JDK to compile that native project
+# with Gradle, so it does NOT need Node.
+#
+# Usage (see scripts/build-android.sh):
+#   docker build -f Dockerfile.android -t couple-android-builder .
+#   docker run --rm -v "$PWD/android:/project" couple-android-builder bash -c '...'
+
+# JDK 21 required: Capacitor 8's @capacitor/android library sets
+# sourceCompatibility/targetCompatibility = JavaVersion.VERSION_21.
+FROM eclipse-temurin:21-jdk
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        wget unzip ca-certificates bash coreutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Android SDK location
+ENV ANDROID_HOME=/opt/android-sdk
+ENV ANDROID_SDK_ROOT=/opt/android-sdk
+ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+
+# Install Android command-line tools
+RUN mkdir -p "$ANDROID_HOME/cmdline-tools" && \
+    cd /tmp && \
+    wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -O cmdtools.zip && \
+    unzip -q cmdtools.zip -d "$ANDROID_HOME/cmdline-tools" && \
+    mv "$ANDROID_HOME/cmdline-tools/cmdline-tools" "$ANDROID_HOME/cmdline-tools/latest" && \
+    rm -f cmdtools.zip
+
+# Accept licenses and install the SDK packages the native project requires.
+# variables.gradle asks for compileSdk/targetSdk 36, so we need platforms;android-36.
+# AGP 8.13's default build-tools is 35.0.0, so we install that.
+RUN yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses && \
+    sdkmanager --sdk_root="$ANDROID_HOME" \
+        "platform-tools" \
+        "platforms;android-36" \
+        "build-tools;35.0.0"
+
+# 预装 Gradle 8.14.3：容器内用系统 `gradle` 直接编译，而非 `./gradlew` 包装器。
+# 原因：wrapper 会从 services.gradle.org 307 跳转到 GitHub 拉取分发包，而本沙箱代理会把
+# GitHub 内容篡改/截断，导致 "zip END header not found" / checksum 校验失败。改用腾讯云镜像
+# 下载并校验官方 SHA256，彻底绕开运行时下载。
+ENV GRADLE_VERSION=8.14.3
+RUN curl -fSL "https://mirrors.cloud.tencent.com/gradle/gradle-${GRADLE_VERSION}-all.zip" -o /tmp/gradle.zip && \
+    echo "ed1a8d686605fd7c23bdf62c7fc7add1c5b23b2bbc3721e661934ef4a4911d7c  /tmp/gradle.zip" | sha256sum -c - && \
+    unzip -q /tmp/gradle.zip -d /opt/gradle && \
+    rm -f /tmp/gradle.zip
+ENV GRADLE_HOME=/opt/gradle/gradle-${GRADLE_VERSION}
+ENV PATH=$PATH:$GRADLE_HOME/bin
+
+# 国内镜像：为构建脚本与依赖兜底（google / mavenCentral 均可达，镜像作为更快的备用源）。
+# 放在 GRADLE_HOME/init.d 下，由 gradle 自动加载，不受 /root/.gradle 缓存卷覆盖影响。
+RUN mkdir -p "$GRADLE_HOME/init.d" && \
+    cat > "$GRADLE_HOME/init.d/mirrors.gradle" <<'EOF'
+allprojects {
+    buildscript {
+        repositories {
+            maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+            maven { url 'https://maven.aliyun.com/repository/public' }
+        }
+    }
+    repositories {
+        maven { url 'https://mirrors.cloud.tencent.com/nexus/repository/maven-public/' }
+        maven { url 'https://maven.aliyun.com/repository/public' }
+    }
+}
+EOF
+
+WORKDIR /project

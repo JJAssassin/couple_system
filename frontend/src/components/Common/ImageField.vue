@@ -1,7 +1,7 @@
 <template>
   <div class="img-field">
     <div class="img-thumb" :style="boxStyle">
-      <img v-if="modelValue" :src="modelValue" :alt="label || '图片'" class="img-img" loading="lazy" />
+      <img v-if="modelValue" :src="assetUrl(modelValue)" :alt="label || '图片'" class="img-img" loading="lazy" />
       <div v-else class="img-ph">
         <ImageIcon :size="22" :stroke-width="1.6" />
       </div>
@@ -31,6 +31,7 @@ import { NUpload, NButton, NSpin } from 'naive-ui';
 import type { UploadCustomRequestOptions } from 'naive-ui';
 import { Image as ImageIcon } from 'lucide-vue-next';
 import { uploadStandalone } from '@/api/upload';
+import { assetUrl } from '@/config/server';
 
 const props = withDefaults(
   defineProps<{ modelValue?: string; label?: string; size?: number }>(),

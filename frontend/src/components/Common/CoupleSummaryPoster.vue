@@ -130,6 +130,7 @@ import { useMessage } from 'naive-ui';
 import html2canvas from 'html2canvas';
 import { NButton } from 'naive-ui';
 import type { PosterData } from '@/types/poster';
+import { assetUrl } from '@/config/server';
 
 // 数据接口（@/types/poster）：全部可选，缺失字段对应的板块自动隐藏。
 // 注意：agreements / goals / coverCaption 等当前后端 YearReport 不提供，
@@ -170,10 +171,7 @@ const hasAgreementsOrGoals = computed(
 );
 
 function toAbs(path?: string): string {
-  if (!path) return '';
-  if (/^https?:\/\//i.test(path)) return path;
-  const base = window.location.origin;
-  return base + (path.startsWith('/') ? path : '/' + path);
+  return assetUrl(path);
 }
 function onImgError(e: Event) {
   const el = e.target as HTMLImageElement;

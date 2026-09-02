@@ -132,7 +132,7 @@
       <IndPager v-if="list.length" mode="more" :page="page" :page-size="pageSize" :loading="listLoading" :has-more="hasMore" :total="total" @load-more="nextPage" />
     </section>
 
-    <NModal v-model:show="showModal" :title="editing ? '编辑记录' : '记一笔'" preset="card" style="max-width: 440px" class="account-modal">
+    <NModal v-model:show="showModal" :title="editing ? '编辑记录' : '记一笔'" preset="card" style="width: 92%; max-width: 440px" class="account-modal">
       <NForm ref="formRef" :model="form" :rules="rules" class="account-form">
         <NFormItem label="类型" path="recordType" class="account-form-item">
           <NSelect v-model:value="form.recordType" :options="typeOptions" class="account-input" />
@@ -158,7 +158,7 @@
       </template>
     </NModal>
 
-    <NModal v-model:show="showBudget" title="设置预算" preset="card" style="max-width: 460px" class="account-modal budget-modal">
+    <NModal v-model:show="showBudget" title="设置预算" preset="card" style="width: 92%; max-width: 460px" class="account-modal budget-modal">
       <NForm class="budget-form">
         <NFormItem label="月份" class="budget-form-item">
           <NDatePicker v-model:value="bForm.monthTs" type="month" style="width: 100%" class="budget-picker" />
@@ -189,7 +189,7 @@
     </NModal>
 
     <!-- 月度消费海报 -->
-    <NModal v-model:show="showPoster" preset="card" title="分享你的本月消费" style="max-width: 420px" class="account-modal poster-modal">
+    <NModal v-model:show="showPoster" preset="card" title="分享你的本月消费" style="width: 92%; max-width: 420px" class="account-modal poster-modal">
       <ExpensePoster
         ref="posterRef"
         :total-expense="summary.expend"
@@ -205,7 +205,7 @@
     </NModal>
 
     <!-- 批量导入账单 -->
-    <NModal v-model:show="showImport" title="批量导入账单" preset="card" style="max-width: 580px" class="account-modal import-modal">
+    <NModal v-model:show="showImport" title="批量导入账单" preset="card" style="width: 92%; max-width: 580px" class="account-modal import-modal">
       <div class="import-body">
         <p class="import-tip">支持本系统导出的 CSV，或常见银行流水（含 日期/类型/分类/金额/备注 表头）。已存在的记录会自动跳过，可放心重复导入。</p>
         <input ref="fileInputRef" type="file" accept=".csv,text/csv" class="import-file" :disabled="importing" @change="onImportFile" />

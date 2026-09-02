@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useDialogA11y } from '@/composables/useDialogA11y';
+import { getUpdateManifestUrl, getServerBase } from '@/config/server';
 
 interface UpdateManifest {
   versionName: string;
@@ -143,7 +144,9 @@ onMounted(async () => {
 
   let manifest: UpdateManifest | null = null;
   try {
-    const r = await fetch('/app/version.json', { cache: 'no-store' });
+    // 打包 APK 时页面源是 https://localhost，相对 /app/version.json 取不到后端域名清单，
+    // 因此改为随「服务器地址」指向用户后端（同源托管 /app/version.json）。
+    const r = await fetch(getUpdateManifestUrl(), { cache: 'no-store' });
     if (r.ok) manifest = (await r.json()) as UpdateManifest;
   } catch {
     return;
@@ -166,31 +169,41 @@ const btnLabel = computed(() => {
   return '立即更新';
 });
 
+// 相对地址（以 / 开头）按「服务器地址」拼成绝对 URL，使清单与 APK 同址托管时
+// 无需在 version.json 里写死域名（部署方只放 /app/our-little-world-release.apk 即可）。
+function resolveUrl(u?: string): string | undefined {
+  if (!u) return undefined;
+  if (/^https?:\/\//i.test(u)) return u;
+  const base = getServerBase();
+  return base ? `${base}${u.startsWith('/') ? '' : '/'}${u}` : u;
+}
+
 async function go() {
   const m = info.value;
   if (!m) return;
+  const apk = resolveUrl(m.apkUrl);
+  const fallback = resolveUrl(m.releaseUrl) || apk;
   if (platform.value === 'ios') {
-    const url = m.releaseUrl || m.apkUrl;
-    if (url) {
-      openExternal(url);
+    if (fallback) {
+      openExternal(fallback);
       info.value = null; // 已引导去下载，关闭弹层
     }
     return;
   }
-  // Android 走原生下载安装
+  // Android：优先原生插件「下载并安装」；未装插件时退化为系统浏览器打开 APK 下载。
   const upd = nativeUpdate();
-  if (upd && m.apkUrl) {
+  if (upd && apk) {
     downloading.value = true;
     try {
-      await upd.downloadAndInstall({ url: m.apkUrl });
+      await upd.downloadAndInstall({ url: apk });
       info.value = null; // 关闭弹层，系统下载通知接管
     } catch {
-      // 失败兜底：打开下载页
-      if (m.releaseUrl) openExternal(m.releaseUrl);
+      // 失败兜底：打开 APK 下载地址（系统浏览器触发下载）
+      if (fallback) openExternal(fallback);
       downloading.value = false;
     }
-  } else if (m.releaseUrl) {
-    openExternal(m.releaseUrl);
+  } else if (fallback) {
+    openExternal(fallback);
     info.value = null;
   }
 }

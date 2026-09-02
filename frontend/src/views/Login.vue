@@ -15,7 +15,7 @@
         <span class="uvi-input-draw">
           <input id="login-pass" v-model="password" type="password" placeholder="默认 123456" autocomplete="current-password" />
         </span>
-        <GlowButton type="submit" :disabled="loading">{{ loading ? '登录中…' : '登 录' }}</GlowButton>
+        <GlowButton type="submit" class="login-submit" :disabled="loading">{{ loading ? '登录中…' : '登 录' }}</GlowButton>
       </form>
       <p class="hint">初始账号 partner_a / partner_b，密码 123456</p>
     </div>
@@ -64,7 +64,7 @@ async function onSubmit() {
     radial-gradient(46% 100% at 78% 12%, color-mix(in srgb, var(--color-cocoa) 12%, transparent), transparent 70%);
   filter: blur(18px); opacity: .9; }
 .login-card {
-  position: relative; z-index: 1; width: 340px; background: var(--color-surface); border-radius: 20px; padding: 36px 28px 30px;
+  position: relative; z-index: 1; width: min(340px, 100%); background: var(--color-surface); border-radius: 20px; padding: 36px 28px 30px;
   box-shadow: 0 20px 60px rgba(122,100,98,.12); text-align: center; border: 1px solid var(--color-border);
   animation: login-pop var(--dur-page) var(--ease-love) both;
 }
@@ -81,5 +81,6 @@ input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px sol
   border-radius: 10px; font-size: 14px; outline: none; background: var(--color-surface-2); color: var(--color-ink);
   transition: border-color var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love); }
 input:focus { border-color: var(--color-rose); box-shadow: 0 0 0 3px var(--color-rose-soft); }
+.login-submit { margin-top: 22px; }
 .hint { margin-top: 16px; font-size: 12px; color: var(--color-ink-3); }
 </style>

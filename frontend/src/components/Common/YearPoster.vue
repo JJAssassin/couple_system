@@ -139,6 +139,7 @@ import { useDialogA11y } from '@/composables/useDialogA11y';
 import html2canvas from 'html2canvas';
 import type { YearReport } from '@/api/stats';
 import type { ImageDto, FootprintDto } from '@/types';
+import { assetUrl } from '@/config/server';
 
 const props = defineProps<{
   report: YearReport | null;
@@ -180,10 +181,7 @@ function onClose() {
 }
 
 function toAbs(path?: string): string {
-  if (!path) return '';
-  if (/^https?:\/\//i.test(path)) return path;
-  const base = window.location.origin;
-  return base + (path.startsWith('/') ? path : '/' + path);
+  return assetUrl(path);
 }
 
 function onImgError(e: Event) {

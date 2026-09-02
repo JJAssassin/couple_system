@@ -28,6 +28,15 @@
       </NForm>
     </section>
 
+    <!-- 服务器地址（APK / 远程部署） -->
+    <section class="block love-card">
+      <IndSectionTitle label="服务器地址" :led="true" />
+      <p class="sub-text">App 连接的情侣后端地址。留空表示与网页同源（本地 / 反向代理同域）。在手机 APK 中请填写你的域名或电脑局域网地址（如 http://192.168.1.50:5199），修改后即时生效，无需重启。</p>
+      <NInput v-model:value="serverBaseInput" placeholder="https://love.example.com 或 http://192.168.1.50:5199" />
+      <NButton class="svr-save" type="primary" :loading="savingSvr" v-press-bounce @click="saveServerBase">保存服务器地址</NButton>
+      <p v-if="serverBaseNote" class="theme-hint">{{ serverBaseNote }}</p>
+    </section>
+
     <!-- 我们的专属（共享） -->
     <section class="block love-card">
       <IndSectionTitle label="我们的专属（双方共享）" :led="true" />
@@ -167,7 +176,7 @@
       <NButton class="import-ml" :loading="importing" @click="openImport">导入备份</NButton>
     </section>
 
-    <NModal v-model:show="showImport" class="import-modal" preset="card" title="导入备份" style="max-width: 460px">
+    <NModal v-model:show="showImport" class="import-modal" preset="card" title="导入备份" style="width: 92%; max-width: 460px">
       <div v-if="!preview">
         <p class="sub-text">选择此前从「导出全部数据」得到的 .zip 或 .json 备份文件。导入将按导出对称范围覆盖当前账号的数据（纪念日 / 日记 / 愿望 / 矛盾 / 记账 / 约会 / 消息）。</p>
         <input class="file-input" type="file" accept=".zip,.json" @change="onFileChosen" />
@@ -219,6 +228,7 @@ import { FinesseSwitch } from '@/interactions';
 import LoveToggle from '@/components/Common/LoveToggle.vue';
 import IpIcon from '@/components/Common/IpIcon.vue';
 import { maxLenRule } from '@/utils/formRules';
+import { getServerBase, setServerBase } from '@/config/server';
 import type { FormItemRule } from 'naive-ui';
 import { useStaggerEnter } from '@/composables/useAnimation';
 
@@ -235,6 +245,24 @@ const isIOS = ref(/iP(hone|od|ad)/.test(navigator.userAgent) || (navigator.userA
 const loading = ref(false);
 const saving = ref(false);
 const exporting = ref(false);
+
+// 服务器地址（APK 指向域名 / 局域网后端）；留空 = 同源。运行时持久化，即时生效。
+const serverBaseInput = ref(getServerBase());
+const savingSvr = ref(false);
+const serverBaseNote = ref('');
+async function saveServerBase() {
+  savingSvr.value = true;
+  serverBaseNote.value = '';
+  try {
+    setServerBase(serverBaseInput.value.trim());
+    serverBaseNote.value = '已保存，正在切换到新服务器地址…';
+    msg.success('服务器地址已更新');
+  } catch {
+    serverBaseNote.value = '保存失败，请重试';
+  } finally {
+    savingSvr.value = false;
+  }
+}
 const todayStr = toDateStr(); // YYYY-MM-DD（本地，时区稳定）
 
 // 本地时区稳定的 YYYY-MM-DD，避免 toLocaleDateString 区域/时区漂移（与首页同款）
@@ -607,6 +635,7 @@ html:not(.reduce-motion) .sw:hover { transform: scale(1.12); }
 .join-box :deep(.n-input) { flex: 1; }
 
 .import-ml { margin-left: 8px; }
+.svr-save { margin-top: 10px; }
 
 @media (max-width: 767px) {
   .brand { padding: 10px 14px; margin-bottom: 14px; }

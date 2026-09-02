@@ -102,19 +102,24 @@ public class AuthService
         var httpCtx = _http?.HttpContext;
         if (httpCtx?.Response.HasStarted == false)
         {
+            // 跨域场景(Capacitor APK 的 WebView 源 https://localhost 访问域名/后端)：
+            // 浏览器仅在 Secure + SameSite=None 时才会在跨站请求中携带 Cookie。
+            // 故请求本身为 HTTPS 时升级为 None+Secure；纯 HTTP(本机局域网同站) 维持原 Lax 行为，避免破坏既有 Web。
+            var cookieSecure = httpCtx.Request.IsHttps;
+            var cookieSameSite = cookieSecure ? SameSiteMode.None : SameSiteMode.Lax;
             httpCtx.Response.Cookies.Append("cl_at", access, new CookieOptions
             {
                 HttpOnly = true,
-                SameSite = SameSiteMode.Lax,
-                Secure = httpCtx.Request.IsHttps,
+                SameSite = cookieSameSite,
+                Secure = cookieSecure,
                 MaxAge = TimeSpan.FromMinutes(_jwt.AccessExpireMinutes),
                 Path = "/"
             });
             httpCtx.Response.Cookies.Append("cl_rt", refresh, new CookieOptions
             {
                 HttpOnly = true,
-                SameSite = SameSiteMode.Lax,
-                Secure = false,
+                SameSite = cookieSameSite,
+                Secure = cookieSecure,
                 MaxAge = ttl,
                 Path = "/"
             });

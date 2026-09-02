@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import axios from 'axios';
 import api from '@/utils/request';
+import { getApiBase } from '@/config/server';
 import type { ApiResult, LoginResp, UserProfile } from '@/types';
 
 // 安全说明（评审 #2）：
@@ -62,11 +63,15 @@ export const useAuthStore = defineStore('auth', () => {
   /**
    * 静默续期：浏览器自动携带 HttpOnly Cookie cl_rt 调 /auth/refresh，
    * 后端轮换并返回新 accessToken（refresh 仍只在 Cookie 中，前端不接触）。
+   * 注意：必须显式 withCredentials:true —— 本调用走原始 axios（非带凭据的 api 实例），
+   * 否则 APK 跨站（WebView 源 https://localhost ↔ 后端不同源）时 cl_rt Cookie 不会被发送，
+   * 导致刷新失败、App 冷启动后用户被静默登出（与 request.ts 的 doRefresh 保持一致）。
    */
   async function restoreSession() {
     const { data } = await axios.post(
-      `${import.meta.env.VITE_API_BASE || '/api'}/auth/refresh`,
+      `${getApiBase()}/auth/refresh`,
       {},
+      { withCredentials: true },
     );
     const r = (data as ApiResult<LoginResp>).data;
     setAccessToken(r.accessToken);

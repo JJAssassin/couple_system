@@ -14,9 +14,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.StaticFiles;
 using CoupleLoveSystem.Infrastructure.Email;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.IdentityModel.Tokens;
@@ -173,6 +175,18 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         // 后端登记身份并把连接加入对应情侣组。故此处不再注入 URL 令牌。
     });
 
+// ---- CORS：允许 Capacitor 安卓 WebView 源 https://localhost 跨域访问 API（携带凭据，用于刷新 Cookie cl_rt / cl_at）。
+// 其余受信任源（如自有域名）通过配置 AllowedOrigins（逗号分隔）追加。仅影响跨域请求，同源 Web 经反代不受影响。
+var allowedOrigins = new List<string> { "https://localhost" };
+var extraOrigins = builder.Configuration["AllowedOrigins"];
+if (!string.IsNullOrWhiteSpace(extraOrigins))
+    allowedOrigins.AddRange(extraOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+builder.Services.AddCors(o => o.AddPolicy("AppCors", p => p
+    .WithOrigins(allowedOrigins.ToArray())
+    .AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials()));
+
 builder.Services.AddAuthorization();
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<ApiRateLimiter>(); // 速率限制（P2-1/2/3），基于 ICacheService 固定窗口计数
@@ -198,6 +212,28 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<DbSeeder>();
 
 var app = builder.Build();
+
+// 信任反向代理（caddy / cloudflared / nginx）转发的 X-Forwarded-Proto / X-Forwarded-For，
+// 使 Request.IsHttps 反映真实 HTTPS 而非代理到本机的 HTTP。否则 AuthService 据 Request.IsHttps
+// 设的刷新/媒体 Cookie 会落到 Secure=false;SameSite=Lax，APK（源 https://localhost）跨站访问时
+// Cookie 不发 → 持久登录失效。
+// 关键：cloudflared（隧道 ingress → backend:5199）与同 compose 网络内的 nginx 均从「容器非回环 IP」
+// （172.16.0.0/12 为 docker 默认桥接网段 172.17/172.18/...）连入本服务。ForwardedHeadersOptions
+// 默认仅信任回环网络，若不把该网段加入 KnownNetworks，X-Forwarded-Proto 会被整体忽略，
+// Request.IsHttps 仍为 false。故此处显式把 docker 网段纳入受信任代理。
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    KnownNetworks =
+    {
+        // 保留默认回环（127.0.0.1/8、::1/128），并追加 docker compose 网段
+        Microsoft.AspNetCore.HttpOverrides.IPNetwork.Parse("172.16.0.0/12"),
+    },
+});
+// 注意：必须在 UseStaticFiles / UseAuthentication 之前注册 CORS，否则静态资源（如 /app/version.json）
+// 与带凭据的跨域预检（OPTIONS → [Authorize] 控制器）会在 CORS 头注入前就短路返回，
+// 导致 APK（源 https://localhost）跨域 fetch 清单/接口被浏览器拦截。
+app.UseCors("AppCors");
 
 // 生产启动 fail-fast（评审 #4 残留项 P2-7 收尾）：
 // 上方已强制 Provider=Redis；这里再做一次真实连通性探测——RedisTokenStore 的
@@ -261,13 +297,34 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
-// 托管 /app/version.json：供前端 AppUpdatePrompt 检测版本更新
-var appRoot = Path.Combine(app.Environment.WebRootPath ?? app.Environment.ContentRootPath, "app");
+// 托管 /app：version.json（前端 AppUpdatePrompt 检测更新）+ our-little-world-release.apk（应用内 OTA 下载）
+// 解析 wwwroot/app：优先 WebRootPath；若从 bin 目录启动（dev 常见），bin 下并无 wwwroot，
+// 则回退到项目根 wwwroot（ContentRoot 向上三级：bin/Debug/net8.0 -> 项目根）。生产发布时 WebRootPath 即指向发布目录 wwwroot，沿用首选。
+var wwwRootForApp = app.Environment.WebRootPath ?? app.Environment.ContentRootPath;
+string[] candidateAppRoots =
+{
+    Path.Combine(wwwRootForApp, "app"),
+    Path.Combine(app.Environment.ContentRootPath, "wwwroot", "app"),
+    Path.Combine(app.Environment.ContentRootPath, "..", "..", "..", "wwwroot", "app"),
+};
+string appRoot = candidateAppRoots[0];
+foreach (var c in candidateAppRoots)
+{
+    if (Directory.Exists(c) && Directory.GetFiles(c).Length > 0)
+    {
+        appRoot = c;
+        break;
+    }
+}
 if (!Directory.Exists(appRoot)) Directory.CreateDirectory(appRoot);
+var appContentTypeProvider = new FileExtensionContentTypeProvider();
+// .apk 不在默认 MIME 映射内，UseStaticFiles 默认会 404；显式注册以便 OTA 下载可正常返回安装包。
+appContentTypeProvider.Mappings[".apk"] = "application/vnd.android.package-archive";
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(appRoot),
     RequestPath = "/app",
+    ContentTypeProvider = appContentTypeProvider,
     OnPrepareResponse = ctx =>
     {
         // 版本文件需可缓存但前端加了 cache: 'no-store'，此处不过度限制

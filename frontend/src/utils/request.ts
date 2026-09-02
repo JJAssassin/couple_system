@@ -2,11 +2,22 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/store/authStore';
 import { useNotifyStore } from '@/store/notifyStore';
 import { useGlobalLoading } from '@/composables/useGlobalLoading';
+import { getApiBase, onServerBaseChanged } from '@/config/server';
 import type { ApiResult, LoginResp } from '@/types';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE || '/api',
+  // 构建期默认(VITE_API_BASE) 或 运行时可配置服务器地址；空时为同源相对 /api。
+  baseURL: getApiBase(),
   timeout: 15000,
+  // APK(WebView 源 https://localhost) 跨域访问后端时需携带 HttpOnly 刷新 Cookie cl_rt / cl_at；
+  // 同源 Web 下此选项无副作用。
+  withCredentials: true,
+});
+
+// 用户在设置页切换「服务器地址」后，热更新 axios 的 baseURL，无需刷新页面。
+// 注意：已发出的请求不受影响，仅后续请求生效；SignalR 连接由 useRealtime 同步重置。
+onServerBaseChanged(() => {
+  api.defaults.baseURL = getApiBase();
 });
 
 // 顶部加载条：仅在非刷新、非文件下载的请求上跟踪（其余请求自带骨架/按钮 loading）
@@ -105,7 +116,8 @@ api.interceptors.response.use(
 
 async function doRefresh(): Promise<string> {
   // refresh 走 HttpOnly Cookie cl_rt，浏览器自动携带，前端不持有（评审 #2）
-  const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {});
+  // withCredentials 确保跨域(APK) 时 cl_rt Cookie 被发送。
+  const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, { withCredentials: true });
   const payload = (data as ApiResult<LoginResp>).data;
   useAuthStore().setSession(payload.accessToken, payload.userProfile);
   return payload.accessToken;

@@ -76,7 +76,7 @@ onMounted(checkAnniversaryReminders);
 
 <style scoped>
 .rem-tip {
-  position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+  position: fixed; top: calc(env(safe-area-inset-top) + 14px); left: 50%; transform: translateX(-50%);
   z-index: 1600; max-width: min(92vw, 420px);
   display: flex; align-items: center; gap: 10px;
   background: var(--color-surface); border: 1px solid var(--color-rose);

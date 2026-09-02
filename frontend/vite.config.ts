@@ -8,6 +8,16 @@ import { VitePWA } from 'vite-plugin-pwa';
 import { gzipSync, brotliCompressSync, constants as zlibConstants } from 'node:zlib';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
+
+// 读取 package.json 的 version，作为 APK/前端的统一版本号，注入到 import.meta.env.VITE_APP_VERSION，
+// 并产出 dist/version.json 与 dist/app/version.json（应用内更新检查读取的清单，可由后端域名同址托管）。
+const require = createRequire(import.meta.url);
+const pkg = require('./package.json');
+
+// 版本号（与 android/app/build.gradle 的 versionCode / versionName 保持一致，发版时同步 +1）。
+const APP_VERSION_CODE = 1;
+const APP_ANDROID_VERSION_CODE = 1;
 
 // 构建期静态资源压缩（零依赖，使用 Node 内置 zlib）：为 dist 内每个资源产出 .gz 与 .br 副本，
 // 由静态服务器/CDN 按需返回以显著降低传输体积。需服务器开启 precompressed 协商（如 nginx gzip_static / brotli_static）。
@@ -47,14 +57,42 @@ function compressStaticAssets() {
   };
 }
 
+// 构建期产出版本清单：dist/version.json 与 dist/app/version.json。
+// 应用内更新检查（AppUpdatePrompt）会读取「服务器地址 /app/version.json」，
+// 比对 versionCode；其中 apkUrl / releaseUrl 由部署方在托管处填写（指向新 APK 下载地址）。
+function emitVersionJson() {
+  return {
+    name: 'emit-version-json',
+    apply: 'build' as const,
+    async closeBundle() {
+      const outDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'dist');
+      const manifest = {
+        versionName: pkg.version,
+        versionCode: APP_VERSION_CODE,
+        androidVersionCode: APP_ANDROID_VERSION_CODE,
+        changelog: '',
+        apkUrl: '',
+        releaseUrl: '',
+        minSupportedCode: 1,
+      };
+      await fs.writeFile(path.join(outDir, 'version.json'), JSON.stringify(manifest, null, 2));
+      await fs.mkdir(path.join(outDir, 'app'), { recursive: true });
+      await fs.writeFile(path.join(outDir, 'app', 'version.json'), JSON.stringify(manifest, null, 2));
+    },
+  };
+}
+
 export default defineConfig({
+  // 注入应用版本号（应用内更新检查用它比对远端清单的 versionCode）
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(pkg.version),
+  },
   plugins: [
     vue(),
     tailwindcss(),
-    // NaiveUI 按需引入：编译期自动注入模板中用到的 n-* 组件（含 App.vue 的 Provider），
-    // 配合 main.ts 去掉全量 app.use(NaiveUi)，把 naive chunk 从整库 ~1.3MB 砍到仅用到的组件。
     Components({ resolvers: [NaiveUiResolver()], dts: false }),
     compressStaticAssets(),
+    emitVersionJson(),
     VitePWA({
       registerType: 'autoUpdate',
       disable: true,

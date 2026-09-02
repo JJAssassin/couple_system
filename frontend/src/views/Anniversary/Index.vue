@@ -70,7 +70,7 @@
             class="anniv-card"
             :class="{ pop: poppingId === a.id, near: isNear(a), soon: isSoon(a) }"
           >
-          <div v-if="a.coverImage" class="ac-cover" :style="{ backgroundImage: `url(${a.coverImage})` }" />
+          <div v-if="a.coverImage" class="ac-cover" :style="{ backgroundImage: `url(${assetUrl(a.coverImage)})` }" />
 
           <div class="ac-top">
             <component :is="typeMeta(a.anniversaryType).icon" class="ac-type-ico" :size="20" />
@@ -195,6 +195,7 @@ import { useStaggerEnter } from '@/composables/useAnimation';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
+import { assetUrl } from '@/config/server';
 import IndLed from '@/components/industrial/IndLed.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';

@@ -83,7 +83,7 @@
           <span class="author">{{ m.authorName || (m.createUserId === meId ? '我' : 'TA') }}</span>
           <span class="time sub-text">{{ fmt(m.createTime) }}<span v-if="relDays(m.createTime) > 1" class="board-rel"> · {{ relTime(m.createTime) }}</span></span>
         </div>
-        <img v-if="m.imageUrl" :src="m.imageUrl" class="msg-img" alt="配图" loading="lazy" />
+        <img v-if="m.imageUrl" :src="assetUrl(m.imageUrl)" class="msg-img" alt="配图" loading="lazy" />
         <p class="msg-body" :style="m.color ? { color: m.color } : {}">{{ m.content }}</p>
 
         <!-- 已产生的反应胶囊 -->
@@ -188,6 +188,7 @@ import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
 import { useAuthStore } from '@/store/authStore';
+import { assetUrl } from '@/config/server';
 import { usePartnerStore } from '@/store/partnerStore';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';

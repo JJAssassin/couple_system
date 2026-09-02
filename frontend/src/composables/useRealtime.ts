@@ -2,6 +2,7 @@ import { ref, shallowRef, onUnmounted, type Ref } from 'vue';
 import * as signalR from '@microsoft/signalr';
 import { useAuthStore } from '@/store/authStore';
 import { authenticateSync } from '@/api/sync';
+import { getHubUrl, onServerBaseChanged } from '@/config/server';
 
 // 模块级单例：全局仅一条 SignalR 连接
 const partnerOnline = ref(false);
@@ -28,6 +29,14 @@ const listeners = new Map<string, Set<(sig: SyncSignal) => void>>();
 // 全局监听：收到任意模块信号时都会触发（无论是否订阅了该模块），用于"伴侣更新"等跨模块提示
 const anyListeners = new Set<(sig: SyncSignal) => void>();
 
+// 服务器地址变更后，旧连接指向旧 host，必须断开让下次 ensure() 用新 hub 地址重建。
+onServerBaseChanged(() => {
+  if (connection.value) {
+    connection.value.stop().catch(() => {});
+    connection.value = null;
+  }
+});
+
 // 握手：匿名连上 WebSocket 后，携带 JWT 上报 connectionId，后端据此登记并加入对应情侣组
 async function authenticate(conn: signalR.HubConnection) {
   const id = conn.connectionId;
@@ -42,7 +51,7 @@ async function ensure(): Promise<signalR.HubConnection | null> {
   starting.value = true;
   try {
     const conn = new signalR.HubConnectionBuilder()
-      .withUrl('/hub/sync') // 不再在 URL 带 JWT；令牌仅通过 /api/sync/authenticate 的 Authorization 头上报
+      .withUrl(getHubUrl()) // 不再在 URL 带 JWT；令牌仅通过 /api/sync/authenticate 的 Authorization 头上报
       .withAutomaticReconnect([0, 1000, 2000, 5000, 10000])
       .build();
     conn.on('Presence', (p: { online: boolean }) => {

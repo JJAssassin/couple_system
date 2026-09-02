@@ -40,7 +40,7 @@
       >
         <img
           v-if="cur"
-          :src="curUrl"
+          :src="assetUrl(curUrl)"
           :alt="curRemark || 'photo'"
           class="lb-img"
           :class="{ grabbed: dragging }"
@@ -64,6 +64,7 @@
 import { ref, computed, watch, onBeforeUnmount } from 'vue';
 import { useDialogA11y } from '@/composables/useDialogA11y';
 import { Heart } from 'lucide-vue-next';
+import { assetUrl } from '@/config/server';
 
 export interface LightboxImage {
   id: number;
@@ -247,6 +248,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
+  padding-top: calc(env(safe-area-inset-top) + 14px);
   z-index: 2;
   color: #fff;
 }
@@ -335,7 +337,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
 .lb-cap {
   position: absolute;
-  bottom: 26px;
+  bottom: calc(env(safe-area-inset-bottom) + 26px);
   left: 50%;
   transform: translateX(-50%);
   max-width: 80vw;

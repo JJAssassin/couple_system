@@ -1,7 +1,9 @@
 {
-  "versionName": "1.0.0",
-  "versionCode": 100,
-  "androidVersionCode": 100,
-  "changelog": "首次发布",
-  "minSupportedCode": 100
+  "versionName": "0.1.0",
+  "versionCode": 1,
+  "androidVersionCode": 1,
+  "changelog": "小世界 App 首个可安装版本（Capacitor 真原生 APK）",
+  "apkUrl": "/app/our-little-world-release.apk",
+  "releaseUrl": "/app/our-little-world-release.apk",
+  "minSupportedCode": 1
 }

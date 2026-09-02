@@ -99,7 +99,7 @@
       <IndSectionTitle label="回忆胶片" :led="true" />
       <div class="film">
         <button v-for="a in albums" :key="a.id" class="film-cell uvi-card3d" type="button" :aria-label="'查看相册 ' + a.albumName" @click="go('album')">
-          <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" class="img-fade" @error="onAlbumCoverError(a)" />
+          <img v-if="a.cover" :src="assetUrl(a.cover)" :alt="a.albumName" loading="lazy" class="img-fade" @error="onAlbumCoverError(a)" />
           <div v-else class="film-ph">{{ a.albumName.slice(0, 1) }}</div>
           <div class="film-cap">{{ a.albumName }} · {{ a.imageCount }}张</div>
         </button>
@@ -201,6 +201,7 @@ import {
   Heart, Mail, BookOpen, Star, CalendarHeart, CloudFog, Image, PartyPopper, X,
 } from 'lucide-vue-next';
 import api from '@/utils/request';
+import { assetUrl } from '@/config/server';
 import type { ApiResult, LoveInfo, DashboardData, AnniversaryDto, TimelineItemDto, AlbumDto, DailyQuoteDto } from '@/types';
 import type { EChartsOption } from 'echarts';
 import LoveCount from '@/components/Common/LoveCount.vue';

@@ -9,6 +9,7 @@ import './interactions/finesse.css'; // 12 项微交互动效层（keyframes + �
 import './assets/style/uiverse-motion.css'; // UIverse Motion Kit：取自 uiverse.io 的动效，重调为浪漫柔光设计语言
 import HeroIcon from './components/Common/HeroIcon.vue';
 import { registerFinesseDirectives } from './interactions';
+import '@capacitor/app'; // 注册原生 App 插件（更新检查读取 versionCode 用）
 
 const app = createApp(App);
 app.use(createPinia());

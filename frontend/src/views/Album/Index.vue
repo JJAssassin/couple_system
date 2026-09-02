@@ -52,7 +52,7 @@
             @keydown.space.prevent="openAlbum(a, $event)"
           >
             <div class="album-cover">
-              <img v-if="a.cover" :src="a.cover" :alt="a.albumName" loading="lazy" />
+              <img v-if="a.cover" :src="assetUrl(a.cover)" :alt="a.albumName" loading="lazy" />
               <div v-else class="album-cover-ph"></div>
             </div>
             <div class="album-meta">
@@ -98,7 +98,7 @@
       <!-- 封面 hero：View Transition 共享元素目标（列表封面放大进入详情） -->
       <div class="album-hero" v-if="currentAlbum">
         <div class="album-hero-cover" ref="detailCoverEl">
-          <img v-if="currentAlbum.cover" :src="currentAlbum.cover" :alt="currentAlbum.albumName" class="detail-cover" />
+          <img v-if="currentAlbum.cover" :src="assetUrl(currentAlbum.cover)" :alt="currentAlbum.albumName" class="detail-cover" />
           <div v-else class="album-cover-ph">{{ currentAlbum.albumName.slice(0, 1) }}</div>
         </div>
         <div class="album-hero-meta">
@@ -225,7 +225,7 @@
               @keydown.enter.prevent="onCellClick(img)"
               @keydown.space.prevent="onCellClick(img)"
             >
-              <img class="thumb" :src="img.url || img.imagePath" :alt="img.remark || 'photo'" loading="lazy" />
+              <img class="thumb" :src="assetUrl(img.url || img.imagePath)" :alt="img.remark || 'photo'" loading="lazy" />
               <div class="img-cap" v-show="!selectMode && (img.remark || imgWhen(img))">
                 <span class="img-cap-remark" v-if="img.remark">{{ img.remark }}</span>
                 <span class="img-cap-time" v-if="imgWhen(img)">{{ imgWhen(img) }}</span>
@@ -371,6 +371,7 @@ import { startSharedTransition } from '@/composables/useViewTransition';
 import { useSettingStore } from '@/store/settingStore';
 import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
+import { assetUrl } from '@/config/server';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';

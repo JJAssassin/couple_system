@@ -44,11 +44,11 @@
 
           <div class="avatars" :title="partnerName ? `你 & ${partnerName}` : '你'">
             <span class="avatar" :class="{ 'has-img': !!meAvatar }">
-              <img v-if="meAvatar" :src="meAvatar" alt="" />
+              <img v-if="meAvatar" :src="assetUrl(meAvatar)" alt="" />
               <template v-else>{{ meInitial }}</template>
             </span>
             <span class="avatar avatar-mate" :class="{ 'has-img': !!mateAvatar, online: partnerOnline }">
-              <img v-if="mateAvatar" :src="mateAvatar" alt="" />
+              <img v-if="mateAvatar" :src="assetUrl(mateAvatar)" alt="" />
               <template v-else>{{ mateInitial }}</template>
             </span>
           </div>
@@ -103,6 +103,7 @@ import { prefetchRoutes } from '@/router';
 import { HamburgerIcon } from '@/interactions';
 import { isMobile, useDevice } from '@/composables/useDevice';
 import { useAuthStore } from '@/store/authStore';
+import { assetUrl } from '@/config/server';
 import { usePartnerStore } from '@/store/partnerStore';
 import { useSettingStore } from '@/store/settingStore';
 import { useRealtime } from '@/composables/useRealtime';
