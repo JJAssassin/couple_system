@@ -7,8 +7,19 @@
     <!-- 页面转场：进出都做 opacity 淡入淡出（绝不用 transform/filter，避免破坏 position:fixed 子元素）。
          out-in 让旧页先淡出、新页再淡入，导航更有"过渡感"；appear 保留首屏入场淡入。 -->
     <transition name="route-fade" mode="out-in" appear>
-      <div class="route-fade" :key="route.path">
-        <component :is="Component" />
+      <div class="route-fade" :key="route.path + ':' + retryNonce">
+        <ErrorBoundary @retry="onRetry">
+          <!-- 路由懒加载 chunk 期间显示品牌骨架屏，消除切换空白闪跳；
+               页面挂载后由各页自身的 v-if="loading" 骨架屏接管数据等待 -->
+          <Suspense>
+            <component :is="Component" />
+            <template #fallback>
+              <div class="route-skeleton">
+                <IndSkeleton variant="hero" :rows="3" />
+              </div>
+            </template>
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </transition>
   </router-view>
@@ -20,6 +31,7 @@
   <PwaInstallPrompt />
   <AppUpdatePrompt />
   <AnniversaryReminder />
+  <RealtimeBanner />
 
   <!-- 原生首次启动引导：APK 内 WebView 无法预知后端地址，首次打开引导填写服务器地址 -->
   <teleport to="body">
@@ -66,6 +78,9 @@ import PwaInstallPrompt from '@/components/Common/PwaInstallPrompt.vue';
 import AppUpdatePrompt from '@/components/Common/AppUpdatePrompt.vue';
 import AnniversaryReminder from '@/components/Common/AnniversaryReminder.vue';
 import GlobalLoadingBar from '@/components/Common/GlobalLoadingBar.vue';
+import ErrorBoundary from '@/components/Common/ErrorBoundary.vue';
+import RealtimeBanner from '@/components/Common/RealtimeBanner.vue';
+import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 
 // 必须在 <n-message-provider> / <n-notification-provider> 之下调用，
 // 因此本组件作为 provider 的子节点（见 App.vue）渲染，setup 中才能拿到实例。
@@ -81,6 +96,13 @@ pwa.setupNotifications();
 
 // 移动端：左边缘右滑返回上一页
 useSwipeBack();
+
+// 路由级错误边界：页面渲染抛错时由 ErrorBoundary 显示友好页而非白屏。
+// retryNonce 变化会强制重建当前路由组件（重置边界 + 重新拉取数据）。
+const retryNonce = ref(0);
+function onRetry() {
+  retryNonce.value++;
+}
 
 // 原生壳首次启动：若尚未配置服务器地址，弹出引导（避免在不知道后端在哪的情况下白屏）。
 const showServerSetup = ref(false);
@@ -141,4 +163,11 @@ if (!auth.accessToken) {
 .svr-fade-enter-from, .svr-fade-leave-to { opacity: 0; }
 :global(.reduce-motion) .svr-fade-enter-active,
 :global(.reduce-motion) .svr-fade-leave-active { transition: none; }
+/* 路由懒加载骨架屏容器：与内容区视觉对齐，顶部留白呼应页面标题 */
+.route-skeleton {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 2px 0;
+}
 </style>

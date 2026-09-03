@@ -10,6 +10,10 @@ const partnerOnline = ref(false);
 // 导致 .value 与 HubConnection 类型不兼容（TS2740）。shallowRef 不做深解包，保留完整类类型。
 const connection = shallowRef<signalR.HubConnection | null>(null);
 const starting = ref(false);
+// 连接状态：驱动顶部实时连接提示条（断线 / 重连中）。
+// idle=未登录未尝试；connecting=握手/重连中（瞬时）；connected=已连；
+// reconnecting=自动重连尝试中；disconnected=自动重连耗尽，需手动重连。
+const connState = ref<'idle' | 'connecting' | 'connected' | 'reconnecting' | 'disconnected'>('idle');
 
 // 增量同步信号类型（与后端 SyncSignal 对齐）：kind ∈ created/updated/deleted/reload；id 为变更实体主键
 // payload：后端携带的实体标量投影（camelCase），供前端就地 upsert；reload / deleted 时为 undefined
@@ -68,19 +72,31 @@ async function ensure(): Promise<signalR.HubConnection | null> {
         Promise.resolve(cb(sig)).catch(() => {});
       });
     });
-    // 重连后 connectionId 会变，必须重新握手绑定情侣组
+    // 自动重连进行中：重试耗尽前持续触发，状态置 reconnecting（用户可见"重连中…"）
+    conn.onreconnecting(() => {
+      connState.value = 'reconnecting';
+    });
+    // 重连成功后 connectionId 会变，必须重新握手绑定情侣组
     conn.onreconnected(async () => {
+      connState.value = 'connected';
       await authenticate(conn);
       conn.invoke('Ping').catch(() => {});
     });
+    // 自动重连耗尽（withAutomaticReconnect 次数用尽）后触发：状态置 disconnected，等待用户手动重连
+    conn.onclose(() => {
+      connState.value = 'disconnected';
+    });
+    connState.value = 'connecting';
     await conn.start();
     connection.value = conn;
     // 握手：上报 connectionId，后端登记并加入对应情侣组（情侣组隔离，杜绝跨情侣串台）
     await authenticate(conn);
     conn.invoke('Ping').catch(() => {}); // 主动探测一次在线状态
+    connState.value = 'connected';
     return conn;
   } catch {
     connection.value = null;
+    connState.value = 'disconnected';
     return null;
   } finally {
     starting.value = false;
@@ -120,6 +136,32 @@ export function useRealtime() {
     }
   }
 
+  /**
+   * 手动重连：自动重连耗尽（onclose → Disconnected）后，用户点提示条按钮主动重建连接。
+   * 先停掉旧连接并清空单例，下次 ensure() 走新建分支用最新 JWT + hub 地址重建。
+   */
+  async function reconnect(): Promise<void> {
+    const token = useAuthStore().accessToken;
+    if (!token) {
+      connState.value = 'disconnected';
+      return;
+    }
+    const old = connection.value;
+    if (old) {
+      try {
+        await old.stop();
+      } catch {
+        /* 旧连接可能已不可用，忽略 */
+      }
+    }
+    connection.value = null;
+    starting.value = false;
+    connState.value = 'connecting';
+    await ensure();
+    // ensure 内部已据结果更新 connState；兜底：若仍无连接则置 disconnected
+    if (!connection.value) connState.value = 'disconnected';
+  }
+
   // 订阅所有模块的实时信号（无论是否显式订阅某模块）。用于"伴侣更新"等跨模块轻提示。
   function onAnySync(cb: (sig: SyncSignal) => void) {
     anyListeners.add(cb);
@@ -128,7 +170,7 @@ export function useRealtime() {
     return off;
   }
 
-  return { partnerOnline, ensure, onSync, onAnySync, rehandshake, useModuleSync };
+  return { partnerOnline, connState, ensure, onSync, onAnySync, rehandshake, useModuleSync, reconnect };
 }
 
 // 增量同步助手：在 onSync 基础上，当后端信号携带实体 Payload 时做就地 upsert/remove，避免整表重载。
