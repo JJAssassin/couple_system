@@ -59,4 +59,14 @@ describe('IndEmpty', () => {
     expect(w.findComponent(IndButton).exists()).toBe(false);
     w.unmount();
   });
+
+  it('容器带无障碍状态角色，供屏幕阅读器播报空态', () => {
+    const w = mount(IndEmpty, { props: { title: 'x' } });
+    const root = w.find('.ind-empty');
+    expect(root.attributes('role')).toBe('status');
+    expect(root.attributes('aria-live')).toBe('polite');
+    // 装饰插画对辅助技术隐藏
+    expect(w.find('svg').attributes('aria-hidden')).toBe('true');
+    w.unmount();
+  });
 });

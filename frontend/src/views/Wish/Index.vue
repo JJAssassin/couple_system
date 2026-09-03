@@ -250,6 +250,7 @@ import {
   listWish, createWish, updateWish, deleteWish, claimWish, completeWish, reorderWishes,
 } from '@/api/wish';
 import { useNotifyStore } from '@/store/notifyStore';
+import { useOptimistic } from '@/composables/useOptimistic';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
@@ -270,6 +271,8 @@ import { toLocalISO } from '@/utils/format';
 import { fireConfetti } from '@/composables/useConfetti';
 
 const notify = useNotifyStore();
+// 乐观更新助手：失败时以服务端真值回滚（load），并弹可重试错误卡
+const { mutate } = useOptimistic(load);
 const loading = ref(true);
 const container = ref<HTMLElement>();
 const listEl = ref<HTMLElement>();
@@ -462,19 +465,32 @@ async function submitForm() {
   }
   saving.value = true;
   try {
-    form.expectTime = toLocalISO(expectTs.value);
-    if (editing.value) {
-      await updateWish(editing.value.id, { ...form });
-    } else {
-      await createWish({ ...form });
+    const payload = { ...form, expectTime: toLocalISO(expectTs.value) };
+    const id = editing.value?.id ?? 0;
+    const ok = await mutate({
+      label: editing.value ? '保存愿望' : '添加愿望',
+      apply: () => {
+        if (editing.value) {
+          const x = wishes.value.find((i) => i.id === id);
+          if (x) Object.assign(x, payload);
+        } else {
+          wishes.value = [
+            { id: -Date.now(), ...payload, status: (payload.status ?? 1) } as WishDto,
+            ...wishes.value,
+          ];
+        }
+      },
+      api: () => (editing.value ? updateWish(id, payload) : createWish(payload)),
+    });
+    if (ok) {
+      saved.value = true;
+      later(async () => {
+        showForm.value = false;
+        if (editing.value) feedback.updated('愿望');
+        else feedback.created('愿望');
+        await load();
+      }, 720);
     }
-    saved.value = true;
-    later(async () => {
-      showForm.value = false;
-      if (editing.value) feedback.updated('愿望');
-      else feedback.created('愿望');
-      await load();
-    }, 720);
   } finally {
     saving.value = false;
   }
@@ -496,41 +512,76 @@ function openComplete(w: WishDto) {
 async function submitComplete() {
   savingComplete.value = true;
   try {
-    await completeWish({ ...completeForm });
-    savedComplete.value = true;
-    fireConfetti();
-    later(async () => {
-      showComplete.value = false;
-      feedback.saved('愿望');
-      await load();
-    }, 720);
+    const id = completeForm.id;
+    const ok = await mutate({
+      label: '完成愿望',
+      apply: () => {
+        const x = wishes.value.find((i) => i.id === id);
+        if (x) x.status = 3;
+      },
+      api: () => completeWish({ ...completeForm }),
+    });
+    if (ok) {
+      savedComplete.value = true;
+      fireConfetti();
+      later(async () => {
+        showComplete.value = false;
+        feedback.saved('愿望');
+        await load();
+      }, 720);
+    }
   } finally {
     savingComplete.value = false;
   }
 }
 
 async function onClaim(w: WishDto) {
-  await claimWish(w.id);
-  notify.success('已认领');
-  await load();
+  const id = w.id;
+  const ok = await mutate({
+    label: '认领愿望',
+    apply: () => {
+      const x = wishes.value.find((i) => i.id === id);
+      if (x) x.claimUserId = -1; // 乐观隐藏「认领」按钮，成功后由 load() 补真实认领人
+    },
+    api: () => claimWish(id),
+  });
+  if (ok) {
+    notify.success('已认领');
+    await load();
+  }
 }
 async function onDelete(id: number) {
-  await deleteWish(id);
-  feedback.deleted('愿望');
-  await load();
+  const ok = await mutate({
+    label: '删除愿望',
+    apply: () => {
+      wishes.value = wishes.value.filter((w) => w.id !== id);
+    },
+    api: () => deleteWish(id),
+  });
+  if (ok) {
+    feedback.deleted('愿望');
+    await load();
+  }
 }
 
 // 11 卡片抽走：已完成愿望向左滑「抽走」= 归档（status→4 已归档，可逆、非删除）
 async function archiveWish(w: WishDto) {
-  try {
-    await updateWish(w.id, {
-      wishType: w.wishType, title: w.title, description: w.description,
-      expectTime: w.expectTime, priority: w.priority, status: 4,
-    });
+  const id = w.id;
+  const ok = await mutate({
+    label: '归档愿望',
+    apply: () => {
+      const x = wishes.value.find((i) => i.id === id);
+      if (x) x.status = 4; // 乐观：滑出默认列表
+    },
+    api: () =>
+      updateWish(id, {
+        wishType: w.wishType, title: w.title, description: w.description,
+        expectTime: w.expectTime, priority: w.priority, status: 4,
+      }),
+  });
+  if (ok) {
     feedback.saved('已归档愿望');
     await load();
-  } catch {
-    // 归档失败：保留原卡片，下次刷新自然恢复
   }
 }
 

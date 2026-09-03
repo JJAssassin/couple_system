@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/store/authStore';
+import { useGlobalLoading } from '@/composables/useGlobalLoading';
 
 // 集中管理懒加载函数，便于空闲时预取（消除点击导航的“等一会才有反应”）
 const loaders = {
@@ -69,6 +70,18 @@ router.beforeEach((to) => {
   const auth = useAuthStore();
   if (to.meta.requiresAuth && !auth.accessToken) return '/login';
   if (to.path === '/login' && auth.accessToken) return '/home';
+});
+
+// 路由切换期间显示顶部加载条：与请求层加载计数互补，构成「加载→失败」完整体验链。
+// 用布尔信号（startNav/endNav）而非计数，规避守卫重定向导致的 start/end 不配对泄漏。
+router.beforeEach(() => {
+  useGlobalLoading().startNav();
+});
+router.afterEach(() => {
+  useGlobalLoading().endNav();
+});
+router.onError(() => {
+  useGlobalLoading().endNav();
 });
 
 // 空闲时预取所有页面 chunk：首屏后后台静默加载，后续点击导航即瞬时切换

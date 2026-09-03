@@ -104,11 +104,12 @@ api.interceptors.response.use(
         const cached = await readApiCache(cfg.url || '');
         if (cached) return cached;
       }
-      useNotifyStore().error('网络异常：请确认后端服务已启动（dotnet run）');
+      // 网络层错误可重试：弹出浪漫风提示 + 「重试一下」按钮，重放原请求配置自愈。
+      useNotifyStore().requestError('网络走神了，点一下重试～', () => api(cfg));
     } else if (err.response.status >= 500) {
-      // 5xx：后端业务异常，把服务端 msg 透出，便于排查
+      // 5xx：后端业务异常，把服务端 msg 透出；可重试，提供重放按钮。
       const body = err.response.data as ApiResult<unknown> | undefined;
-      useNotifyStore().error(body?.msg || '服务器开小差了，请稍后再试');
+      useNotifyStore().requestError(body?.msg || '服务器开了个小差，重试试试？', () => api(cfg));
     }
     return Promise.reject(err);
   }

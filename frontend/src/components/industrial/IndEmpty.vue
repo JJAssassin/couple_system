@@ -1,5 +1,5 @@
 <template>
-  <div class="ind-empty">
+  <div class="ind-empty" role="status" aria-live="polite">
     <!-- 装饰插画：柔和的线描圆环 + 漂浮小心心，给空态一点"被设计过"的质感 -->
     <div class="art" :class="{ 'no-art': !showArt }">
       <svg v-if="showArt" class="art-svg" viewBox="0 0 120 120" aria-hidden="true">

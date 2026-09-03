@@ -665,7 +665,7 @@ onMounted(async () => {
 .tag.ok { background: var(--color-income-soft); color: var(--color-income-deep); }
 .tag.over { background: var(--color-rose-soft); color: var(--color-rose-text); }
 .tag.sm { padding: 1px 8px; }
-.budget-empty { color: var(--color-ink-3); font-size: 13px; padding: 8px 0; }
+
 .cat-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
 .cat-row { display: flex; align-items: center; gap: 8px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 10px; padding: 8px 12px; }
 .cat-name { font-weight: 600; }
