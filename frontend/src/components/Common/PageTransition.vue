@@ -8,7 +8,7 @@
     - 全局 .reduce-motion：关闭过渡，元素直接显示。
   -->
   <transition name="page" mode="out-in">
-    <slot />
+    <div class="page-wrap"><slot /></div>
   </transition>
 </template>
 
@@ -18,6 +18,13 @@
 
 <!-- 注意：transition 生成的 .page-* 类是全局的，必须写在不带 scoped 的 <style> 中 -->
 <style>
+/* 内层居中列：把"视觉居中(max-width)"从滚动容器(.content)下放到此包裹层，
+   使 .content 可满宽滚动——滚动条贴视口右缘，而非居中列的右缘（避免大屏下滚动条悬在中间）。 */
+.page-wrap {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+}
 /* 整页转场：旧页向上轻退淡出、新页从下方升起淡入。
    只动 transform + opacity（frame-smith 反廉质铁律），缓动用 --ease-love（非 linear）；
    will-change 仅挂在过渡进行时的 .page-*-active 上（过渡结束类移除即释放，非常驻合成层）；

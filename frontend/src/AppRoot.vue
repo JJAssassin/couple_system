@@ -4,9 +4,13 @@
        破坏页面内 position:fixed 元素（如 Album 移动端底部固定上传栏）。
        内部页面可是多根组件（loading 骨架 v-if/v-else），不受影响。 -->
   <router-view v-slot="{ Component, route }">
-    <div class="route-fade" :key="route.path">
-      <component :is="Component" />
-    </div>
+    <!-- 页面转场：进出都做 opacity 淡入淡出（绝不用 transform/filter，避免破坏 position:fixed 子元素）。
+         out-in 让旧页先淡出、新页再淡入，导航更有"过渡感"；appear 保留首屏入场淡入。 -->
+    <transition name="route-fade" mode="out-in" appear>
+      <div class="route-fade" :key="route.path">
+        <component :is="Component" />
+      </div>
+    </transition>
   </router-view>
   <GlobalLoadingBar />
   <Onboarding />

@@ -47,6 +47,23 @@
         </div>
       </section>
 
+      <!-- 年度默契仪表盘 -->
+      <section class="block">
+        <IndSectionTitle label="年度默契" :led="true" />
+        <div class="gauge-grid">
+          <div class="chart-card uvi-glass-pop gauge-card">
+            <div class="chart-title">默契率</div>
+            <ChartWrap :option="matchGaugeOption" height="200px" />
+            <div class="gauge-sub">{{ report?.quizRounds ?? 0 }} 轮默契问答 · 越接近 100% 越懂彼此</div>
+          </div>
+          <div class="chart-card uvi-glass-pop gauge-card">
+            <div class="chart-title">平均心情</div>
+            <ChartWrap :option="moodGaugeOption" height="200px" />
+            <div class="gauge-sub">满分 10 分 · 这一年我们的小情绪</div>
+          </div>
+        </div>
+      </section>
+
       <!-- 记账总览 -->
       <section class="block">
         <IndSectionTitle label="一起记账" :led="true" />
@@ -64,6 +81,47 @@
         <IndSectionTitle label="情绪曲线" :led="true" />
         <div class="chart-card uvi-glass-pop"><div class="chart-title">月度平均心情（1-10）</div><ChartWrap :option="moodOption" height="240px" /></div>
         <div class="chart-card uvi-glass-pop"><div class="chart-title">月度矛盾次数</div><ChartWrap :option="conflictOption" height="240px" /></div>
+      </section>
+
+      <!-- 年度心情日历热力图 -->
+      <section v-if="moodCalendar" class="block">
+        <IndSectionTitle label="年度心情日历" :led="true" />
+        <div class="heatmap-card uvi-glass-pop">
+          <div class="heatmap-scroll">
+            <div class="hm-month-row">
+              <span class="hm-corner"></span>
+              <div class="hm-months">
+                <span v-for="m in monthCols" :key="m.col" class="hm-month" :style="{ gridColumnStart: m.col + 1 }">{{ m.label }}</span>
+              </div>
+            </div>
+            <div class="hm-body">
+              <div class="hm-weekdays">
+                <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+              </div>
+              <div class="hm-grid">
+                <template v-for="(col, ci) in heatmap" :key="ci">
+                  <span
+                    v-for="(cell, ri) in col" :key="ri"
+                    class="hcell"
+                    :class="{ empty: !cell.inYear || cell.score == null }"
+                    :style="cell.score != null && cell.inYear ? { background: moodColor(cell.score) } : {}"
+                    :title="cell.inYear ? `${cell.date} · ${cell.score != null ? '心情 ' + cell.score : '无记录'}${cell.tag ? ' ' + cell.tag : ''}` : ''"
+                  ></span>
+                </template>
+              </div>
+            </div>
+          </div>
+          <div class="hm-legend">
+            <span class="hm-legend-txt">心情越低</span>
+            <span class="hcell empty"></span>
+            <span class="hcell" :style="{ background: moodColor(2) }"></span>
+            <span class="hcell" :style="{ background: moodColor(5) }"></span>
+            <span class="hcell" :style="{ background: moodColor(8) }"></span>
+            <span class="hcell" :style="{ background: moodColor(10) }"></span>
+            <span class="hm-legend-txt">越高</span>
+            <span class="hm-count">· 共记录 {{ moodCalendar?.days?.length ?? 0 }} 天心情</span>
+          </div>
+        </div>
       </section>
 
       <!-- 关系里程碑时间轴 -->
@@ -91,6 +149,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import ChartWrap from '@/components/ChartWrap.vue';
+import type { EChartsOption } from 'echarts';
 import AuroraBackdrop from '@/components/Common/AuroraBackdrop.vue';
 import GradientText from '@/components/Common/GradientText.vue';
 import CoupleSummaryPoster from '@/components/Common/CoupleSummaryPoster.vue';
@@ -101,7 +160,7 @@ import IndLed from '@/components/industrial/IndLed.vue';
 import IpIcon from '@/components/Common/IpIcon.vue';
 import GlowButton from '@/components/Common/GlowButton.vue';
 import { NumberRoll } from '@/interactions';
-import { fetchYearReport, type YearReport } from '@/api/stats';
+import { fetchYearReport, fetchMoodCalendar, type YearReport, type MoodCalendar } from '@/api/stats';
 import { listAlbum, listImages } from '@/api/album';
 import { listFootprints } from '@/api/footprint';
 import type { ImageDto, FootprintDto } from '@/types';
@@ -115,6 +174,8 @@ const selectedYear = ref(currentYear);
 const poster = ref<InstanceType<typeof CoupleSummaryPoster> | null>(null);
 const posterPhotos = ref<ImageDto[]>([]);
 const posterFootprints = ref<FootprintDto[]>([]);
+// 年度心情日历：按天记录的心情分（1-10）用于热力图
+const moodCalendar = ref<MoodCalendar | null>(null);
 // 错峰入场容器（柔光 2.0 · 动效编排）
 const container = ref<HTMLElement>();
 useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
@@ -180,6 +241,7 @@ async function load() {
   } catch {
     /* 拦截器已 toast */
   }
+  loadMood(selectedYear.value);
 }
 async function loadPosterAssets() {
   try {
@@ -187,14 +249,14 @@ async function loadPosterAssets() {
       listAlbum({ page: 1, pageSize: 20 }),
       listFootprints(),
     ]);
-    const albums = (albumRes.data as { data: { items: { id: number; cover?: string }[] } }).data.items ?? [];
-    // 收集封面照片 + 各相册前几张照片
+    const albums = albumRes.data.data.items ?? [];
+    // 收集封面照片 + 各相册前几张照片（albumRes.data = ApiResult，.data = payload）
     const covers = albums.map((a) => a.cover).filter(Boolean) as string[];
     const extra: string[] = [];
     for (const a of albums.slice(0, 3)) {
       try {
-        const { data: imgRes } = await listImages(a.id);
-        const imgs = (imgRes.data as { data: ImageDto[] }).data ?? [];
+        const imgRes = await listImages(a.id);
+        const imgs = imgRes.data.data ?? [];
         extra.push(...imgs.slice(0, 4).map((i) => i.url || i.imagePath).filter(Boolean));
       } catch { /* ignore */ }
     }
@@ -207,6 +269,14 @@ async function loadPosterAssets() {
 }
 onMounted(() => { load(); loadPosterAssets(); });
 
+async function loadMood(year: number) {
+  try {
+    moodCalendar.value = await fetchMoodCalendar(year);
+  } catch {
+    /* 静默：热力图降级为空白 */
+  }
+}
+
 // 年度数据由多模块聚合而成；伴侣在当年新增日记/照片/愿望/记账/矛盾等内容时实时刷新。
 // 历史年份数据已封版，刷新无副作用。reload() 直接赋值，避免实时刷新时骨架闪烁。
 const { onSync } = useRealtime();
@@ -216,10 +286,10 @@ function reload() {
 AGGREGATE_SYNC_MODULES.forEach((m) => onSync(m, reload));
 
 // ---- ECharts options（ChartWrap 提供主题/调色板） ----
-const financeOption = computed(() => {
+const financeOption = computed<EChartsOption>(() => {
   const m = report.value?.monthlyFinance ?? [];
   return {
-    tooltip: { trigger: 'axis' },
+    tooltip: { trigger: 'axis', valueFormatter: (v: unknown) => fmt(Number(v)) },
     legend: { data: ['收入', '支出'] },
     grid: { left: 8, right: 8, top: 34, bottom: 4, containLabel: true },
     xAxis: { type: 'category', data: m.map((x) => x.month.slice(5)) },
@@ -230,7 +300,7 @@ const financeOption = computed(() => {
     ],
   };
 });
-const spendOption = computed(() => ({
+const spendOption = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'item', valueFormatter: (v: unknown) => fmt(Number(v)) },
   series: [{
     type: 'pie',
@@ -241,7 +311,7 @@ const spendOption = computed(() => ({
     data: (report.value?.topSpend ?? []).map((s) => ({ name: s.category, value: s.amount })),
   }],
 }));
-const moodOption = computed(() => ({
+const moodOption = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis' },
   grid: { left: 8, right: 8, top: 16, bottom: 4, containLabel: true },
   xAxis: { type: 'category', boundaryGap: false, data: (report.value?.moodTrend ?? []).map((x) => x.label) },
@@ -253,7 +323,7 @@ const moodOption = computed(() => ({
     areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(255,111,125,.28)' }, { offset: 1, color: 'rgba(255,111,125,0)' }] } },
   }],
 }));
-const conflictOption = computed(() => ({
+const conflictOption = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis' },
   grid: { left: 8, right: 8, top: 16, bottom: 4, containLabel: true },
   xAxis: { type: 'category', data: (report.value?.conflictTrend ?? []).map((x) => x.label) },
@@ -263,6 +333,84 @@ const conflictOption = computed(() => ({
     itemStyle: { color: 'var(--color-semantic-anniv)', borderRadius: [6, 6, 0, 0] },
   }],
 }));
+
+// ---- 年度默契仪表盘（GaugeChart，ChartWrap 已注册）----
+const matchGaugeOption = computed<EChartsOption>(() => ({
+  series: [{
+    type: 'gauge',
+    startAngle: 220, endAngle: -40, min: 0, max: 100,
+    radius: '94%', center: ['50%', '62%'],
+    progress: { show: true, width: 12, roundCap: true, itemStyle: { color: 'var(--color-rose-vivid)' } },
+    axisLine: { lineStyle: { width: 12, color: [[1, 'var(--color-surface-2)']] } },
+    pointer: { show: false }, axisTick: { show: false }, splitLine: { show: false },
+    axisLabel: { show: false }, anchor: { show: false }, title: { show: false },
+    detail: {
+      valueAnimation: true, formatter: '{value}%',
+      fontSize: 32, fontWeight: 800, color: 'var(--color-rose-text)', offsetCenter: [0, '8%'],
+    },
+    data: [{ value: report.value?.matchRate ?? 0 }],
+  }],
+}));
+const moodGaugeOption = computed<EChartsOption>(() => ({
+  series: [{
+    type: 'gauge',
+    startAngle: 220, endAngle: -40, min: 0, max: 10,
+    radius: '94%', center: ['50%', '62%'],
+    progress: { show: true, width: 12, roundCap: true, itemStyle: { color: 'var(--color-rose)' } },
+    axisLine: { lineStyle: { width: 12, color: [[1, 'var(--color-surface-2)']] } },
+    pointer: { show: false }, axisTick: { show: false }, splitLine: { show: false },
+    axisLabel: { show: false }, anchor: { show: false }, title: { show: false },
+    detail: {
+      valueAnimation: true, formatter: '{value}',
+      fontSize: 32, fontWeight: 800, color: 'var(--color-rose-text)', offsetCenter: [0, '8%'],
+    },
+    data: [{ value: report.value?.avgMood ?? 0 }],
+  }],
+}));
+
+// ---- 年度心情日历热力图（自研 CSS 网格，无 echarts 依赖）----
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const heatmap = computed(() => {
+  const year = report.value?.year ?? selectedYear.value;
+  const map = new Map<string, { score?: number; tag?: string }>();
+  (moodCalendar.value?.days ?? []).forEach((d) => map.set(d.date, { score: d.moodScore, tag: d.moodTag }));
+  const start = new Date(year, 0, 1);
+  const gridStart = new Date(year, 0, 1 - start.getDay()); // 回退到当周周日，使列对齐
+  const weeks: { date: string; score?: number; tag?: string; inYear: boolean }[][] = [];
+  const cur = new Date(gridStart);
+  for (let w = 0; w < 53; w++) {
+    const col: { date: string; score?: number; tag?: string; inYear: boolean }[] = [];
+    for (let d = 0; d < 7; d++) {
+      const y = cur.getFullYear();
+      const inYear = y === year;
+      const dateStr = `${y}-${pad2(cur.getMonth() + 1)}-${pad2(cur.getDate())}`;
+      const md = inYear ? map.get(dateStr) : undefined;
+      col.push({ date: dateStr, score: md?.score, tag: md?.tag, inYear });
+      cur.setDate(cur.getDate() + 1);
+    }
+    weeks.push(col);
+  }
+  return weeks;
+});
+const monthCols = computed(() => {
+  const labels: { col: number; label: string }[] = [];
+  let last = -1;
+  heatmap.value.forEach((col, i) => {
+    const firstIn = col.find((c) => c.inYear);
+    if (!firstIn) return;
+    const m = new Date(firstIn.date).getMonth();
+    if (m !== last) { labels.push({ col: i, label: `${m + 1}月` }); last = m; }
+  });
+  return labels;
+});
+// 心情分 1-10 → 浅玫瑰到鲜活玫瑰的 RGB 插值；空值由 .empty 类接手主题色
+function moodColor(score?: number): string {
+  if (score == null) return 'var(--color-surface-2)';
+  const t = Math.max(0, Math.min(1, score / 10));
+  const a = [255, 233, 236], b = [255, 94, 114];
+  const c = a.map((v, i) => Math.round(v + (b[i] - v) * t));
+  return `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+}
 </script>
 
 <style scoped>
@@ -303,7 +451,15 @@ const conflictOption = computed(() => ({
   border: 1px solid var(--color-border); border-radius: var(--radius-lg);
 }
 .hero-aurora { opacity: 0.5; }
-.hero-num { position: relative; font-size: 52px; line-height: 1; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; letter-spacing: -0.03em; }
+.hero-num { position: relative; font-size: 52px; line-height: 1; font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; letter-spacing: -0.03em; animation: heartbeat 2.6s var(--ease-love) infinite; }
+/* 心跳脉冲：仅 scale（无位移），不创建 containing block；reduce-motion 下由全局规则收敛为瞬时 */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  8% { transform: scale(1.045); }
+  16% { transform: scale(1); }
+  24% { transform: scale(1.045); }
+  32% { transform: scale(1); }
+}
 .hero-unit { font-size: 20px; margin-left: 6px; color: var(--color-ink-2); }
 .hero-txt { position: relative; margin-top: 10px; font-size: 13px; color: var(--color-ink-2); }
 /* 主行动按钮改用 GlowButton 组件（流动渐变描边 + 高光扫过，见模板） */
@@ -349,6 +505,34 @@ html:not(.reduce-motion) .ms-item:hover { transform: translateY(-2px); box-shado
 .skeleton { height: 96px; background: linear-gradient(90deg, var(--color-ink-soft) 25%, var(--color-surface-2) 50%, var(--color-ink-soft) 75%); background-size: 200% 100%; animation: sk 1.4s infinite; }
 @keyframes sk { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 :global(.reduce-motion) .skeleton { animation: none; }
+
+/* 年度默契双仪表 */
+.gauge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.gauge-card { display: flex; flex-direction: column; align-items: center; }
+.gauge-sub { font-size: 11px; color: var(--color-ink-3); margin-top: -6px; text-align: center; }
+
+/* 年度心情日历热力图（GitHub 式 53×7 网格） */
+.heatmap-card { padding: 14px; }
+.heatmap-scroll { overflow-x: auto; padding-bottom: 4px; }
+.hm-month-row { display: flex; margin-bottom: 4px; }
+.hm-corner { flex: 0 0 18px; width: 18px; margin-right: 6px; }
+.hm-months { display: grid; grid-template-columns: repeat(53, 11px); gap: 3px; }
+.hm-month { font-size: 10px; color: var(--color-ink-3); white-space: nowrap; }
+.hm-body { display: flex; gap: 6px; }
+.hm-weekdays { display: grid; grid-template-rows: repeat(7, 11px); gap: 3px; width: 18px; flex: 0 0 18px; }
+.hm-weekdays span { font-size: 9px; color: var(--color-ink-3); line-height: 11px; text-align: right; padding-right: 2px; }
+.hm-grid { display: grid; grid-template-rows: repeat(7, 11px); grid-auto-flow: column; grid-auto-columns: 11px; gap: 3px; }
+.hcell { width: 11px; height: 11px; border-radius: 3px; background: var(--color-surface-2); transition: transform var(--dur-pop) var(--ease-love); }
+html:not(.reduce-motion) .hcell:hover { transform: scale(1.35); }
+.hcell.empty { background: var(--color-surface-2); }
+.hm-legend { display: flex; align-items: center; gap: 4px; margin-top: 10px; font-size: 11px; color: var(--color-ink-3); }
+.hm-legend .hcell { width: 11px; height: 11px; }
+.hm-legend-txt { margin: 0 2px; }
+.hm-count { margin-left: auto; }
+
+@media (max-width: 767px) {
+  .gauge-grid { grid-template-columns: 1fr; }
+}
 
 @media (max-width: 767px) {
   .brand { padding: 10px 14px; margin-bottom: 10px; }

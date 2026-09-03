@@ -12,8 +12,9 @@ import { useSettingStore } from '@/store/settingStore';
 // 运行期用到 line/bar/pie/gauge 四类图 + 网格/提示/图例 + Canvas 渲染器
 use([PieChart, LineChart, BarChart, GaugeChart, GridComponent, TooltipComponent, LegendComponent, CanvasRenderer]);
 
-// 选项类型放宽，避免 ECharts 严格的字面量类型在各页面反复报错；内部统一 cast。
-const props = withDefaults(defineProps<{ option: any; height?: string }>(), { height: '240px' });
+// 选项类型为 EChartsOption：调用点传入的图表配置在编译期即受检，
+// 避免散落各页的 any 掩盖字段拼写/结构错误（内部 seriesDefaults/resolveCssVars 仍按 any 处理）。
+const props = withDefaults(defineProps<{ option: EChartsOption; height?: string }>(), { height: '240px' });
 const el = ref<HTMLElement>();
 let chart: EChartsType | null = null;
 

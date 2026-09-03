@@ -4,8 +4,9 @@ import tailwindcss from '@tailwindcss/vite';
 import Components from 'unplugin-vue-components/vite';
 import { NaiveUiResolver } from 'unplugin-vue-components/resolvers';
 import { fileURLToPath, URL } from 'node:url';
-import { VitePWA } from 'vite-plugin-pwa';
 import { gzipSync, brotliCompressSync, constants as zlibConstants } from 'node:zlib';
+// PWA：Service Worker 为手写 public/sw.js，由 main.ts 在 PROD 注册；此处不启用 vite-plugin-pwa，
+// 避免与手写 SW 产生双 Service Worker 冲突。
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
@@ -93,100 +94,7 @@ export default defineConfig({
     Components({ resolvers: [NaiveUiResolver()], dts: false }),
     compressStaticAssets(),
     emitVersionJson(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      disable: true,
-      manifest: {
-        name: '我们的小世界',
-        short_name: '小世界',
-        description: '情侣专属情感陪伴 Web 系统',
-        lang: 'zh-CN',
-        dir: 'ltr',
-        start_url: '/',
-        scope: '/',
-        display: 'standalone',
-        display_override: ['standalone', 'minimal-ui'],
-        orientation: 'portrait',
-        background_color: '#fff5f6',
-        theme_color: '#ff6f7d',
-        categories: ['lifestyle', 'social'],
-        icons: [
-          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: '/pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-        ],
-        shortcuts: [
-          { name: '首页', url: '/' },
-          { name: '记账', url: '/account' },
-          { name: '纪念日', url: '/anniversary' },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        runtimeCaching: [
-          {
-            urlPattern: /^\/api\//,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'pw-api-v1',
-              networkTimeoutSeconds: 3,
-              cacheKeyWillBeUsed: async ({ request }) => {
-                const url = new URL(request.url);
-                const sep = url.search.includes('?') ? '&' : '?';
-                const auth = request.headers.get('Authorization') || '';
-                let h = 5381;
-                for (let i = 0; i < auth.length; i++) h = ((h << 5) + h + auth.charCodeAt(i)) >>> 0;
-                return `${request.url}${sep}__u=${h.toString(36)}`;
-              },
-              cacheWillUpdate: async ({ response }) => {
-                try {
-                  const clone = response.clone();
-                  const body = await clone.json();
-                  if (body && body.success === true) return response;
-                } catch {}
-                return false;
-              },
-            },
-          },
-          {
-            urlPattern: ({ request }) => request.mode === 'navigate',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'pw-precache-v1',
-              networkTimeoutSeconds: 3,
-              fallbackToCache: true,
-            },
-          },
-          {
-            urlPattern: /^\/assets\//,
-            handler: 'StaleWhileRevalidate',
-            options: { cacheName: 'pw-assets-v1' },
-          },
-          {
-            urlPattern: /^\/uploads\//,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'pw-uploads-v1',
-              expiration: { maxEntries: 100 },
-            },
-          },
-          {
-            urlPattern: /^\/hub\//,
-            handler: 'NetworkOnly',
-          },
-          {
-            urlPattern: /^https?:\/\//,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'pw-static-v1',
-              expiration: { maxEntries: 50 },
-            },
-          },
-        ],
-        navigateFallback: '/index.html',
-      },
-      devOptions: { enabled: false },
-    }),
+    // PWA Service Worker 由 public/sw.js（手写）提供，main.ts 在 PROD 注册；不使用 vite-plugin-pwa，避免双 SW 冲突。
   ],
   // dev 预构建目标与 build.target 对齐（es2022），避免开发/生产语法降级不一致。
   optimizeDeps: {

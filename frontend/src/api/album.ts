@@ -1,8 +1,9 @@
+import type { AxiosResponse } from 'axios';
 import api from '@/utils/request';
 import type { ApiResult, PagedResult, AlbumDto, AlbumReq, ImageDto, AlbumImageBatchUploadResult } from '@/types';
 
-export function listAlbum(params: { page?: number; pageSize?: number }) {
-  return api.get('/album/list', { params });
+export function listAlbum(params: { page?: number; pageSize?: number }): Promise<AxiosResponse<ApiResult<PagedResult<AlbumDto>>>> {
+  return api.get<ApiResult<PagedResult<AlbumDto>>>('/album/list', { params });
 }
 export function getAlbum(id: number) {
   return api.get(`/album/${id}`);
@@ -16,8 +17,8 @@ export function updateAlbum(id: number, req: AlbumReq) {
 export function deleteAlbum(id: number) {
   return api.delete(`/album/delete?id=${id}`);
 }
-export function listImages(albumId: number) {
-  return api.get('/album/image/list', { params: { albumId } });
+export function listImages(albumId: number): Promise<AxiosResponse<ApiResult<ImageDto[]>>> {
+  return api.get<ApiResult<ImageDto[]>>('/album/image/list', { params: { albumId } });
 }
 export function uploadImage(albumId: number, file: File) {
   const fd = new FormData();

@@ -462,17 +462,18 @@ html:not(.reduce-motion) .love-card-pro:hover {
 .reduce-motion :global(.n-message--info) { border-left: none; }
 
 /* ====================== 路由过渡（页面入场淡入） ====================== */
-/* 通过给路由视图包裹 keyed 容器，每次导航重建该 div 触发入场动画；
+/* 页面转场：通过给路由视图包裹 keyed 容器 + Vue <transition>，每次导航重建该 div 触发
+   进出淡入淡出；仅在 opacity 上做过渡，绝不用 transform / filter —— 否则会创建
+   containing block，破坏页面内 position:fixed 元素（如 Album 移动端底部固定上传栏）。
    内部页面可是多根组件（如 loading 骨架 v-if/v-else），不受影响。
-   注意：仅用 opacity，绝不用 transform / filter —— 否则会创建 containing block，
-   破坏页面内 position:fixed 元素（如 Album 移动端底部固定上传栏）。
-   reduced-motion 下由全局规则收敛为瞬时（animation-duration: 0.001ms）。 */
-.route-fade {
-  animation: route-fade-in var(--dur-page) var(--ease-smooth) both;
+   reduced-motion 下由下方规则收敛为瞬时。 */
+.route-fade-enter-active,
+.route-fade-leave-active {
+  transition: opacity var(--dur-page, 0.28s) var(--ease-smooth);
 }
-@keyframes route-fade-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+.route-fade-enter-from,
+.route-fade-leave-to {
+  opacity: 0;
 }
 
 /* 通用可访问性：尊重 reduce-motion（分级收敛，而非一刀切）

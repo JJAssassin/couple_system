@@ -4,7 +4,7 @@
  *  - 导航请求 network-first，离线回退缓存的 app shell（/index.html）
  *  - /assets/*（带 hash 的构建产物）stale-while-revalidate
  *  - /uploads/*（用户图片）cache-first
- *  - /api/* GET（幂等读接口）network-first，断网回退缓存；按用户 token 隔离 key，杜绝跨账号串数据；
+ *  - /api/* GET（幂等读接口）network-first，断网回退缓存；按登录会话(cl_at Cookie)隔离 key，杜绝跨账号串数据；
  *    写操作（POST/PUT/DELETE）与 /hub/*（SignalR）不拦截，保留实时性与鉴权
  *  - 其余同源静态 stale-while-revalidate
  */
@@ -104,12 +104,20 @@ async function staleWhileRevalidate(req, cacheName) {
 
 /* ---------- API 离线缓存（方向④） ---------- */
 
-/** 用 Authorization 头算用户指纹（djb2），缓存 key 带用户维度，杜绝跨账号串数据 */
+/**
+ * 用户指纹（djb2）用于隔离 API 缓存 key，杜绝同一浏览器切换账号时跨账号串数据。
+ * 注意：本系统鉴权走 httponly Cookie（cl_at），前端/Service Worker 拿不到其明文，
+ * 也不会在请求里带 Authorization 头——此前用 Authorization 算指纹会得到空串、
+ * 导致所有账号共用同一缓存 key（隐私漏洞）。现改为从 Cookie 头提取 cl_at 值作为指纹源；
+ * 未登录/提取失败则退化为 'anon'。SW fetch 事件的同域请求 headers 仍含 Cookie，可正常读取。
+ */
 function userKey(headers) {
-  const at = headers.get('Authorization') || '';
+  const cookie = headers.get('Cookie') || '';
+  const m = /(?:^|;\s*)cl_at=([^;]+)/.exec(cookie);
+  const at = m ? m[1] : '';
   let h = 5381;
   for (let i = 0; i < at.length; i++) h = ((h << 5) + h + at.charCodeAt(i)) >>> 0;
-  return h.toString(36);
+  return h.toString(36) || 'anon';
 }
 
 /** 缓存条目 URL：原 URL + 用户指纹参数（仅作缓存 key，不参与网络请求） */

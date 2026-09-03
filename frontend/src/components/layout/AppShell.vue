@@ -60,7 +60,7 @@
       </header>
 
       <!-- 内容区（URL 驱动，淡入淡出转场）：<main> 地标，路由切换后接收焦点 -->
-      <main id="main" class="content" tabindex="-1">
+      <main id="main" ref="contentRef" class="content" tabindex="-1" @scroll="onContentScroll">
         <router-view v-slot="{ Component }">
           <PageTransition>
             <component :is="Component" />
@@ -126,6 +126,20 @@ const removeRouteFocus = router.afterEach(() => {
 
 const drawerOpen = ref(false);
 
+/* 自动隐藏滚动条：滚动时显示、空闲后淡出（桌面端常驻滚动条体验优化；
+   iOS 本就是 overlay 行为无需处理）。用 is-scrolling 类切换，避免布局抖动。 */
+const contentRef = ref<HTMLElement | null>(null);
+let scrollHideTimer: number | undefined;
+function onContentScroll() {
+  const el = contentRef.value;
+  if (!el) return;
+  el.classList.add('is-scrolling');
+  if (scrollHideTimer) window.clearTimeout(scrollHideTimer);
+  scrollHideTimer = window.setTimeout(() => {
+    el.classList.remove('is-scrolling');
+  }, 900);
+}
+
 // 移动端底部 TabBar：4 个主入口 + 「更多」打开抽屉（完整导航）
 const tabItems = [
   { to: '/home', label: '首页', icon: Home },
@@ -150,6 +164,7 @@ onMounted(() => {
   prefetchData();
 });
 onUnmounted(() => {
+  if (scrollHideTimer) window.clearTimeout(scrollHideTimer);
   window.removeEventListener('resize', evalTablet);
   removeRouteFocus();
 });
@@ -254,9 +269,10 @@ function goSetting() {
 .avatar-mate.online { box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px #43d17a; }
 
 /* 内容区内部滚动：min-height:0 允许在 flex 列中收缩并出现滚动条；
-   -webkit-overflow-scrolling 提供 iOS 惯性滚动；overscroll-behavior 防止滚动链抖动 */
+   -webkit-overflow-scrolling 提供 iOS 惯性滚动；overscroll-behavior 防止滚动链抖动。
+   满宽滚动（不居中），使滚动条贴视口右缘；视觉居中列由内层 .page-wrap 负责。 */
 .content {
-  flex: 1; width: 100%; max-width: 1200px; margin: 0 auto;
+  flex: 1; width: 100%;
   padding: 32px 24px 48px;
   min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
 }
@@ -301,4 +317,32 @@ function goSetting() {
 .drawer-fade-enter-from, .drawer-fade-leave-to { opacity: 0; }
 .drawer-slide-enter-active, .drawer-slide-leave-active { transition: transform var(--dur-pop) var(--ease-love); }
 .drawer-slide-enter-from, .drawer-slide-leave-to { transform: translateX(-100%); }
+</style>
+
+<!-- 自动隐藏滚动条（非 scoped：保证 ::-webkit-scrollbar 伪元素稳定生效）。
+     默认透明（隐藏），滚动中(.is-scrolling)或悬停(.content:hover)时淡入显示；
+     Firefox 用 scrollbar-*，WebKit 用 ::-webkit-scrollbar，均预留 9px 不引发布局抖动 -->
+<style>
+.content {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s var(--ease-love);
+}
+.content.is-scrolling,
+.content:hover {
+  scrollbar-color: color-mix(in srgb, var(--color-ink-2) 45%, transparent) transparent;
+}
+.content::-webkit-scrollbar { width: 9px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.3s var(--ease-love);
+}
+.content.is-scrolling::-webkit-scrollbar-thumb,
+.content:hover::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--color-ink-2) 45%, transparent);
+}
 </style>
