@@ -20,7 +20,7 @@
         </n-button>
       </n-upload>
       <n-button v-if="modelValue" size="small" tertiary type="error" @click="clear">移除</n-button>
-      <p class="img-hint">本地 jpg/png/gif/webp，≤5MB</p>
+      <p class="img-hint">本地 jpg/png/gif/webp，≤25MB</p>
     </div>
   </div>
 </template>

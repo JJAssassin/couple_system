@@ -36,8 +36,8 @@ public class ImageController : BaseController
     // 允许的扩展名（忽略大小写）
     private static readonly HashSet<string> AllowedExt =
         new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
-    // 单文件大小上限 5MB
-    private const long MaxFileSize = 5 * 1024 * 1024;
+    // 单文件大小上限 25MB（支持手机直拍大图，配合 Program.cs 中 Kestrel MaxRequestBodySize）
+    private const long MaxFileSize = 25 * 1024 * 1024;
 
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
@@ -200,7 +200,7 @@ public class ImageController : BaseController
     private async Task<string> SaveValidatedImageAsync(IFormFile file, CancellationToken ct)
     {
         if (file.Length > MaxFileSize)
-            throw new ConflictException("文件大小不能超过 5MB");
+            throw new ConflictException("文件大小不能超过 25MB");
 
         byte[] bytes;
         await using (var ms = new MemoryStream())

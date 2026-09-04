@@ -52,7 +52,13 @@ const display = computed(() => {
 });
 
 function open() {
-  picker.value?.showPicker?.() ?? picker.value?.click();
+  const el = picker.value;
+  if (!el) return;
+  try {
+    el.showPicker?.();
+  } catch {
+    el.focus();
+  }
 }
 function onChange(e: Event) {
   const v = (e.target as HTMLInputElement).value;
@@ -112,6 +118,7 @@ function clear() {
   opacity: 0;
   width: 100%;
   height: 100%;
+  pointer-events: none;
   cursor: pointer;
 }
 </style>

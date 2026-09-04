@@ -38,6 +38,9 @@ builder.Host.UseSerilog((ctx, cfg) =>
        // 仍关闭其 Information 级 "Request starting" 日志，确保任何意外出现在查询串的令牌都不会落入日志。
        .MinimumLevel.Override("Microsoft.AspNetCore.Server.Kestrel", Serilog.Events.LogEventLevel.Warning));
 
+// 放宽上传请求体上限，支持手机直拍大图（配合 ImageController.MaxFileSize = 25MB）
+builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 60 * 1024 * 1024);
+
 // ---- Options ----
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("Jwt"));
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("Email"));

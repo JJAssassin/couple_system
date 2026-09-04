@@ -68,7 +68,7 @@ import { gsap } from 'gsap';
 import {
   Mail, HeartHandshake, Heart,
   Home, History, BookOpen, Star, ListChecks, MessageCircle, Sparkles, Image, CloudFog,
-  Wallet, Coffee, Footprints, CalendarHeart, BarChart3, Smile, Settings,
+  Wallet, Coffee, Footprints, CalendarHeart, BarChart3, Settings,
 } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 import api from '@/utils/request';
@@ -115,7 +115,6 @@ const items = [
   { to: '/footprint', label: '足迹', icon: Footprints },
   { to: '/anniversary', label: '纪念日', icon: CalendarHeart },
   { to: '/stats', label: '我们的一年', icon: BarChart3 },
-  { to: '/mood-calendar', label: '心情日历', icon: Smile },
   { to: '/setting', label: '设置', icon: Settings },
 ];
 

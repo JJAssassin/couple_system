@@ -22,7 +22,6 @@ const loaders = {
   Anniversary: () => import('@/views/Anniversary/Index.vue'),
   Stats: () => import('@/views/Stats/Index.vue'),
   Setting: () => import('@/views/Setting/Index.vue'),
-  MoodCalendar: () => import('@/views/MoodCalendar/Index.vue'),
   FinesseShowcase: () => import('@/interactions/Showcase.vue'),
 };
 
@@ -58,7 +57,6 @@ const router = createRouter({
         { path: 'anniversary', name: 'Anniversary', component: loaders.Anniversary },
         { path: 'stats', name: 'Stats', component: loaders.Stats },
         { path: 'setting', name: 'Setting', component: loaders.Setting },
-        { path: 'mood-calendar', name: 'MoodCalendar', component: loaders.MoodCalendar },
         { path: 'finesse', name: 'FinesseShowcase', component: loaders.FinesseShowcase, meta: { hidden: true } },
       ],
     },

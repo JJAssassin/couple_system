@@ -13,6 +13,28 @@
       <n-button type="primary" class="uvi-glow-border" v-press-bounce @click="openWrite">写日记</n-button>
     </header>
 
+    <!-- 最近心情：把心情日历的概览价值融合进日记页（数据来自每篇日记的 moodScore） -->
+    <section v-if="recentMoods.length" class="mood-strip love-card">
+      <div class="ms-head">
+        <span class="ms-title">最近心情</span>
+        <span class="ms-sub">记录里的情绪轨迹</span>
+      </div>
+      <div class="ms-row">
+        <button
+          v-for="m in recentMoods"
+          :key="m.id"
+          type="button"
+          class="ms-chip"
+          :style="{ background: moodColor(m.moodScore) }"
+          :aria-label="`${fmtDate(m.diaryDate)} 心情 ${m.moodScore} 分，点击查看`"
+          @click="openDetail(m)"
+        >
+          <span class="ms-face">{{ moodFace(m.moodScore) }}</span>
+          <span class="ms-score">{{ m.moodScore }}</span>
+        </button>
+      </div>
+    </section>
+
     <!-- 分段：全部 / 我写的 / 对方写的 -->
     <div class="tabs">
       <button :class="['tab', { active: tab === 'all' }]" @click="tab = 'all'">全部</button>
@@ -200,6 +222,7 @@ import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
+import { useOptimistic } from '@/composables/useOptimistic';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
 import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
@@ -276,6 +299,24 @@ async function load() {
     loading.value = false;
   }
 }
+
+// 最近心情：心情日历融合进日记页——取带心情分的日记，按日期倒序取最近若干条，作为情绪轨迹概览
+const MOOD_FACES = ['', '😣', '😞', '🙁', '😕', '😐', '🙂', '😊', '😄', '😍', '🥰'];
+function moodFace(s: number): string {
+  return MOOD_FACES[Math.max(1, Math.min(10, Math.round(s)))] ?? '😐';
+}
+// 1(红/糟糕) → 10(绿/幸福) 柔和渐变，用于心情条底色
+function moodColor(s: number): string {
+  const hue = ((Math.max(1, Math.min(10, s)) - 1) * 130) / 9;
+  return `hsl(${hue.toFixed(0)}, 68%, 92%)`;
+}
+const recentMoods = computed(() =>
+  [...list.value]
+    .filter((d) => d.moodScore != null && d.moodScore > 0)
+    .sort((a, b) => new Date(b.diaryDate ?? b.createTime).getTime() - new Date(a.diaryDate ?? a.createTime).getTime())
+    .slice(0, 18),
+);
+const { mutate } = useOptimistic(load);
 onMounted(async () => {
   if (!partner.status) await partner.load();
   await load();
@@ -355,14 +396,29 @@ async function submit() {
       weather: form.weather || undefined,
       diaryDate: form.dateTs ? toLocalISO(form.dateTs) : undefined,
     };
-    await createDiary(req);
-    saved.value = true;
-    // 让「保存」按钮先完成对勾动画，再收起表单；用 later() 跟踪，切页时自动清理
-    later(async () => {
-      showWrite.value = false;
-      feedback.saved('日记');
-      await load();
-    }, 720);
+    const ok = await mutate({
+      label: '写日记',
+      apply: () => {
+        list.value = [
+          {
+            id: -Date.now(), title: req.title, content: req.content,
+            moodTag: req.moodTag, moodScore: req.moodScore, permissionType: req.permissionType,
+            weather: req.weather, diaryDate: req.diaryDate,
+          } as DiaryDto,
+          ...list.value,
+        ];
+      },
+      api: () => createDiary(req),
+    });
+    if (ok) {
+      saved.value = true;
+      // 让「保存」按钮先完成对勾动画，再收起表单；用 later() 跟踪，切页时自动清理
+      later(async () => {
+        showWrite.value = false;
+        feedback.saved('日记');
+        await load();
+      }, 720);
+    }
   } finally {
     saving.value = false;
   }
@@ -371,6 +427,9 @@ async function submit() {
 // ---------- 详情 / 评论 ----------
 const showDetail = ref(false);
 const current = ref<DiaryDto | null>(null);
+const { mutate: mutateComment } = useOptimistic(async () => {
+  if (current.value) comments.value = await listComments(current.value.id);
+});
 const comments = ref<DiaryCommentDto[]>([]);
 const commentText = ref('');
 const sending = ref(false);
@@ -483,13 +542,25 @@ async function openDetail(d: DiaryDto) {
 
 async function sendComment() {
   if (!current.value || !commentText.value.trim()) return;
-  sending.value = true;
-  try {
-    await addComment({ diaryId: current.value.id, content: commentText.value });
+  const diaryId = current.value.id;
+  const content = commentText.value;
+  const ok = await mutateComment({
+    label: '发评论',
+    apply: () => {
+      comments.value = [
+        {
+          id: -Date.now(), diaryId, content,
+          userId: auth.profile?.id ?? 0, createdAt: new Date().toISOString(),
+          createUserId: auth.profile?.id ?? 0, createTime: new Date().toISOString(),
+        } as DiaryCommentDto,
+        ...comments.value,
+      ];
+    },
+    api: () => addComment({ diaryId, content }),
+  });
+  if (ok) {
     commentText.value = '';
-    comments.value = await listComments(current.value.id);
-  } finally {
-    sending.value = false;
+    comments.value = await listComments(diaryId);
   }
 }
 
@@ -498,13 +569,14 @@ async function sendComment() {
 async function onDelete() {
   if (!current.value) return;
   const id = current.value.id;
-  try {
-    await deleteDiary(id);
-    list.value = list.value.filter((d) => d.id !== id);
+  const ok = await mutate({
+    label: '删除日记',
+    apply: () => { list.value = list.value.filter((d) => d.id !== id); },
+    api: () => deleteDiary(id),
+  });
+  if (ok) {
     showDetail.value = false;
     feedback.deleted('日记');
-  } catch {
-    /* 拦截器已提示 */
   }
 }
 
@@ -587,6 +659,22 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .meta { display: inline-flex; align-items: center; gap: 4px; color: var(--color-ink-3); }
 .meta :deep(svg) { color: var(--color-rose-text); flex: 0 0 auto; }
 .mood-tag { color: var(--color-rose-text); font-size: 12px; margin-top: 6px; }
+
+.mood-strip { padding: 14px 16px; margin-bottom: 16px; }
+.ms-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.ms-title { font-weight: 600; font-size: 15px; }
+.ms-sub { font-size: 12px; color: var(--color-ink-3); }
+.ms-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.ms-chip {
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border: none; border-radius: 12px; cursor: pointer;
+  transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love);
+}
+.ms-chip:hover { box-shadow: var(--elev-2); }
+.ms-chip:active { transform: scale(0.92); }
+.ms-chip:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
+.ms-face { font-size: 20px; line-height: 1; }
+.ms-score { font-size: 11px; color: var(--color-ink-2); margin-top: 2px; font-weight: 600; }
 
 .detail-actions { display: flex; justify-content: flex-end; margin-bottom: 10px; }
 .detail-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
