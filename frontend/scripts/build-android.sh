@@ -137,7 +137,12 @@ if [ -d "$BACKEND_APP_DIR" ]; then
         DST_WIN="$(cygpath -w "$BACKEND_APP_DIR/version.json" 2>/dev/null || echo "$BACKEND_APP_DIR/version.json")"
         node -e '
             const fs = require("fs");
-            const [src, dst] = process.argv.slice(1);
+            // Git Bash 的 /d/foo 会被 Windows node 误解析成 D:\d\foo；cygpath 缺失时
+            // 脚本层的回退救不了 node，这里在 node 内再兜底归一化一次。
+            const toWin = (p) => (process.platform === "win32" && /^\/[a-zA-Z](\/|$)/.test(p))
+                ? p[1].toUpperCase() + ":" + p.slice(2).replace(/\//g, "\\")
+                : p;
+            const [src, dst] = process.argv.slice(1).map(toWin);
             const m = JSON.parse(fs.readFileSync(src, "utf8"));
             let out = {};
             if (fs.existsSync(dst)) { try { out = JSON.parse(fs.readFileSync(dst, "utf8")); } catch {} }

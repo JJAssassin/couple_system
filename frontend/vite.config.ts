@@ -17,8 +17,8 @@ const require = createRequire(import.meta.url);
 const pkg = require('./package.json');
 
 // 版本号（与 android/app/build.gradle 的 versionCode / versionName 保持一致，发版时同步 +1）。
-const APP_VERSION_CODE = 1;
-const APP_ANDROID_VERSION_CODE = 1;
+const APP_VERSION_CODE = 2;
+const APP_ANDROID_VERSION_CODE = 2;
 
 // 构建期静态资源压缩（零依赖，使用 Node 内置 zlib）：为 dist 内每个资源产出 .gz 与 .br 副本，
 // 由静态服务器/CDN 按需返回以显著降低传输体积。需服务器开启 precompressed 协商（如 nginx gzip_static / brotli_static）。
