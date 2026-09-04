@@ -29,7 +29,7 @@
           :aria-label="`${fmtDate(m.diaryDate)} 心情 ${m.moodScore} 分，点击查看`"
           @click="openDetail(m)"
         >
-          <span class="ms-face">{{ moodFace(m.moodScore) }}</span>
+          <IpIcon :name="moodIconName(m.moodScore)" :size="22" alt="心情" class="ms-face" />
           <span class="ms-score">{{ m.moodScore }}</span>
         </button>
       </div>
@@ -79,7 +79,7 @@
         <div class="row2 sub-text">
           <span v-if="d.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(d.diaryDate) }}<span v-if="relDate(d.diaryDate)" class="diary-rel"> · {{ relDate(d.diaryDate) }}</span></span>
           <span v-if="d.weather" class="meta"><CloudSun :size="13" :stroke-width="1.8" /> {{ d.weather }}</span>
-          <span class="meta"><Heart :size="13" :stroke-width="1.8" /> 心情 {{ d.moodScore }}/10</span>
+          <span class="meta"><IpIcon :name="moodIconName(d.moodScore)" :size="15" :alt="'心情 ' + d.moodScore" /> 心情 {{ d.moodScore }}/10</span>
           <span class="meta author"><PenLine :size="13" :stroke-width="1.8" /> {{ authorLabel(d.createUserId) }}</span>
         </div>
         <div v-if="d.moodTag" class="mood-tag">#{{ d.moodTag }}</div>
@@ -150,7 +150,7 @@
           <div class="sub-text detail-meta">
             <span v-if="current.diaryDate" class="meta"><Calendar :size="13" :stroke-width="1.8" /> {{ fmtDate(current.diaryDate) }}<span v-if="relDate(current.diaryDate)" class="diary-rel"> · {{ relDate(current.diaryDate) }}</span></span>
             <span v-if="current.weather" class="meta"><CloudSun :size="13" :stroke-width="1.8" /> {{ current.weather }}</span>
-            <span class="meta"><Heart :size="13" :stroke-width="1.8" /> 心情 {{ current.moodScore }}/10</span>
+            <span class="meta"><IpIcon :name="moodIconName(current.moodScore)" :size="15" :alt="'心情 ' + current.moodScore" /> 心情 {{ current.moodScore }}/10</span>
             <n-tag :type="permMeta[current.permissionType]?.type ?? 'default'" size="small" round>
               {{ permMeta[current.permissionType]?.label ?? '' }}
             </n-tag>
@@ -212,7 +212,7 @@ import {
   NButton, NDrawer, NDrawerContent, NPopconfirm, NTag, NDivider, NInput,
 } from 'naive-ui';
 import type { DiaryDto, DiaryReq, DiaryCommentDto, PermissionType } from '@/types';
-import { Calendar, CloudSun, Heart, PenLine } from 'lucide-vue-next';
+import { Calendar, CloudSun, PenLine } from 'lucide-vue-next';
 import {
   listDiary, createDiary, listComments, addComment, deleteDiary,
 } from '@/api/diary';
@@ -229,6 +229,7 @@ import IndSectionTitle from '@/components/industrial/IndSectionTitle.vue';
 import IndLed from '@/components/industrial/IndLed.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
 import IpIcon from '@/components/Common/IpIcon.vue';
+import { moodIconName } from '@/utils/mood';
 import {
   LoveSheet, LoveInput, LoveTextarea, LoveMoodPicker,
   LoveChips, LoveSegmented, LoveDateField, LoveSaveBar,
@@ -301,10 +302,7 @@ async function load() {
 }
 
 // 最近心情：心情日历融合进日记页——取带心情分的日记，按日期倒序取最近若干条，作为情绪轨迹概览
-const MOOD_FACES = ['', '😣', '😞', '🙁', '😕', '😐', '🙂', '😊', '😄', '😍', '🥰'];
-function moodFace(s: number): string {
-  return MOOD_FACES[Math.max(1, Math.min(10, Math.round(s)))] ?? '😐';
-}
+// 心情图标映射（mood_*.png）统一走 @/utils/mood
 // 1(红/糟糕) → 10(绿/幸福) 柔和渐变，用于心情条底色
 function moodColor(s: number): string {
   const hue = ((Math.max(1, Math.min(10, s)) - 1) * 130) / 9;
@@ -673,7 +671,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .ms-chip:hover { box-shadow: var(--elev-2); }
 .ms-chip:active { transform: scale(0.92); }
 .ms-chip:focus-visible { outline: 2px solid var(--color-rose); outline-offset: 2px; }
-.ms-face { font-size: 20px; line-height: 1; }
+.ms-face { width: 22px; height: 22px; line-height: 1; filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08)); }
 .ms-score { font-size: 11px; color: var(--color-ink-2); margin-top: 2px; font-weight: 600; }
 
 .detail-actions { display: flex; justify-content: flex-end; margin-bottom: 10px; }

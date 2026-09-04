@@ -2,7 +2,7 @@
   <div class="lf-field">
     <label v-if="label" class="lf-label">
       <span>{{ label }}</span>
-      <span v-if="current" class="lf-mood-label">{{ current.label }}</span>
+      <span v-if="current" class="lf-mood-label">{{ current.label }} {{ modelValue }} 分</span>
     </label>
     <div class="lf-moods" role="radiogroup">
       <button
@@ -10,12 +10,12 @@
         :key="m.value"
         type="button"
         class="lf-mood"
-        :class="{ active: modelValue === m.value }"
+        :class="{ active: sameRange(modelValue, m.value) }"
         :aria-label="m.label"
-        :aria-pressed="modelValue === m.value"
+        :aria-pressed="sameRange(modelValue, m.value)"
         @click="pick(m.value)"
       >
-        <span class="lf-mood-face">{{ m.face }}</span>
+        <IpIcon :name="m.icon" :size="26" :alt="m.label" class="lf-mood-face" />
       </button>
     </div>
   </div>
@@ -23,27 +23,22 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import IpIcon from '@/components/Common/IpIcon.vue';
+import { MOOD_LEVELS, moodIconName } from '@/utils/mood';
 
 const props = withDefaults(
   defineProps<{ modelValue?: number; label?: string }>(),
-  { modelValue: 5, label: '心情' }
+  { modelValue: 6, label: '心情' }
 );
 const emit = defineEmits<{ (e: 'update:modelValue', v: number): void }>();
 
-// 1→10 由低到高，对应「糟糕」到「幸福」
-const moods = [
-  { value: 1, face: '😣', label: '糟糕' },
-  { value: 2, face: '😞', label: '难过' },
-  { value: 3, face: '🙁', label: '低落' },
-  { value: 4, face: '😕', label: '一般' },
-  { value: 5, face: '😐', label: '平静' },
-  { value: 6, face: '🙂', label: '还行' },
-  { value: 7, face: '😊', label: '不错' },
-  { value: 8, face: '😄', label: '开心' },
-  { value: 9, face: '😍', label: '甜蜜' },
-  { value: 10, face: '🥰', label: '幸福' },
-];
-const current = computed(() => moods.find((m) => m.value === props.modelValue));
+// 5 档卡通心情（1→10 由低到高）：点击取各档代表分；历史任意 1-10 分按档位高亮
+const moods = MOOD_LEVELS;
+const current = computed(() => moods.find((m) => m.icon === moodIconName(props.modelValue)));
+
+function sameRange(a: number | undefined, b: number): boolean {
+  return moodIconName(a ?? 6) === moodIconName(b);
+}
 
 function pick(v: number) {
   emit('update:modelValue', v);
@@ -80,7 +75,8 @@ function pick(v: number) {
     background var(--dur-micro) var(--ease-love),
     box-shadow var(--dur-micro) var(--ease-love);
 }
-.lf-mood-face { font-size: 19px; line-height: 1; transition: transform var(--dur-micro) var(--fx-ease-back); }
+/* IpIcon 是 img：由组件层控制缩放，按钮内做弹性动画 */
+.lf-mood-face { transition: transform var(--dur-micro) var(--fx-ease-back); }
 .lf-mood:hover { background: var(--color-rose-soft); }
 .lf-mood:active { transform: scale(0.9); }
 .lf-mood.active {
@@ -89,6 +85,6 @@ function pick(v: number) {
 }
 .lf-mood.active .lf-mood-face { transform: scale(1.25); }
 @media (max-width: 380px) {
-  .lf-mood-face { font-size: 16px; }
+  .lf-mood-face { width: 22px; height: 22px; }
 }
 </style>
