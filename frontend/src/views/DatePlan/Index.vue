@@ -119,6 +119,7 @@ import { useStaggerEnter } from '@/composables/useAnimation';
 import { usePagedList } from '@/composables/usePagedList';
 import { useRealtime } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
+import { useOptimistic } from '@/composables/useOptimistic';
 import { feedback } from '@/utils/feedback';
 import { toLocalISO } from '@/utils/format';
 
@@ -206,6 +207,7 @@ async function loadStats() {
 async function refresh() {
   await Promise.all([loadStats(), refreshList()]);
 }
+const { mutate } = useOptimistic(refresh);
 
 function toIso(ts: number | null) { return toLocalISO(ts); }
 
@@ -225,20 +227,29 @@ async function saveCreate() {
   }
   saving.value = true;
   created.value = false;
+  const payload = {
+    isCompleted: false,
+    planTime: toIso(cform.value.planTime),
+    location: cform.value.location,
+    budget: cform.value.budget ? Number(cform.value.budget) : undefined,
+    remark: cform.value.remark,
+  };
   try {
-    await dp.createDate({
-      isCompleted: false,
-      planTime: toIso(cform.value.planTime),
-      location: cform.value.location,
-      budget: cform.value.budget ? Number(cform.value.budget) : undefined,
-      remark: cform.value.remark,
+    const ok = await mutate({
+      label: '添加约会',
+      apply: () => {
+        list.value = [{ id: -Date.now(), ...payload } as DateRecordDto, ...list.value];
+      },
+      api: () => dp.createDate(payload),
     });
-    created.value = true;
-    feedback.created('约会');
-    later(async () => {
-      showCreate.value = false;
-      await refresh();
-    }, 680);
+    if (ok) {
+      created.value = true;
+      feedback.created('约会');
+      later(async () => {
+        showCreate.value = false;
+        await refresh();
+      }, 680);
+    }
   } finally {
     saving.value = false;
   }
@@ -255,42 +266,51 @@ function openComplete(d: DateRecordDto) {
 }
 async function saveComplete() {
   if (!active.value) return;
+  const id = active.value.id;
   saving.value = true;
   completed.value = false;
   try {
-    await dp.updateDate(active.value.id, {
-      isCompleted: true,
-      planTime: active.value.planTime,
-      location: active.value.location,
-      budget: active.value.budget,
-      realTime: toLocalISO(Date.now()),
-      realCost: completeForm.value.realCost ? Number(completeForm.value.realCost) : undefined,
-      experienceScore: completeForm.value.score,
-      remark: active.value.remark,
+    const ok = await mutate({
+      label: '完成约会',
+      apply: () => {
+        const x = list.value.find((i) => i.id === id);
+        if (x) x.isCompleted = true;
+      },
+      api: () => dp.updateDate(id, {
+        isCompleted: true,
+        planTime: active.value!.planTime,
+        location: active.value!.location,
+        budget: active.value!.budget,
+        realTime: toLocalISO(Date.now()),
+        realCost: completeForm.value.realCost ? Number(completeForm.value.realCost) : undefined,
+        experienceScore: completeForm.value.score,
+        remark: active.value!.remark,
+      }),
     });
-    completed.value = true;
-    message.success('约会完成');
-    later(async () => {
-      showComplete.value = false;
-      await refresh();
-    }, 680);
+    if (ok) {
+      completed.value = true;
+      message.success('约会完成');
+      later(async () => {
+        showComplete.value = false;
+        await refresh();
+      }, 680);
+    }
   } finally {
     saving.value = false;
   }
 }
 
 async function remove(d: DateRecordDto) {
-  // 先播收缩动画，再删库并刷新，避免瞬间消失（对标纪念日页删除 pop）
+  // 先播收缩动画，再乐观移除并删库（失败由 refresh 回滚），避免瞬间消失（对标纪念日页删除 pop）
   removingId.value = d.id;
-  later(async () => {
-    try {
-      await dp.deleteDate(d.id);
-      feedback.deleted('这段约会');
-      await refresh();
-    } finally {
-      removingId.value = null;
-    }
-  }, 320);
+  await new Promise((r) => setTimeout(r, 320));
+  const ok = await mutate({
+    label: '删除约会',
+    apply: () => { list.value = list.value.filter((x) => x.id !== d.id); },
+    api: () => dp.deleteDate(d.id),
+  });
+  if (ok) feedback.deleted('这段约会');
+  removingId.value = null;
 }
 
 onMounted(async () => {

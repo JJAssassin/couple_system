@@ -217,6 +217,7 @@ import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
+import { useOptimistic } from '@/composables/useOptimistic';
 import { useAuthStore } from '@/store/authStore';
 import { usePartnerStore } from '@/store/partnerStore';
 import IndProgressRing from '@/components/industrial/IndProgressRing.vue';
@@ -234,6 +235,7 @@ import {
 const auth = useAuthStore();
 const partner = usePartnerStore();
 const notify = useNotifyStore();
+const { mutate } = useOptimistic(load);
 const loading = ref(true);
 const container = ref<HTMLElement>();
 const listEl = ref<HTMLElement>();
@@ -346,13 +348,12 @@ watch(doneList, (v) => { doneDrag.value = [...v]; }, { immediate: true });
 async function onTodoReorder(group: 'active' | 'done') {
   const ids = (group === 'active' ? activeDrag.value : doneDrag.value).map((t) => t.id);
   if (ids.length < 2) return;
-  try {
-    await reorderTodos(ids);
-  } catch {
-    feedback.warn('排序保存失败，已恢复顺序');
-  } finally {
-    await load();
-  }
+  // 拖拽已即时改动本地顺序（乐观），此处仅持久化；失败经 load() 回滚到服务端顺序并可重试
+  await mutate({
+    label: '排序',
+    apply: () => {},
+    api: () => reorderTodos(ids),
+  });
 }
 
 const statusFilterOptions = [
@@ -429,45 +430,80 @@ async function submitForm() {
   }
   saving.value = true;
   try {
-    form.dueTime = toLocalISO(dueTs.value);
-    form.assigneeUserId = formAssignee.value === -1 ? null : formAssignee.value;
-    if (editing.value) {
-      await updateTodo(editing.value.id, { ...form });
-      feedback.updated('待办');
-    } else {
-      await createTodo({ ...form });
-      feedback.created('待办');
+    const payload: TodoReq = {
+      ...form,
+      dueTime: toLocalISO(dueTs.value),
+      assigneeUserId: formAssignee.value === -1 ? null : formAssignee.value,
+    };
+    const id = editing.value?.id ?? 0;
+    const ok = await mutate({
+      label: editing.value ? '保存待办' : '添加待办',
+      apply: () => {
+        if (editing.value) {
+          const x = todos.value.find((i) => i.id === id);
+          if (x) Object.assign(x, payload);
+        } else {
+          todos.value = [
+            {
+              id: -Date.now(), title: payload.title, description: payload.description,
+              priority: payload.priority, dueTime: payload.dueTime, category: payload.category,
+              assigneeUserId: payload.assigneeUserId, isDone: false,
+            } as TodoDto,
+            ...todos.value,
+          ];
+        }
+      },
+      api: () => (editing.value ? updateTodo(id, payload) : createTodo(payload)),
+    });
+    if (ok) {
+      saved.value = true;
+      later(async () => {
+        showForm.value = false;
+        if (editing.value) feedback.updated('待办');
+        else feedback.created('待办');
+        await load();
+      }, 720);
     }
-    saved.value = true;
-    later(async () => {
-      showForm.value = false;
-      await load();
-    }, 720);
   } finally { saving.value = false; }
 }
 
 async function onToggle(t: TodoDto) {
-  await toggleTodo({ id: t.id });
-  notify.success(t.isDone ? '已标记未完成' : '已完成，棒棒哒');
-  await load();
+  const ok = await mutate({
+    label: '切换待办状态',
+    apply: () => { t.isDone = !t.isDone; },
+    api: () => toggleTodo({ id: t.id }),
+  });
+  if (ok) {
+    notify.success(t.isDone ? '已标记未完成' : '已完成，棒棒哒');
+    await load();
+  }
 }
 // 11 卡片抽走：未完成项向左滑「抽走」= 标记完成（可逆、非删除）
 async function onSwipeDone(t: TodoDto) {
   if (t.isDone) return;
-  await toggleTodo({ id: t.id });
-  notify.success('已完成，棒棒哒');
-  await load();
+  const ok = await mutate({
+    label: '完成待办',
+    apply: () => { t.isDone = true; },
+    api: () => toggleTodo({ id: t.id }),
+  });
+  if (ok) { notify.success('已完成，棒棒哒'); await load(); }
 }
 async function onAssign(t: TodoDto, v: number) {
   const assigneeUserId = v === -1 ? null : v;
-  await assignTodo({ id: t.id, assigneeUserId });
-  feedback.saved('指派');
-  await load();
+  const ok = await mutate({
+    label: '指派待办',
+    apply: () => { t.assigneeUserId = assigneeUserId; },
+    api: () => assignTodo({ id: t.id, assigneeUserId }),
+  });
+  if (ok) { feedback.saved('指派'); await load(); }
 }
 async function onDelete(id: number) {
-  await deleteTodo(id);
-  feedback.deleted('待办');
-  await load();
+  const ok = await mutate({
+    label: '删除待办',
+    apply: () => { todos.value = todos.value.filter((w) => w.id !== id); },
+    api: () => deleteTodo(id),
+  });
+  if (ok) { feedback.deleted('待办'); await load(); }
 }
 
 async function load() {

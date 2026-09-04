@@ -336,13 +336,12 @@ watch(displayList, (v) => { wishDrag.value = [...v]; }, { immediate: true });
 async function onWishReorder() {
   const ids = wishDrag.value.map((w) => w.id);
   if (ids.length < 2) return;
-  try {
-    await reorderWishes(ids);
-  } catch {
-    feedback.warn('排序保存失败，已恢复顺序');
-  } finally {
-    await load();
-  }
+  // 拖拽已即时改动本地顺序（乐观），此处仅持久化；失败经 load() 回滚到服务端顺序并可重试
+  await mutate({
+    label: '排序',
+    apply: () => {},
+    api: () => reorderWishes(ids),
+  });
 }
 
 const typeOptions = [

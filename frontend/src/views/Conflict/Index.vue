@@ -155,6 +155,7 @@ import IpIcon from '@/components/Common/IpIcon.vue';
 import { feedback } from '@/utils/feedback';
 import { usePagedList } from '@/composables/usePagedList';
 import { isMobile } from '@/composables/useDevice';
+import { useOptimistic } from '@/composables/useOptimistic';
 
 const notify = useNotifyStore();
 const submitting = ref(false);
@@ -176,6 +177,7 @@ const { list, page, pageSize, total, loading, hasMore, nextPage, refresh, loadFi
   },
   { pageSize: 15, mode: 'more' },
 );
+const { mutate } = useOptimistic(refresh);
 
 const levelOptions = [
   { label: '小摩擦', value: 1 },
@@ -276,15 +278,29 @@ async function submitForm() {
   }
   submitting.value = true;
   saved.value = false;
+  const req = buildReq();
+  const id = editing.value?.id ?? 0;
   try {
-    if (editing.value) await updateConflict(editing.value.id, buildReq());
-    else await createConflict(buildReq());
-    feedback.saved('复盘');
-    saved.value = true;
-    later(async () => {
-      showForm.value = false;
-      await refresh();
-    }, 680);
+    const ok = await mutate({
+      label: editing.value ? '保存复盘' : '添加复盘',
+      apply: () => {
+        if (editing.value) {
+          const x = list.value.find((i) => i.id === id);
+          if (x) Object.assign(x, req);
+        } else {
+          list.value = [{ id: -Date.now(), ...req } as ConflictDto, ...list.value];
+        }
+      },
+      api: () => (editing.value ? updateConflict(id, req) : createConflict(req)),
+    });
+    if (ok) {
+      feedback.saved('复盘');
+      saved.value = true;
+      later(async () => {
+        showForm.value = false;
+        await refresh();
+      }, 680);
+    }
   } finally { submitting.value = false; }
 }
 
@@ -301,27 +317,41 @@ async function openDetail(c: ConflictDto) {
 async function markReconciled() {
   if (!detail.value) return;
   const full = await getConflict(detail.value.id);
-  await updateConflict(full.id, {
-    occurTime: full.occurTime,
-    summary: full.summary,
-    conflictLevel: full.conflictLevel,
-    myThoughtA: full.myThoughtA,
-    myThoughtB: full.myThoughtB,
-    reconcileTime: new Date().toISOString(),
-    reconcileWay: full.reconcileWay,
-    reflectA: full.reflectA,
-    reflectB: full.reflectB,
-    ruleConclusion: full.ruleConclusion,
+  const ok = await mutate({
+    label: '和好',
+    apply: () => {
+      if (detail.value) detail.value.reconcileTime = new Date().toISOString();
+      list.value = list.value.map((c) => c.id === full.id ? { ...c, reconcileTime: new Date().toISOString() } : c);
+    },
+    api: () => updateConflict(full.id, {
+      occurTime: full.occurTime,
+      summary: full.summary,
+      conflictLevel: full.conflictLevel,
+      myThoughtA: full.myThoughtA,
+      myThoughtB: full.myThoughtB,
+      reconcileTime: new Date().toISOString(),
+      reconcileWay: full.reconcileWay,
+      reflectA: full.reflectA,
+      reflectB: full.reflectB,
+      ruleConclusion: full.ruleConclusion,
+    }),
   });
-  notify.success('已经和好啦');
-  showDetail.value = false;
-  await refresh();
+  if (ok) {
+    notify.success('已经和好啦');
+    showDetail.value = false;
+    await refresh();
+  }
 }
 async function onDelete(id: number) {
-  await deleteConflict(id);
-  feedback.deleted('复盘');
-  showDetail.value = false;
-  await refresh();
+  const ok = await mutate({
+    label: '删除复盘',
+    apply: () => { list.value = list.value.filter((c) => c.id !== id); },
+    api: () => deleteConflict(id),
+  });
+  if (ok) {
+    feedback.deleted('复盘');
+    showDetail.value = false;
+  }
 }
 
 useStaggerEnter(container, '.love-card', { stagger: 0.06, y: 14 });

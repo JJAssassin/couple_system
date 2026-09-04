@@ -187,6 +187,7 @@ import { useNotifyStore } from '@/store/notifyStore';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime, overlaySyncMap } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
+import { useOptimistic } from '@/composables/useOptimistic';
 import { useAuthStore } from '@/store/authStore';
 import { assetUrl } from '@/config/server';
 import { usePartnerStore } from '@/store/partnerStore';
@@ -203,6 +204,7 @@ import { hapticForAction } from '@/composables/useHaptic';
 
 const auth = useAuthStore();
 const notify = useNotifyStore();
+const { mutate } = useOptimistic(load);
 const partner = usePartnerStore();
 const meId = computed(() => auth.profile?.id ?? 0);
 const partnerId = computed(() => partner.status?.partner?.id ?? null);
@@ -282,18 +284,33 @@ function reactionList(m: BoardMessageDto) {
 function hasReacted(m: BoardMessageDto, key: string) {
   return (m.reactions?.[key] ?? []).includes(meId.value);
 }
-// 切换某条留言的某个表情：已点则取消，未点则加上；用返回的最新 reactions 就地更新，避免整页刷新打断滚动
+// 本地镜像服务端 toggle 语义：已点则移除自己，未点则加上自己
+function applyReactionToggle(m: BoardMessageDto, key: string) {
+  const idx = messages.value.findIndex(x => x.id === m.id);
+  if (idx < 0) return;
+  const cur = messages.value[idx];
+  const reactions: Record<string, number[]> = { ...(cur.reactions ?? {}) };
+  const users = [...(reactions[key] ?? [])];
+  const pos = users.indexOf(meId.value);
+  if (pos >= 0) users.splice(pos, 1);
+  else users.push(meId.value);
+  reactions[key] = users;
+  messages.value[idx] = { ...cur, reactions };
+}
+// 切换某条留言的某个表情：先乐观 toggle 本地，api 成功后采纳服务端权威 reactions；失败自动回滚
 async function toggleReaction(m: BoardMessageDto, key: string) {
   reactingId.value = null;
-  try {
-    const res = await addReaction({ id: m.id, emojiKey: key });
-    const idx = messages.value.findIndex(x => x.id === m.id);
-    if (idx >= 0) messages.value[idx] = { ...messages.value[idx], reactions: res.reactions };
-    triggerBump(m.id, key);
-    hapticForAction('tap');
-  } catch {
-    feedback.warn('反应失败，请重试');
-  }
+  triggerBump(m.id, key);
+  hapticForAction('tap');
+  await mutate({
+    label: '反应',
+    apply: () => applyReactionToggle(m, key),
+    api: async () => {
+      const res = await addReaction({ id: m.id, emojiKey: key });
+      const idx = messages.value.findIndex(x => x.id === m.id);
+      if (idx >= 0) messages.value[idx] = { ...messages.value[idx], reactions: res.reactions };
+    },
+  });
 }
 
 function fmt(s: string) {
@@ -325,23 +342,44 @@ async function send() {
     feedback.warn('请先绑定伴侣再发送私密消息');
     return;
   }
+  const isPrivate = activeTab.value === 'private';
+  const req: BoardMessageReq = {
+    content,
+    color: draftColor.value || undefined,
+    imageUrl: draftImage.value,
+    isPrivate,
+    receiverUserId: isPrivate ? partnerId.value! : undefined,
+  };
+  // 乐观占位：临时负 id 立即上墙，ok 后 load() 换回真实 id
+  const optimistic: BoardMessageDto = {
+    id: -Date.now(),
+    content,
+    color: draftColor.value || null,
+    imageUrl: draftImage.value ?? null,
+    isPrivate,
+    receiverUserId: isPrivate ? partnerId.value : null,
+    createUserId: meId.value,
+    createTime: new Date().toISOString(),
+    pinned: false,
+    isUnlocked: true,
+    authorName: '我',
+    reactions: {},
+  };
   sending.value = true;
-  try {
-    const req: BoardMessageReq = {
-      content,
-      color: draftColor.value || undefined,
-      imageUrl: draftImage.value,
-      isPrivate: activeTab.value === 'private',
-      receiverUserId: activeTab.value === 'private' ? partnerId.value! : undefined,
-    };
-    await createBoard(req);
+  const ok = await mutate({
+    label: '发送留言',
+    apply: () => { messages.value = [optimistic, ...messages.value]; },
+    api: () => createBoard(req),
+  });
+  sending.value = false;
+  if (ok) {
     hapticForAction('success');
     feedback.created('留言');
     draft.value = '';
     draftColor.value = '';
     draftImage.value = undefined;
     await load();
-  } finally { sending.value = false; }
+  }
 }
 
 function openEdit(m: BoardMessageDto) {
@@ -353,33 +391,59 @@ function openEdit(m: BoardMessageDto) {
 }
 async function submitEdit() {
   if (!editDraft.value.trim()) { feedback.warn('留言内容不能为空'); return; }
+  const id = editId.value;
+  const content = editDraft.value.trim();
+  const color = editColor.value || undefined;
   sending.value = true;
   saved.value = false;
-  try {
-    await updateBoard(editId.value, { content: editDraft.value.trim(), color: editColor.value || undefined });
+  const ok = await mutate({
+    label: '保存留言',
+    apply: () => {
+      const idx = messages.value.findIndex(m => m.id === id);
+      if (idx >= 0) messages.value[idx] = { ...messages.value[idx], content, color: color ?? null };
+    },
+    api: () => updateBoard(id, { content, color }),
+  });
+  sending.value = false;
+  if (ok) {
     feedback.updated('留言');
     saved.value = true;
     later(async () => {
       showEdit.value = false;
       await load();
     }, 680);
-  } finally { sending.value = false; }
+  }
 }
 
 async function onPin(m: BoardMessageDto) {
-  await pinBoard({ id: m.id });
-  notify.success(m.pinned ? '已取消置顶' : '已置顶');
-  await load();
+  const willPin = !m.pinned;
+  const ok = await mutate({
+    label: willPin ? '置顶' : '取消置顶',
+    apply: () => {
+      const idx = messages.value.findIndex(x => x.id === m.id);
+      if (idx >= 0) messages.value[idx] = { ...messages.value[idx], pinned: willPin };
+    },
+    api: () => pinBoard({ id: m.id }),
+  });
+  if (ok) {
+    notify.success(willPin ? '已置顶' : '已取消置顶');
+    await load();
+  }
 }
 async function onDelete(id: number) {
-  await deleteBoard(id);
-  feedback.deleted('留言');
-  // 先标记 pop 动画，等 0.3s 动画播完再从本地移除；修复原「先移除导致动画永不触发」
-  poppingId.value = id;
-  later(() => {
-    messages.value = messages.value.filter(m => m.id !== id);
-    poppingId.value = null;
-  }, 300);
+  const ok = await mutate({
+    label: '删除留言',
+    apply: () => {
+      // 先标记 pop 动画，等 0.3s 动画播完再从本地移除；修复原「先移除导致动画永不触发」
+      poppingId.value = id;
+      later(() => {
+        messages.value = messages.value.filter(m => m.id !== id);
+        poppingId.value = null;
+      }, 300);
+    },
+    api: () => deleteBoard(id),
+  });
+  if (ok) feedback.deleted('留言');
 }
 
 async function load() {

@@ -221,6 +221,7 @@ import { usePagedList } from '@/composables/usePagedList';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { useRealtime } from '@/composables/useRealtime';
 import { useSyncSettle } from '@/composables/useSyncSettle';
+import { useOptimistic } from '@/composables/useOptimistic';
 import { feedback } from '@/utils/feedback';
 import { Mail, Gem, CheckCircle2, Heart, Star, Image as ImageIcon, PenLine, Check } from 'lucide-vue-next';
 import IpIcon from '@/components/Common/IpIcon.vue';
@@ -259,20 +260,30 @@ function onCardClick(m: SystemMessageDto, e?: Event) {
   open(m);
 }
 async function deleteReadAll() {
-  await msgApi.deleteRead();
-  feedback.deleted('已读消息');
-  await refresh();
-  syncUnread();
+  const ok = await mutate({
+    label: '删除已读消息',
+    apply: () => { list.value = list.value.filter((m) => !m.isRead); },
+    api: () => msgApi.deleteRead(),
+  });
+  if (ok) {
+    feedback.deleted('已读消息');
+    syncUnread();
+  }
 }
 async function deleteSelected() {
   const ids = [...selected.value];
   if (!ids.length) return;
-  await msgApi.batchDeleteMessage(ids);
-  feedback.deleted('消息');
-  selected.value = new Set();
-  selectMode.value = false;
-  await refresh();
-  syncUnread();
+  const ok = await mutate({
+    label: '删除消息',
+    apply: () => { list.value = list.value.filter((m) => !ids.includes(m.id)); },
+    api: () => msgApi.batchDeleteMessage(ids),
+  });
+  if (ok) {
+    feedback.deleted('消息');
+    selected.value = new Set();
+    selectMode.value = false;
+    syncUnread();
+  }
 }
 const container = ref<HTMLElement>();
 const unreadRef = ref<HTMLElement>();
@@ -290,6 +301,7 @@ const { list, page, pageSize, total, loading, hasMore, nextPage, refresh, loadFi
   },
   { pageSize: 50, mode: 'more' },
 );
+const { mutate } = useOptimistic(refresh);
 loading.value = true;
 
 function syncUnread() {
@@ -363,10 +375,15 @@ async function open(m: SystemMessageDto) {
 
 async function markAllRead() {
   if (unread.value === 0) return;
-  await msgApi.readAll();
-  await refresh();
-  syncUnread();
-  feedback.info('已把所有消息标记为已读');
+  const ok = await mutate({
+    label: '全部已读',
+    apply: () => { list.value = list.value.map((m) => ({ ...m, isRead: true })); },
+    api: () => msgApi.readAll(),
+  });
+  if (ok) {
+    syncUnread();
+    feedback.info('已把所有消息标记为已读');
+  }
 }
 
 // 反应：与留言板共享 8 个表情，名称对应 src/assets/icons/ip/emoji_*.png
@@ -394,16 +411,29 @@ function reactionList(m: SystemMessageDto) {
 function hasReacted(m: SystemMessageDto, key: string) {
   return (m.reactions?.[key] ?? []).includes(meId.value);
 }
-// 切换某条消息的某个表情：已点则取消，未点则加上；用返回的最新 reactions 就地更新，避免整页刷新打断滚动
+// 本地切换某条消息的某个表情（镜像服务端 toggle 语义：已点则取消，未点则加上）
+function applyReactionToggle(m: SystemMessageDto, key: string) {
+  const reactions = { ...(m.reactions ?? {}) };
+  const users = [...(reactions[key] ?? [])];
+  const i = users.indexOf(meId.value);
+  if (i >= 0) users.splice(i, 1); else users.push(meId.value);
+  if (users.length === 0) delete reactions[key];
+  else reactions[key] = users;
+  m.reactions = reactions;
+}
+// 切换反应：乐观即时反馈，失败回滚到服务端真值（refresh）
 async function toggleReaction(m: SystemMessageDto, key: string) {
   reactingId.value = null;
-  try {
-    const res = await msgApi.addReaction({ id: m.id, emojiKey: key });
-    const idx = list.value.findIndex(x => x.id === m.id);
-    if (idx >= 0) list.value[idx] = { ...list.value[idx], reactions: res.reactions };
+  let serverReactions: Record<string, number[]> | undefined;
+  const ok = await mutate({
+    label: '反应',
+    apply: () => { applyReactionToggle(m, key); },
+    api: async () => { const r = await msgApi.addReaction({ id: m.id, emojiKey: key }); serverReactions = r.reactions; },
+  });
+  if (ok && serverReactions) {
+    const idx = list.value.findIndex((x) => x.id === m.id);
+    if (idx >= 0) list.value[idx] = { ...list.value[idx], reactions: serverReactions };
     hapticForAction('tap');
-  } catch {
-    feedback.warn('反应失败，请重试');
   }
 }
 // 点击空白处收起表情选择器

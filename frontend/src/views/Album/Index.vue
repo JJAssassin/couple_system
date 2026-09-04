@@ -368,6 +368,7 @@ import * as albumApi from '@/api/album';
 import { isMobile } from '@/composables/useDevice';
 import { useStaggerEnter } from '@/composables/useAnimation';
 import { startSharedTransition } from '@/composables/useViewTransition';
+import { useOptimistic } from '@/composables/useOptimistic';
 import { useSettingStore } from '@/store/settingStore';
 import AlbumLightbox from '@/components/album/AlbumLightbox.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
@@ -430,6 +431,16 @@ const currentAlbum = ref<AlbumDto | null>(null);
 const images = ref<ImageDto[]>([]);
 const imgLoading = ref(false);
 const detailCoverEl = ref<HTMLElement | null>(null); // 详情封面 hero（View Transition 共享元素目标）
+
+// 重新拉取当前相册的图片，作为图片级乐观操作失败时的「真相源」（同时校正封面计数）
+async function reloadImages() {
+  if (!currentAlbum.value) return;
+  const res = await albumApi.listImages(currentAlbum.value.id);
+  images.value = (res.data as ApiResult<ImageDto[]>).data ?? [];
+  currentAlbum.value.imageCount = images.value.length;
+}
+// 图片级乐观实例：删除 / 排序 / 批量删除 / 批量移动共用，失败以 reloadImages 回滚
+const { mutate: mutateImage } = useOptimistic(reloadImages);
 
 const showCreate = ref(false);
 const showDeleteAlbum = ref(false);
@@ -623,21 +634,16 @@ const removingId = ref<number | null>(null);
 async function removeImage(img: ImageDto) {
   if (removingId.value === img.id) return; // 防重复点击：同一张正在删时忽略
   removingId.value = img.id;
-  try {
-    await albumApi.deleteImage(img.id);
-    images.value = images.value.filter((x) => x.id !== img.id);
-    if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - 1);
-    feedback.deleted('照片');
-  } catch {
-    // 删除失败：不本地移除，避免 UI 与服务器不一致；重新拉取保证同步
-    feedback.error('删除失败，请重试');
-    if (currentAlbum.value) {
-      const res = await albumApi.listImages(currentAlbum.value.id);
-      images.value = (res.data as ApiResult<ImageDto[]>).data ?? [];
-    }
-  } finally {
-    removingId.value = null;
-  }
+  const ok = await mutateImage({
+    label: '删除照片',
+    apply: () => {
+      images.value = images.value.filter((x) => x.id !== img.id);
+      if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - 1);
+    },
+    api: () => albumApi.deleteImage(img.id),
+  });
+  if (ok) feedback.deleted('照片');
+  removingId.value = null;
 }
 
 // #17 相册批量：多选 + 批量删除 / 移动到其他相册 + 拖拽排序
@@ -673,29 +679,28 @@ function onCellClick(img: ImageDto) {
   }
 }
 async function onReorder() {
-  try {
-    await albumApi.reorderImages(images.value.map((i) => i.id));
-  } catch {
-    feedback.error('排序保存失败，已撤销');
-    if (currentAlbum.value) {
-      const res = await albumApi.listImages(currentAlbum.value.id);
-      images.value = (res.data as ApiResult<ImageDto[]>).data ?? [];
-    }
-  }
+  // 拖拽已即时改动本地顺序（乐观），此处仅持久化；失败经 reloadImages 回滚到服务端顺序并可重试
+  const order = images.value.map((i) => i.id);
+  await mutateImage({
+    label: '排序',
+    apply: () => {},
+    api: () => albumApi.reorderImages(order),
+  });
 }
 async function batchDelete() {
   if (!selectedIds.value.size) return;
   const ids = [...selectedIds.value];
-  try {
-    await albumApi.batchDeleteImages(ids);
-    images.value = images.value.filter((i) => !selectedIds.value.has(i.id));
-    if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - ids.length);
-    feedback.deleted('所选照片');
-  } catch {
-    feedback.error('批量删除失败，请重试');
-  } finally {
-    exitSelect();
-  }
+  const idSet = new Set(ids);
+  const ok = await mutateImage({
+    label: '批量删除照片',
+    apply: () => {
+      images.value = images.value.filter((i) => !idSet.has(i.id));
+      if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - ids.length);
+    },
+    api: () => albumApi.batchDeleteImages(ids),
+  });
+  if (ok) feedback.deleted('所选照片');
+  exitSelect();
 }
 async function openMove() {
   if (!selectedIds.value.size) return;
@@ -714,19 +719,23 @@ async function openMove() {
 async function confirmBatchMove() {
   if (!moveTarget.value || !selectedIds.value.size) return;
   const ids = [...selectedIds.value];
+  const idSet = new Set(ids);
+  const target = moveTarget.value;
   moving.value = true;
-  try {
-    await albumApi.batchMoveImages(ids, moveTarget.value);
-    images.value = images.value.filter((i) => !selectedIds.value.has(i.id));
-    if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - ids.length);
+  const ok = await mutateImage({
+    label: '批量移动照片',
+    apply: () => {
+      images.value = images.value.filter((i) => !idSet.has(i.id));
+      if (currentAlbum.value) currentAlbum.value.imageCount = Math.max(0, currentAlbum.value.imageCount - ids.length);
+    },
+    api: () => albumApi.batchMoveImages(ids, target),
+  });
+  moving.value = false;
+  if (ok) {
     feedback.moved('所选照片');
     showMove.value = false;
-  } catch {
-    feedback.error('批量移动失败，请重试');
-  } finally {
-    moving.value = false;
-    exitSelect();
   }
+  exitSelect();
 }
 
 // #16-c 相册照片批量导入：选目标相册 + 多选文件，一次请求归库，自动刷新当前相册
