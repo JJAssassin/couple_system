@@ -46,6 +46,10 @@ data/
 # (only local Redis host + Seed flag) and carries the local-dev fix for the redis:6379 crash.
 backend/CoupleLoveSystem.Api/appsettings.json
 
+# OTA update channel APK — ~33MB binary regenerated per release by frontend/scripts/build-android.sh.
+# Keep the file on disk (backend Docker build context reads the working tree), but out of git history.
+backend/CoupleLoveSystem.Api/wwwroot/app/*.apk
+
 # Plaintext DB credential note kept locally for reference — never commit
 MySQL账号密码.txt
 
