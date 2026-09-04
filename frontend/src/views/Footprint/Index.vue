@@ -158,6 +158,7 @@ import IndStatCard from '@/components/industrial/IndStatCard.vue';
 import IpIcon from '@/components/Common/IpIcon.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
 import { feedback } from '@/utils/feedback';
+import { useOptimistic } from '@/composables/useOptimistic';
 
 const { useModuleSync } = useRealtime();
 const loading = ref(true);
@@ -246,6 +247,8 @@ async function load() {
   finally { loading.value = false; }
 }
 
+const { mutate } = useOptimistic(load);
+
 function fmt(s: string) {
   const d = new Date(s);
   return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
@@ -267,25 +270,35 @@ function relTime(s: string) {
 async function onIncrement(f: FootprintDto) {
   poppingId.value = f.id;
   later(() => { poppingId.value = null; }, 420);
-  try {
-    const updated = await incrementFootprint(f.id);
-    const i = items.value.findIndex((x) => x.id === f.id);
-    if (i >= 0) items.value[i] = updated;
-  } catch { /* 忽略 */ }
+  const ok = await mutate({
+    label: '更新足迹',
+    apply: () => {
+      const i = items.value.findIndex((x) => x.id === f.id);
+      if (i >= 0) items.value[i] = { ...items.value[i], count: items.value[i].count + 1 };
+    },
+    api: () => incrementFootprint(f.id),
+  });
+  if (ok) await load(); // 拉一次服务端权威计数
 }
 
 async function onDelete(f: FootprintDto) {
-  // 先播收缩动画，再删库并移除，避免瞬间消失（对标纪念日页删除 pop）
+  // 删除请求立即发出，与收缩动画并行；动画播完（0.32s）再本地移除，
+  // 避免「先移除导致动画永不触发」；失败则取消移除，由 mutate 回滚到服务端真值。
   removingId.value = f.id;
-  later(async () => {
-    try {
-      await deleteFootprint(f.id);
-      items.value = items.value.filter((x) => x.id !== f.id);
-      feedback.deleted('足迹');
-    } catch {
-      removingId.value = null;
-    }
-  }, 320);
+  let cancelled = false;
+  const ok = await mutate({
+    label: '删除足迹',
+    apply: () => {
+      later(() => {
+        if (cancelled) return;
+        items.value = items.value.filter((x) => x.id !== f.id);
+        removingId.value = null;
+      }, 320);
+    },
+    api: () => deleteFootprint(f.id),
+  });
+  if (!ok) { cancelled = true; removingId.value = null; }
+  else feedback.deleted('足迹');
 }
 
 async function submit() {
@@ -302,19 +315,34 @@ async function submit() {
     targetCount: form.value.targetCount ? Number(form.value.targetCount) : null,
     description: form.value.description.trim() || null,
   };
+  const id = editingId.value;
   try {
-    if (editingId.value == null) {
-      const created = await createFootprint(payload);
-      items.value.unshift(created);
-      feedback.created('足迹');
-    } else {
-      const updated = await updateFootprint(editingId.value, payload);
-      const i = items.value.findIndex((x) => x.id === editingId.value);
-      if (i >= 0) items.value[i] = updated;
-      feedback.updated('足迹');
+    const ok = await mutate({
+      label: id == null ? '添加足迹' : '保存足迹',
+      apply: () => {
+        if (id == null) {
+          // 占位行：真实 id / createUserId 等由成功后 load() 校正
+          items.value = [
+            {
+              id: -Date.now(), title: payload.title, emoji: payload.emoji, count: 0,
+              createUserId: 0, createTime: new Date().toISOString(),
+              targetCount: payload.targetCount, description: payload.description,
+            } as FootprintDto,
+            ...items.value,
+          ];
+        } else {
+          const i = items.value.findIndex((x) => x.id === id);
+          if (i >= 0) Object.assign(items.value[i], payload);
+        }
+      },
+      api: () => (id == null ? createFootprint(payload) : updateFootprint(id, payload)),
+    });
+    if (ok) {
+      saved.value = true;
+      if (id == null) feedback.created('足迹');
+      else feedback.updated('足迹');
+      later(async () => { showForm.value = false; resetForm(); await load(); }, 680);
     }
-    saved.value = true;
-    later(() => { showForm.value = false; resetForm(); }, 680);
   } finally { submitting.value = false; }
 }
 

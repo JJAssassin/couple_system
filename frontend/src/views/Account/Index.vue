@@ -250,6 +250,7 @@ import type { EChartsOption } from 'echarts';
 import type { AccountRecordDto, MonthlyBudgetDto, BudgetDto, AccountStatisticsDto, AccountImportRow, AccountImportResult } from '@/types';
 import * as ac from '@/api/account';
 import * as bg from '@/api/budget';
+import { useOptimistic } from '@/composables/useOptimistic';
 import ChartWrap from '@/components/ChartWrap.vue';
 import IndSkeleton from '@/components/industrial/IndSkeleton.vue';
 import IndEmpty from '@/components/industrial/IndEmpty.vue';
@@ -539,6 +540,9 @@ async function refresh() {
   await Promise.all([loadSummary(), refreshList(), loadBudget(), loadStatistics()]);
 }
 
+// 乐观更新：失败时以 refresh() 拉回服务端真值（顺带重算汇总与预算）
+const { mutate } = useOptimistic(refresh);
+
 function openCreate() {
   editing.value = null;
   form.value = { recordType: 2, category: '', amount: null, time: Date.now(), remark: '' };
@@ -572,13 +576,26 @@ async function save() {
       recordTime: new Date(form.value.time ?? Date.now()).toISOString(),
       remark: form.value.remark,
     };
-    if (editing.value) {
-      await ac.updateAccount(editing.value.id, req);
-      feedback.updated('记录');
-    } else {
-      await ac.createAccount(req);
-      feedback.created('一笔账');
-    }
+    const id = editing.value?.id ?? null;
+    const ok = await mutate({
+      label: id ? '保存记录' : '记一笔',
+      apply: () => {
+        if (id) {
+          const i = list.value.findIndex((x) => x.id === id);
+          if (i >= 0) Object.assign(list.value[i], req);
+        } else {
+          // 占位行：真实 id / createUserId 等由成功后 refresh() 校正
+          list.value = [
+            { id: -Date.now(), ...req, createUserId: 0, createTime: new Date().toISOString() } as AccountRecordDto,
+            ...list.value,
+          ];
+        }
+      },
+      api: () => (id ? ac.updateAccount(id, req) : ac.createAccount(req)),
+    });
+    if (!ok) return; // 已回滚，弹窗保持打开便于重试
+    if (id) feedback.updated('记录');
+    else feedback.created('一笔账');
     showModal.value = false;
     await refresh();
     // 超额提醒：记了一笔支出后，若当月总预算或分类预算超支，主动提醒一次
@@ -599,9 +616,14 @@ async function save() {
   }
 }
 async function remove(r: AccountRecordDto) {
-  await ac.deleteAccount(r.id);
+  const ok = await mutate({
+    label: '删除记录',
+    apply: () => { list.value = list.value.filter((x) => x.id !== r.id); },
+    api: () => ac.deleteAccount(r.id),
+  });
+  if (!ok) return;
   feedback.deleted('这笔记录');
-  await refresh();
+  await refresh(); // 重算汇总与预算
 }
 
 import { useRealtime } from '@/composables/useRealtime';

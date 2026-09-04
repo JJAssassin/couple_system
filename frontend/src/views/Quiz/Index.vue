@@ -228,6 +228,7 @@ import IpIcon from '@/components/Common/IpIcon.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
 import { feedback } from '@/utils/feedback';
 import { fireHearts } from '@/composables/useConfetti';
+import { useOptimistic } from '@/composables/useOptimistic';
 
 const auth = useAuthStore();
 const notify = useNotifyStore();
@@ -327,25 +328,44 @@ async function onAnswer(roundId: number, answer: number) {
 }
 
 async function onAbandon(id: number) {
-  await deleteQuizRound(id);
+  const ok = await mutate({
+    label: '放弃这局',
+    apply: () => { rounds.value = rounds.value.filter((r) => r.id !== id); },
+    api: () => deleteQuizRound(id),
+  });
+  if (!ok) return;
   notify.success('已放弃这局');
   await load();
 }
 async function onDeleteRound(id: number) {
-  await deleteQuizRound(id);
+  const ok = await mutate({
+    label: '删除战绩',
+    apply: () => { rounds.value = rounds.value.filter((r) => r.id !== id); },
+    api: () => deleteQuizRound(id),
+  });
+  if (!ok) return;
   feedback.deleted('战绩');
   await load();
 }
 
 async function onAddQuestion() {
   const options = newOptions.value.map((o) => o.trim()).filter((o) => o.length > 0);
+  const text = newText.value.trim();
+  const category = newCategory.value.trim() || undefined;
   savingQ.value = true;
   try {
-    await createQuizQuestion({
-      text: newText.value.trim(),
-      options,
-      category: newCategory.value.trim() || undefined,
+    const ok = await mutate({
+      label: '添加题目',
+      apply: () => {
+        // 占位行：真实 id 由成功后 listQuizQuestions() 校正
+        questions.value = [
+          { id: -Date.now(), text, options, category: category ?? null, isBuiltin: false } as QuizQuestionDto,
+          ...questions.value,
+        ];
+      },
+      api: () => createQuizQuestion({ text, options, category }),
     });
+    if (!ok) return;
     feedback.created('题目');
     newText.value = '';
     newOptions.value = ['', ''];
@@ -354,7 +374,12 @@ async function onAddQuestion() {
   } finally { savingQ.value = false; }
 }
 async function onDeleteQuestion(id: number) {
-  await deleteQuizQuestion(id);
+  const ok = await mutate({
+    label: '删除题目',
+    apply: () => { questions.value = questions.value.filter((q) => q.id !== id); },
+    api: () => deleteQuizQuestion(id),
+  });
+  if (!ok) return;
   feedback.deleted('题目');
   questions.value = await listQuizQuestions();
 }
@@ -372,6 +397,10 @@ async function load() {
     questions.value = qs;
   } finally { loading.value = false; }
 }
+
+// 说明：onStart / onAnswer 不做乐观更新——题目内容、揭晓态与默契判定均由服务端计算，
+// 本地臆造会与真实结果不一致；这里只乐观化「本地可确定」的增删操作。
+const { mutate } = useOptimistic(load);
 
 useStaggerEnter(container, '.love-card', { stagger: 0.05, y: 12 });
 const { onSync } = useRealtime();

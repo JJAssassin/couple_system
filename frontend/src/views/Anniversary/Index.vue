@@ -203,6 +203,7 @@ import ImageField from '@/components/Common/ImageField.vue';
 import GradientText from '@/components/Common/GradientText.vue';
 import TiltCard from '@/components/Common/TiltCard.vue';
 import AnniversaryPoster from '@/components/Common/AnniversaryPoster.vue';
+import { useOptimistic } from '@/composables/useOptimistic';
 import IpIcon from '@/components/Common/IpIcon.vue';
 import { feedback } from '@/utils/feedback';
 
@@ -356,6 +357,8 @@ async function load() {
   finally { loading.value = false; }
 }
 
+const { mutate } = useOptimistic(load);
+
 function fmtDate(s?: string | null) {
   if (!s) return '—';
   const d = parseLocalDate(s);
@@ -413,13 +416,23 @@ async function submit() {
   }
   submitting.value = true;
   saved.value = false;
+  const id = editingId.value;
   try {
-    if (editingId.value) {
-      const updated = await updateAnniversary(editingId.value, toReq());
-      const i = items.value.findIndex((x) => x.id === updated.id);
-      if (i >= 0) items.value[i] = updated;
+    if (id) {
+      // 编辑：乐观合并本地，失败自动回滚并可一键重试
+      const ok = await mutate({
+        label: '保存纪念日',
+        apply: () => {
+          const i = items.value.findIndex((x) => x.id === id);
+          if (i >= 0) Object.assign(items.value[i], toReq());
+        },
+        api: () => updateAnniversary(id, toReq()),
+      });
+      if (!ok) return; // 失败已回滚并保持弹窗打开，可重试
       feedback.updated('纪念日');
+      await load(); // 拉服务端重算的 daysLeft / nextOccurrence
     } else {
+      // 新增：daysLeft / nextOccurrence / lunarDate 由服务端计算，等回包再插入，避免占位行渲染出错
       const created = await createAnniversary(toReq());
       items.value.unshift(created);
       feedback.created('纪念日');
@@ -430,16 +443,23 @@ async function submit() {
 }
 
 async function onDelete(a: AnniversaryDto) {
-  try {
-    await deleteAnniversary(a.id);
-    // 先标记 pop 动画，等 0.3s 动画播完再真正移除；修复原「先移除导致动画永不触发」
-    poppingId.value = a.id;
-    later(() => {
-      items.value = items.value.filter((x) => x.id !== a.id);
-      poppingId.value = null;
-    }, 300);
-    feedback.deleted('纪念日');
-  } catch { /* 忽略 */ }
+  // 删除请求立即发出，与 pop 动画并行；动画播完（0.3s）再本地移除，
+  // 保留「先移除导致动画永不触发」的既有修复；失败则取消移除，由 mutate 回滚到服务端真值。
+  poppingId.value = a.id;
+  let cancelled = false;
+  const ok = await mutate({
+    label: '删除纪念日',
+    apply: () => {
+      later(() => {
+        if (cancelled) return;
+        items.value = items.value.filter((x) => x.id !== a.id);
+        poppingId.value = null;
+      }, 300);
+    },
+    api: () => deleteAnniversary(a.id),
+  });
+  if (!ok) { cancelled = true; poppingId.value = null; }
+  else feedback.deleted('纪念日');
 }
 
 useStaggerEnter(container, '.block', { stagger: 0.1, y: 16 });
