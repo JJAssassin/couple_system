@@ -812,7 +812,7 @@ onUnmounted(() => {
 <style scoped>
 .album-page { max-width: 960px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -835,7 +835,7 @@ onUnmounted(() => {
    用 animation 而非 @load 处理，避免缓存命中时 @load 不触发导致图片永久不可见。 */
 @keyframes img-fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+.album-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
 .album-tilt { display: block; transform-style: preserve-3d; }
 .album-tilt > .album-card { width: 100%; height: 100%; }
 .album-card { padding: 0; overflow: hidden; cursor: pointer; transition: transform var(--dur-micro) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
@@ -844,7 +844,7 @@ onUnmounted(() => {
 .album-cover-ph { width: 100%; height: 100%; display: grid; place-items: center; color: var(--color-ink-3); }
 
 /* 详情封面 hero（View Transition 共享元素目标：列表封面放大进入） */
-.album-hero { display: flex; align-items: flex-start; gap: 16px; margin: 4px 0 14px; }
+.album-hero { display: flex; align-items: flex-start; gap: 16px; margin: 4px 0 16px; }
 .album-hero-cover { width: 148px; flex-shrink: 0; }
 .album-hero-cover .detail-cover,
 .album-hero-cover .album-cover-ph {
@@ -917,7 +917,7 @@ html:not(.reduce-motion) .img-cell:hover .drag-handle, .drag-handle:active { opa
 .sel-toggle { flex: 0 0 auto; }
 .batch-bar {
   position: fixed; left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 16px);
-  z-index: 30; display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+  z-index: 30; display: flex; align-items: center; gap: 10px; padding: 10px 16px;
   background: var(--color-surface, #fff); border-radius: var(--radius-lg); box-shadow: var(--elev-4);
 }
 .batch-count { flex: 1; font-size: 13px; color: var(--color-ink-2); }
@@ -959,9 +959,9 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: v
   .img-grid { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
   /* 移动端固定上传 / 批量栏会盖住最后一行，给内容区留底白 */
   .album-page { padding-bottom: 84px; }
-  .brand { padding: 10px 14px; }
+  .brand { padding: 10px 16px; }
   .brand .ind-label { font-size: 12px; }
-  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .brand-status { padding: 3px 8px; font-size: 11px; }
 }
 
 /* #16-c 相册照片批量导入 */
@@ -970,6 +970,6 @@ html:not(.reduce-motion) .add-tile:hover { transform: scale(1.03); box-shadow: v
 .import-upload { :deep(.n-upload-trigger), :deep(.n-upload-file-info__thumbnail) { border-radius: 8px; } }
 .import-hint { margin: 0; font-size: 12px; color: var(--n-text-color-3, #9aa0a6); line-height: 1.5; }
 .import-result { display: flex; flex-direction: column; gap: 8px; }
-.import-errors { margin: 0; padding-left: 18px; font-size: 12px; color: #d97706; line-height: 1.6; }
+.import-errors { margin: 0; padding-left: 16px; font-size: 12px; color: #d97706; line-height: 1.6; }
 .import-errors strong { color: #b45309; }
 </style>

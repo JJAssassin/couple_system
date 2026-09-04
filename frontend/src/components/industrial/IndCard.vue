@@ -17,7 +17,7 @@ withDefaults(defineProps<{ as?: string; title?: string; led?: boolean }>(), {
 <style scoped>
 .ind-card-shell {
   position: relative; background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg); padding: 18px;
+  border-radius: var(--radius-lg); padding: 16px;
   box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.5);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
 }

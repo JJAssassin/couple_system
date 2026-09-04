@@ -120,7 +120,7 @@
         <p class="desc">关键帧留停顿，靠停留感知状态变化。</p>
         <button class="demo-btn rose" @click="drawer = true">从底部升起</button>
         <BottomDrawer v-model="drawer" title="给 TA 的一句话">
-          <p style="margin: 4px 0 14px; color: var(--color-ink-2)">抽屉升起时会有一次轻微“落定”的停顿。</p>
+          <p style="margin: 4px 0 16px; color: var(--color-ink-2)">抽屉升起时会有一次轻微“落定”的停顿。</p>
           <button class="demo-btn rose w-full" v-ripple @click="drawer = false">发送并收起</button>
         </BottomDrawer>
       </div>
@@ -152,7 +152,7 @@ function noop() {}
 <style scoped>
 .show { max-width: 980px; margin: 0 auto; padding: 8px 4px 40px; }
 .show-head h1 { font-size: 22px; margin: 0 0 6px; }
-.sub { color: var(--color-ink-2); font-size: 14px; line-height: 1.7; margin: 0 0 18px; }
+.sub { color: var(--color-ink-2); font-size: 14px; line-height: 1.7; margin: 0 0 16px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
 .cell {
   background: var(--color-surface); border: 1px solid var(--color-border);
@@ -164,7 +164,7 @@ function noop() {}
 .state { font-size: 13px; color: var(--color-ink-3); }
 .demo-btn {
   align-self: flex-start; font-family: var(--font-sans); font-weight: 600; font-size: 14px;
-  padding: 10px 18px; border-radius: var(--radius-md); cursor: pointer; border: 1px solid var(--color-border);
+  padding: 10px 16px; border-radius: var(--radius-md); cursor: pointer; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink); transition: all var(--fx-dur-micro, 140ms) var(--fx-ease-soft, ease);
 }
 .demo-btn.rose { background: var(--color-rose); color: var(--color-on-primary); border-color: var(--color-rose); }
@@ -188,5 +188,5 @@ function noop() {}
 }
 .stack-base { background: linear-gradient(135deg, var(--color-cocoa), var(--color-ink-2)); }
 .stack-top { background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%); box-shadow: 0 10px 30px -8px rgba(255,111,125,0.5); z-index: 2; }
-.foot { margin-top: 22px; color: var(--color-ink-3); font-size: 12px; text-align: center; }
+.foot { margin-top: 24px; color: var(--color-ink-3); font-size: 12px; text-align: center; }
 </style>

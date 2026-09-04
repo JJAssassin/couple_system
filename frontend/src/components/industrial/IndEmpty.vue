@@ -53,7 +53,7 @@ defineEmits<{ (e: 'action'): void }>();
   background: var(--color-surface-2);
   border: 1px dashed var(--color-border);
 }
-.art { position: relative; width: 96px; height: 96px; margin: 0 auto 14px; }
+.art { position: relative; width: 96px; height: 96px; margin: 0 auto 16px; }
 .art.no-art { width: auto; height: auto; margin-bottom: 4px; }
 .art-svg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.5; }
 .ring { fill: none; stroke: var(--color-accent); stroke-width: 2; opacity: 0.35; }

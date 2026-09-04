@@ -388,7 +388,7 @@ onUnmounted(() => {
 
 .detail-row { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
 .detail-row .k, .detail-block .k { color: var(--color-ink-3); font-size: 13px; }
-.detail-block { margin: 14px 0; }
+.detail-block { margin: 16px 0; }
 .detail-block p { margin: 6px 0 0; white-space: pre-wrap; line-height: 1.8; }
 .detail-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
 

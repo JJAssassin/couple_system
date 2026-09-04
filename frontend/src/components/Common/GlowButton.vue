@@ -23,7 +23,7 @@ defineEmits<{ (e: 'click', ev: MouseEvent): void }>();
 <style scoped>
 .uvi-glow-btn {
   width: 100%;
-  padding: 12px 18px;
+  padding: 12px 16px;
   border: none;
   border-radius: var(--radius-lg, 16px);
   background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);

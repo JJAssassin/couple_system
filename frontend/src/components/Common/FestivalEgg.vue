@@ -115,7 +115,7 @@ onMounted(check)
   position: relative;
   overflow: hidden;
   width: min(86vw, 360px);
-  padding: 30px 26px 26px;
+  padding: 30px 24px 24px;
   border-radius: 22px;
   text-align: center;
   background: var(--color-surface);
@@ -141,7 +141,7 @@ onMounted(check)
 .egg-sub { margin-top: 10px; font-size: 13px; color: var(--color-ink-3); }
 .egg-btn {
   margin-top: 20px;
-  padding: 10px 22px;
+  padding: 10px 24px;
   border: none;
   border-radius: 999px;
   cursor: pointer;

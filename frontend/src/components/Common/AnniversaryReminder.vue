@@ -80,7 +80,7 @@ onMounted(checkAnniversaryReminders);
   z-index: 1600; max-width: min(92vw, 420px);
   display: flex; align-items: center; gap: 10px;
   background: var(--color-surface); border: 1px solid var(--color-rose);
-  border-radius: 16px; padding: 12px 14px; cursor: pointer;
+  border-radius: 16px; padding: 12px 16px; cursor: pointer;
   box-shadow: 0 12px 32px -8px rgba(255, 111, 125, 0.35);
 }
 .rem-ico { font-size: 22px; }

@@ -445,7 +445,7 @@ async function handleShare() {
 .memo-card {
   background: #ffffff;
   border-radius: 12px;
-  padding: 18px 20px;
+  padding: 16px 20px;
   box-shadow: 0 4px 12px rgba(60, 54, 51, 0.05);
   margin-bottom: 20px;
   position: relative;
@@ -459,7 +459,7 @@ async function handleShare() {
 .section-title {
   font-size: 16px;
   font-weight: 700;
-  margin: 0 0 14px 0;
+  margin: 0 0 16px 0;
   color: #4a3e39;
 }
 

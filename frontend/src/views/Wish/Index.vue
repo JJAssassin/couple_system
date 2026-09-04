@@ -605,7 +605,7 @@ onMounted(async () => {
 <style scoped>
 .wish-page { max-width: 960px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -617,35 +617,35 @@ onMounted(async () => {
   background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
-.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .head-left { display: flex; align-items: center; gap: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
 .brand-icon { margin-right: 2px; flex: 0 0 auto; }
 /* 逾期/临近统计（与 Todo 一致） */
 .head-stat { display: flex; flex-direction: column; line-height: 1.1; }
 .overdue-num { font-size: 20px; font-weight: 700; color: var(--color-rose); font-family: var(--font-mono); }
-.head-stat.warn { margin-left: 14px; }
+.head-stat.warn { margin-left: 16px; }
 .duesoon-num { font-size: 20px; font-weight: 700; color: #D98E3C; font-family: var(--font-mono); }
 .head-stat-label { font-size: 12px; color: var(--color-ink-3); }
 /* 期望时间预警角标（与 Todo 一致：玫瑰逾期 / 琥珀临近） */
 .wish-due-soon {
   color: #fff; background: linear-gradient(135deg, #E8B06A 0%, #D98E3C 100%);
-  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
 }
 .wish-overdue {
   color: #fff; background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
-  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;
 }
 .wish-overdue.lv1 { background: linear-gradient(135deg, var(--color-rose-soft) 0%, var(--color-rose) 100%); }
 .wish-overdue.lv3 { background: linear-gradient(135deg, var(--color-rose-vivid) 0%, #E0394F 100%); }
-.filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .type-tabs { flex: 1 1 320px; min-width: 0; }
 .status-select { flex: 0 0 auto; width: 118px; }
 @media (max-width: 520px) {
   .type-tabs { flex: 1 1 100%; }
   .status-select { width: 100%; }
 }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 /* vuedraggable #item 槽需单一根节点：用 .wish-cell 包裹 v-if/v-else 两分支；flex 让内部 FlipCard/SwipeCard 填满单元格并等高对齐 */
 .wish-cell { display: flex; }
 .wish-cell > .wish-card { width: 100%; }
@@ -699,9 +699,9 @@ html:not(.reduce-motion) .wish-face:hover {
 /* 移动端：单列 + 模态全屏 */
 @media (max-width: 767px) {
   .cards { grid-template-columns: 1fr; }
-  .brand { padding: 10px 14px; }
+  .brand { padding: 10px 16px; }
   .brand .ind-label { font-size: 12px; }
-  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .brand-status { padding: 3px 8px; font-size: 11px; }
 }
 
 </style>

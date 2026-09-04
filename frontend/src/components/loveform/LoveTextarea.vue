@@ -82,7 +82,7 @@ onMounted(() => nextTick(autoGrow));
 .lf-textarea-wrap {
   background: var(--color-surface-2);
   border-radius: 12px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   transition:
     box-shadow var(--dur-micro) var(--ease-love),
     background var(--dur-micro) var(--ease-love);

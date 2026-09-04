@@ -415,7 +415,7 @@ onMounted(async () => {
 <style scoped>
 .quiz-page { max-width: 880px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -426,21 +426,21 @@ onMounted(async () => {
 }
 .brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .quiz-rel { color: var(--color-rose); opacity: 0.85; }
-.page-head { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.page-head { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
 .sub { font-size: 13px; color: var(--color-ink-3); }
 
 .stat-card {
-  display: flex; align-items: center; gap: 20px; padding: 16px 18px; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 20px; padding: 16px 16px; margin-bottom: 16px;
   flex-wrap: wrap;
 }
-.stat-nums { display: flex; gap: 22px; }
+.stat-nums { display: flex; gap: 24px; }
 .stat-item { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .stat-item .n { font-size: 22px; font-weight: 700; font-family: var(--font-mono); color: var(--color-ink); }
 .stat-item .n.hit { color: var(--color-rose-text); }
 .stat-item .l { font-size: 11px; }
 .stat-tip { flex: 1 1 180px; font-size: 12px; line-height: 1.5; text-align: right; }
 
-.active, .starter { padding: 18px; margin-bottom: 18px; }
+.active, .starter { padding: 16px; margin-bottom: 16px; }
 .active-top { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .badge {
   display: inline-flex; align-items: center; gap: 4px; font-size: 11px;
@@ -453,12 +453,12 @@ onMounted(async () => {
 }
 .active-top .n-button { margin-left: auto; }
 
-.q-text { font-size: 17px; margin: 0 0 14px; line-height: 1.5; color: var(--color-ink); }
+.q-text { font-size: 17px; margin: 0 0 16px; line-height: 1.5; color: var(--color-ink); }
 
 .options { display: flex; flex-direction: column; gap: 10px; }
 .opt {
   display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
-  padding: 12px 14px; border-radius: var(--radius-md, 12px); cursor: pointer;
+  padding: 12px 16px; border-radius: var(--radius-md, 12px); cursor: pointer;
   background: var(--color-surface-2); border: 1.5px solid var(--color-border);
   transition: transform var(--dur-micro) var(--ease-love), border-color var(--dur-micro) var(--ease-love);
 }
@@ -476,7 +476,7 @@ html:not(.reduce-motion) .opt:hover:not(:disabled) { border-color: var(--color-r
 .my-pick { margin: 0 0 6px; font-size: 14px; color: var(--color-ink); }
 .wait-tip { font-size: 12px; }
 
-.starter-tip { margin: 0 0 14px; font-size: 14px; color: var(--color-ink-2); }
+.starter-tip { margin: 0 0 16px; font-size: 14px; color: var(--color-ink-2); }
 .starter-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
 .history { margin-top: 6px; }
@@ -484,7 +484,7 @@ html:not(.reduce-motion) .opt:hover:not(:disabled) { border-color: var(--color-r
 .sec-head h2 { margin: 0; font-size: 16px; }
 
 .rounds { display: flex; flex-direction: column; gap: 12px; }
-.round { padding: 14px 16px; position: relative; border-left: 4px solid var(--color-border); }
+.round { padding: 16px 16px; position: relative; border-left: 4px solid var(--color-border); }
 .quiz-round-wrap { display: block; transform-style: preserve-3d; }
 .round.matched { border-left-color: var(--color-rose); }
 .round-top { display: flex; align-items: center; gap: 10px; }

@@ -230,13 +230,13 @@ async function handleShare() {
   font-family: "Noto Serif SC", "Songti SC", "STZhongsong", "SimSun", serif;
   font-size: 30px; font-weight: 700; letter-spacing: 0.1em; color: rgba(43, 20, 22, 0.85);
 }
-.mp-num-row { display: flex; align-items: baseline; justify-content: center; gap: 18px; margin-top: 30px; }
+.mp-num-row { display: flex; align-items: baseline; justify-content: center; gap: 16px; margin-top: 30px; }
 .mp-num {
   font-family: "Noto Serif SC", "Songti SC", "STZhongsong", "SimSun", serif;
   font-size: 150px; font-weight: 800; line-height: 1; color: #2b1416; letter-spacing: -0.02em;
 }
 .mp-unit { font-size: 42px; font-weight: 700; color: #2b1416; }
-.mp-rule { display: flex; align-items: center; gap: 20px; margin: 40px 0 34px; }
+.mp-rule { display: flex; align-items: center; gap: 20px; margin: 40px 0 32px; }
 .mp-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(43, 20, 22, 0.45), transparent); }
 .mp-heart-big { font-size: 34px; color: #2b1416; line-height: 1; }
 .mp-sign {

@@ -621,7 +621,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 <style scoped>
 .diary-page { max-width: 880px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -635,7 +635,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .diary-rel { color: var(--color-rose); opacity: 0.85; }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
-.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
 .sec-head { gap: 12px; }
 .sec-head :deep(.ind-sec-title) { flex: 1 1 auto; min-width: 0; margin: 0; }
@@ -660,7 +660,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .meta :deep(svg) { color: var(--color-rose-text); flex: 0 0 auto; }
 .mood-tag { color: var(--color-rose-text); font-size: 12px; margin-top: 6px; }
 
-.mood-strip { padding: 14px 16px; margin-bottom: 16px; }
+.mood-strip { padding: 16px 16px; margin-bottom: 16px; }
 .ms-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
 .ms-title { font-weight: 600; font-size: 15px; }
 .ms-sub { font-size: 12px; color: var(--color-ink-3); }
@@ -688,7 +688,7 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .comment-input :deep(textarea) {
   font-size: 15px;
   line-height: 1.65;
-  padding: 12px 14px;
+  padding: 12px 16px;
   resize: vertical;
 }
 .comment-box .n-button { align-self: flex-end; min-width: 92px; }
@@ -714,11 +714,11 @@ const drawerWidth = computed(() => (isMobile() ? '100%' : 460));
 .mention-empty { padding: 8px 10px; font-size: 13px; color: var(--color-ink-3); }
 .mention { color: var(--color-rose-text); font-weight: 600; }
 
-.diary-form { display: flex; flex-direction: column; gap: 18px; }
+.diary-form { display: flex; flex-direction: column; gap: 16px; }
 
 @media (max-width: 767px) {
-  .brand { padding: 10px 14px; }
+  .brand { padding: 10px 16px; }
   .brand .ind-label { font-size: 12px; }
-  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .brand-status { padding: 3px 8px; font-size: 11px; }
 }
 </style>

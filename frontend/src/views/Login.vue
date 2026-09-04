@@ -73,16 +73,16 @@ async function onSubmit() {
 @keyframes login-pop { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
 .reduce-motion .login-card { animation: none; }
 .brand-mark {
-  width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 14px; display: grid; place-items: center;
+  width: 52px; height: 52px; border-radius: 16px; margin: 0 auto 16px; display: grid; place-items: center;
   color: var(--color-on-primary); background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   box-shadow: 0 8px 22px -8px rgba(255, 111, 125, 0.5);
 }
 h1 { color: var(--color-ink); font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
-label { display: block; text-align: left; font-size: 13px; color: var(--color-ink-2); margin: 18px 0 6px; }
+label { display: block; text-align: left; font-size: 13px; color: var(--color-ink-2); margin: 16px 0 6px; }
 input { width: 100%; box-sizing: border-box; padding: 11px 12px; border: 1px solid var(--color-border);
   border-radius: 10px; font-size: 14px; outline: none; background: var(--color-surface-2); color: var(--color-ink);
   transition: border-color var(--dur-micro) var(--ease-love), box-shadow var(--dur-micro) var(--ease-love); }
 input:focus { border-color: var(--color-rose); box-shadow: 0 0 0 3px var(--color-rose-soft); }
-.login-submit { margin-top: 22px; }
+.login-submit { margin-top: 24px; }
 .hint { margin-top: 16px; font-size: 12px; color: var(--color-ink-3); }
 </style>

@@ -551,7 +551,7 @@ async function doCommit() {
 
 /* 品牌条 */
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 18px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 16px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -564,13 +564,13 @@ async function doCommit() {
 }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 
-.block { margin-bottom: 18px; }
+.block { margin-bottom: 16px; }
 .set-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
 .set-row + .set-row { border-top: 1px solid var(--color-ink-soft); }
 .set-row-top { align-items: flex-start; }
 .theme-seg { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .theme-seg button {
-  padding: 7px 14px; border-radius: var(--radius-md); cursor: pointer; font-size: 13px; font-weight: 600;
+  padding: 7px 16px; border-radius: var(--radius-md); cursor: pointer; font-size: 13px; font-weight: 600;
   border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-ink-2);
   transition: all var(--dur-micro) var(--ease-love);
 }
@@ -600,8 +600,8 @@ html:not(.reduce-motion) .sw:hover { transform: scale(1.12); }
   background: var(--color-rose-soft);
 }
 .bind-card {
-  display: flex; align-items: center; gap: 14px;
-  padding: 14px; border-radius: var(--radius-lg);
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px; border-radius: var(--radius-lg);
   background: var(--color-surface); border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
 }
@@ -638,10 +638,10 @@ html:not(.reduce-motion) .sw:hover { transform: scale(1.12); }
 .svr-save { margin-top: 10px; }
 
 @media (max-width: 767px) {
-  .brand { padding: 10px 14px; margin-bottom: 14px; }
+  .brand { padding: 10px 16px; margin-bottom: 16px; }
   .brand .ind-label { font-size: 12px; }
-  .brand-status { padding: 3px 9px; font-size: 11px; }
-  .block { margin-bottom: 14px; }
+  .brand-status { padding: 3px 8px; font-size: 11px; }
+  .block { margin-bottom: 16px; }
   .set-row { flex-wrap: wrap; gap: 8px; }
   .theme-seg, .swatches { justify-content: flex-start; }
   .theme-hint { text-align: left; }

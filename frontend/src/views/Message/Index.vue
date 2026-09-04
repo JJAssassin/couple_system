@@ -473,11 +473,11 @@ onUnmounted(() => {
 
 <style scoped>
 .msg-page { max-width: 880px; margin: 0 auto; }
-.block { margin: 22px 0; }
+.block { margin: 24px 0; }
 
 /* 品牌条 */
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -490,17 +490,17 @@ onUnmounted(() => {
 .brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .msg-rel { color: var(--color-rose); opacity: 0.85; }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
-.lead { margin: 0 0 18px; font-size: 13px; color: var(--color-ink-3); }
+.lead { margin: 0 0 16px; font-size: 13px; color: var(--color-ink-3); }
 
 /* 操作区 + 统计瓷砖 */
-.page-head { display: flex; align-items: flex-end; justify-content: flex-end; margin-bottom: 14px; }
+.page-head { display: flex; align-items: flex-end; justify-content: flex-end; margin-bottom: 16px; }
 .ops { display: flex; gap: 10px; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
-.grp { margin: 22px 0; }
+.grp { margin: 24px 0; }
 .list { display: flex; flex-direction: column; gap: 12px; }
 .m-card {
-  display: flex; gap: 14px; align-items: flex-start; cursor: pointer;
+  display: flex; gap: 16px; align-items: flex-start; cursor: pointer;
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
 }
 .m-card.unread { box-shadow: 0 0 0 1.5px var(--color-rose), var(--shadow-card); }
@@ -532,9 +532,9 @@ onUnmounted(() => {
 .m-check.on { background: var(--color-rose); border-color: var(--color-rose); }
 .m-card.selected { box-shadow: 0 0 0 1.5px var(--color-rose), var(--elev-2); }
 .sel-bar {
-  position: sticky; bottom: 12px; z-index: 20; margin-top: 18px;
+  position: sticky; bottom: 12px; z-index: 20; margin-top: 16px;
   display: flex; align-items: center; gap: 10px;
-  padding: 10px 14px; border-radius: 14px;
+  padding: 10px 16px; border-radius: 14px;
   background: var(--color-surface); border: 1px solid var(--color-border);
   box-shadow: var(--shadow-float);
 }
@@ -542,7 +542,7 @@ onUnmounted(() => {
 .sel-btn {
   border: 1px solid var(--color-border); background: var(--color-surface-2);
   color: var(--color-ink); font-size: 13px; font-weight: 600;
-  padding: 7px 14px; border-radius: 999px; cursor: pointer;
+  padding: 7px 16px; border-radius: 999px; cursor: pointer;
   transition: all var(--dur-micro) var(--ease-love);
 }
 .sel-btn:hover:not(:disabled) { border-color: var(--color-rose); color: var(--color-rose-text); }
@@ -554,7 +554,7 @@ onUnmounted(() => {
 .msg-reactions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .reaction-pill {
   display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
-  border: 1px solid var(--color-border); padding: 3px 9px 3px 6px; border-radius: 999px;
+  border: 1px solid var(--color-border); padding: 3px 8px 3px 6px; border-radius: 999px;
   font-size: 12px; background: var(--color-surface-2); color: var(--color-ink-2);
   transition: all var(--dur-micro) var(--ease-love);
 }

@@ -66,7 +66,7 @@ function clear() {
 </script>
 
 <style scoped>
-.img-field { display: flex; align-items: center; gap: 14px; }
+.img-field { display: flex; align-items: center; gap: 16px; }
 .img-thumb {
   position: relative; flex: 0 0 auto; border-radius: var(--radius-md, 10px);
   overflow: hidden; background: var(--color-surface-2);

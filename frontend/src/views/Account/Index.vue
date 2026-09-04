@@ -638,7 +638,7 @@ onMounted(async () => {
 <style scoped>
 .account { max-width: 880px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -665,8 +665,8 @@ onMounted(async () => {
   font-feature-settings: "tnum" 1;
   letter-spacing: -0.03em;
 }
-.hero-sub { color: var(--color-ink-3); font-size: 13px; display: flex; gap: 18px; justify-content: center; }
-.block { margin: 22px 0; }
+.hero-sub { color: var(--color-ink-3); font-size: 13px; display: flex; gap: 16px; justify-content: center; }
+.block { margin: 24px 0; }
 .block h2 { font-size: 16px; margin: 0 0 12px; }
 .block-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
 .block-head h2 { margin: 0; }
@@ -675,8 +675,8 @@ onMounted(async () => {
 .month-pick { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
 /* 预算 */
-.budget-body { display: flex; flex-direction: column; gap: 14px; }
-.budget-overall { background: var(--color-surface-2); border-radius: 12px; padding: 14px 16px; }
+.budget-body { display: flex; flex-direction: column; gap: 16px; }
+.budget-overall { background: var(--color-surface-2); border-radius: 12px; padding: 16px 16px; }
 .bo-top { display: flex; justify-content: space-between; font-size: 14px; color: var(--color-ink-2); }
 .bo-top .over { color: var(--color-rose-text); font-weight: 600; }
 .bar { height: 10px; background: var(--color-surface-2); border-radius: 6px; overflow: hidden; margin: 10px 0 8px; }
@@ -701,7 +701,7 @@ onMounted(async () => {
 .cb-amt { color: var(--color-ink-2); }
 .cb-add { display: flex; gap: 8px; align-items: center; }
 
-.rec-tabs { margin-bottom: 14px; }
+.rec-tabs { margin-bottom: 16px; }
 .records { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
 .rec { display: flex; align-items: center; gap: 12px; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love); }
 .rec:hover { box-shadow: var(--elev-3); }
@@ -717,9 +717,9 @@ onMounted(async () => {
 @media (max-width: 767px) {
   .records { grid-template-columns: 1fr; }
   .cat-list { grid-template-columns: 1fr; }
-  .brand { padding: 10px 14px; }
+  .brand { padding: 10px 16px; }
   .brand .ind-label { font-size: 12px; }
-  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .brand-status { padding: 3px 8px; font-size: 11px; }
 }
 
 /* 美化记账模态框 */
@@ -730,7 +730,7 @@ onMounted(async () => {
 }
 :global(.account-modal .n-modal-header) {
   background: linear-gradient(135deg, var(--color-income-soft), var(--color-surface)) !important;
-  padding: 18px 24px !important;
+  padding: 16px 24px !important;
   border-bottom: 1px solid var(--color-border);
 }
 :global(.account-modal .n-modal-header .n-modal-header__close) {
@@ -763,7 +763,7 @@ onMounted(async () => {
 .account-textarea :deep(textarea) {
   font-size: 15px;
   line-height: 1.7;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-radius: 10px;
 }
 .account-foot {
@@ -823,7 +823,7 @@ html:not(.reduce-motion) .account-btn-primary:hover {
 }
 :global(.poster-modal .n-modal-header) {
   background: linear-gradient(135deg, var(--color-rose-soft), var(--color-surface)) !important;
-  padding: 18px 24px !important;
+  padding: 16px 24px !important;
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -855,7 +855,7 @@ html:not(.reduce-motion) .account-btn-primary:hover {
 }
 
 /* 批量导入账单 */
-.import-body { display: flex; flex-direction: column; gap: 14px; }
+.import-body { display: flex; flex-direction: column; gap: 16px; }
 .import-tip { font-size: 13px; color: var(--color-ink-3); margin: 0; line-height: 1.6; }
 .import-file {
   display: block; width: 100%; padding: 10px 12px; font-size: 14px;

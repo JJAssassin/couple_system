@@ -65,12 +65,12 @@ function lineCls(i: number) {
 
 .sk-line { height: 14px; margin: 10px 0; border-radius: var(--radius-sm); }
 .sk-block { border-radius: var(--radius-lg); }
-.sk-hero { height: 96px; margin-bottom: 14px; }
+.sk-hero { height: 96px; margin-bottom: 16px; }
 
 .sk-grid { display: grid; gap: 12px; }
 .sk-box { aspect-ratio: 1 / 1; border-radius: var(--radius-md); }
 
-.sk-row { display: flex; align-items: center; gap: 14px; padding: 12px 0; }
+.sk-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; }
 .sk-dot { width: 44px; height: 44px; border-radius: 50%; flex: 0 0 auto; }
 .sk-lines { flex: 1; }
 .sk-lines .sk-line:first-child { margin-top: 0; }

@@ -397,7 +397,7 @@ async function share() {
 .polaroid-img img { width: 100%; height: 100%; object-fit: cover; }
 .ph-img { font-size: 120px; }
 .polaroid-cap {
-  text-align: center; font-size: 26px; color: #9a6b72; margin-top: 18px;
+  text-align: center; font-size: 26px; color: #9a6b72; margin-top: 16px;
   font-family: "STKaiti", "KaiTi", Georgia, serif;
 }
 
@@ -418,14 +418,14 @@ async function share() {
 /* 统计网格 */
 .stat-grid {
   position: relative; z-index: 1;
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
   margin: 44px 54px 0; padding: 0;
 }
 .stat-cell {
   background: rgba(255, 255, 255, 0.72);
   border: 1px solid rgba(255, 111, 125, 0.18);
   border-radius: 16px;
-  padding: 18px 14px;
+  padding: 16px 16px;
   display: flex; flex-direction: column; align-items: center;
   gap: 6px;
   box-shadow: 0 6px 16px rgba(93, 58, 63, 0.06);
@@ -438,14 +438,14 @@ async function share() {
 .section { position: relative; z-index: 1; margin: 44px 54px 0; }
 .sec-title {
   display: inline-flex; align-items: center; gap: 10px;
-  font-size: 32px; font-weight: 700; color: #5d3a3f; margin-bottom: 18px;
+  font-size: 32px; font-weight: 700; color: #5d3a3f; margin-bottom: 16px;
   font-family: "STKaiti", "KaiTi", Georgia, serif;
 }
 .dot { width: 12px; height: 12px; border-radius: 50%; background: var(--color-rose); }
 
 /* 照片墙 */
 .photo-wall {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
 }
 .wall-item {
   aspect-ratio: 1; border-radius: 10px; overflow: hidden;
@@ -463,7 +463,7 @@ async function share() {
 .fp-card {
   display: flex; align-items: center; gap: 10px;
   background: #fff; border: 1px solid rgba(255, 111, 125, 0.16);
-  border-radius: 14px; padding: 14px 22px;
+  border-radius: 14px; padding: 16px 24px;
   box-shadow: 0 6px 14px rgba(93, 58, 63, 0.06);
 }
 .fp-emoji { font-size: 34px; }
@@ -471,11 +471,11 @@ async function share() {
 .fp-count { font-size: 22px; color: #9a6b72; margin-left: 6px; }
 
 /* 纪念日 */
-.ann-row { display: flex; flex-wrap: wrap; gap: 14px; }
+.ann-row { display: flex; flex-wrap: wrap; gap: 16px; }
 .ann-chip {
   display: flex; align-items: center; gap: 10px;
   background: rgba(255, 234, 237, 0.7); border: 1px dashed rgba(255, 111, 125, 0.25);
-  border-radius: 999px; padding: 12px 22px;
+  border-radius: 999px; padding: 12px 24px;
 }
 .ann-ico { font-size: 28px; }
 .ann-name { font-size: 26px; font-weight: 600; color: #5d3a3f; }
@@ -485,7 +485,7 @@ async function share() {
 .finance { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
 .fin-card {
   background: #fff; border: 1px solid rgba(255, 111, 125, 0.14);
-  border-radius: 16px; padding: 22px 16px; text-align: center;
+  border-radius: 16px; padding: 24px 16px; text-align: center;
   box-shadow: 0 6px 14px rgba(93, 58, 63, 0.06);
 }
 .fin-label { font-size: 24px; color: #9a6b72; }
@@ -520,9 +520,9 @@ async function share() {
 .footer-line { font-size: 24px; color: #9a6b72; margin-top: 12px; }
 
 /* 预览外层滚动与操作 */
-.poster-actions { display: flex; gap: 10px; margin-top: 14px; }
+.poster-actions { display: flex; gap: 10px; margin-top: 16px; }
 .p-btn {
-  padding: 10px 22px; border-radius: 999px; border: 1px solid var(--color-border);
+  padding: 10px 24px; border-radius: 999px; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink-2); font-size: 14px; cursor: pointer;
 }
 .p-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: var(--color-on-primary); font-weight: 600; }

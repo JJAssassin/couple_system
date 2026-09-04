@@ -78,7 +78,7 @@ function go() {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
-  padding: 14px 12px;
+  padding: 16px 12px;
   text-align: center;
   box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);

@@ -482,7 +482,7 @@ onUnmounted(() => {
 <style scoped>
 .anniv-page { max-width: 880px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -496,12 +496,12 @@ onUnmounted(() => {
 }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
 
-.block { margin: 22px 0; }
+.block { margin: 24px 0; }
 
 /* ---------- 英雄卡 ---------- */
 .hero {
-  position: relative; display: flex; align-items: center; gap: 18px;
-  padding: 22px 24px; border-radius: var(--radius-lg);
+  position: relative; display: flex; align-items: center; gap: 16px;
+  padding: 24px 24px; border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--color-rose-soft), var(--color-surface));
   border: 1px solid var(--color-rose-soft);
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04), 0 18px 44px -16px rgba(214, 100, 120, 0.34);
@@ -529,7 +529,7 @@ onUnmounted(() => {
 
 .head-row { display: flex; align-items: center; justify-content: space-between; }
 .add-btn {
-  border: 1px solid var(--color-border); cursor: pointer; padding: 9px 16px; border-radius: 999px;
+  border: 1px solid var(--color-border); cursor: pointer; padding: 8px 16px; border-radius: 999px;
   color: var(--color-rose-text); font-size: 13px; background: var(--color-rose-soft);
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
   transition: all var(--dur-micro) var(--ease-love);
@@ -540,7 +540,7 @@ onUnmounted(() => {
 .anniv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .anniv-card-wrap { display: block; transform-style: preserve-3d; }
 .anniv-card {
-  position: relative; height: 100%; padding: 18px 18px 14px; border-radius: var(--radius-lg);
+  position: relative; height: 100%; padding: 16px 16px 16px; border-radius: var(--radius-lg);
   background: var(--color-surface); border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
@@ -551,7 +551,7 @@ html:not(.reduce-motion) .anniv-card:hover { box-shadow: 0 4px 12px rgba(31, 41,
 .anniv-card.pop { animation: acPop 0.3s var(--ease-love); }
 @keyframes acPop { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
 
-.ac-cover { height: 92px; margin: -18px -18px 14px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; background-size: cover; background-position: center; }
+.ac-cover { height: 92px; margin: -16px -16px 16px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; background-size: cover; background-position: center; }
 
 .ac-top { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
 .ac-type-ico { color: var(--color-rose-text); }
@@ -572,7 +572,7 @@ html:not(.reduce-motion) .anniv-card:hover { box-shadow: 0 4px 12px rgba(31, 41,
 .ac-expired { color: var(--color-ink-3); }
 
 .ac-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
-.badge { font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; }
+.badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
 .badge.occ { color: var(--color-rose-text); background: var(--color-rose-soft); border: 1px solid var(--color-rose-soft); }
 .badge.remind { color: var(--color-rose-text); background: var(--color-rose-soft); border: 1px solid var(--color-rose-soft); }
 .badge.today { color: var(--color-on-primary); background: var(--color-rose); }
@@ -604,10 +604,10 @@ html:not(.reduce-motion) .anniv-card:hover { box-shadow: 0 4px 12px rgba(31, 41,
 .yearly-title { font-size: 14px; font-weight: 500; color: var(--color-ink); }
 .yearly-hint { font-size: 12px; color: var(--color-ink-3); margin-top: 2px; }
 @media (max-width: 767px) {
-  .brand { padding: 10px 14px; }
+  .brand { padding: 10px 16px; }
   .brand .ind-label { font-size: 12px; }
-  .brand-status { padding: 3px 9px; font-size: 11px; }
-  .hero { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px; }
+  .brand-status { padding: 3px 8px; font-size: 11px; }
+  .hero { flex-direction: column; align-items: flex-start; gap: 16px; padding: 16px; }
   .hero-ring { align-self: center; }
   .hero-name { font-size: 17px; }
   .hero-count { flex-wrap: wrap; }
@@ -615,9 +615,9 @@ html:not(.reduce-motion) .anniv-card:hover { box-shadow: 0 4px 12px rgba(31, 41,
   .hero-hms { margin-left: 0; margin-top: 6px; font-size: 16px; }
   .hero-remind { margin-left: 0; margin-top: 6px; }
   .hero-sub { display: flex; flex-wrap: wrap; gap: 4px; }
-  .anniv-grid { grid-template-columns: 1fr; gap: 14px; }
+  .anniv-grid { grid-template-columns: 1fr; gap: 16px; }
   .history .hist-row { grid-template-columns: 1fr; }
-  .hist-stat { padding: 14px 10px; }
+  .hist-stat { padding: 16px 10px; }
   .ac-cover { height: 120px; }
   .head-row { gap: 12px; flex-wrap: wrap; }
   .add-btn { flex: 0 0 auto; }

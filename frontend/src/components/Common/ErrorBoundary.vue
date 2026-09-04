@@ -56,7 +56,7 @@ function onRetry() {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 20px;
-  padding: 32px 26px;
+  padding: 32px 24px;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.35);
 }
 .err-emoji {
@@ -64,13 +64,13 @@ function onRetry() {
   line-height: 1;
 }
 .err-title {
-  margin: 14px 0 8px;
+  margin: 16px 0 8px;
   font-size: 19px;
   font-weight: 800;
   color: var(--color-ink);
 }
 .err-desc {
-  margin: 0 0 18px;
+  margin: 0 0 16px;
   font-size: 14px;
   line-height: 1.7;
   color: var(--color-ink-2);
@@ -93,7 +93,7 @@ function onRetry() {
   appearance: none;
   border: none;
   cursor: pointer;
-  padding: 11px 22px;
+  padding: 11px 24px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 700;

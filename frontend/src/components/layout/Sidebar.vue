@@ -247,14 +247,14 @@ nav {
   padding-bottom: 8px;
 }
 
-.brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 18px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 6px 8px 16px; }
 .brand-mark {
   display: inline-flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; border-radius: 10px; flex: 0 0 auto;
   color: var(--color-on-primary); background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
 }
 .brand-name { font-weight: 600; font-size: 14px; color: var(--color-ink); letter-spacing: 0.01em; }
-.collapsed .brand { padding: 6px 0 18px; }
+.collapsed .brand { padding: 6px 0 16px; }
 
 .partner-chip {
   display: flex; align-items: center; gap: 6px; margin: -8px 0 12px; padding: 7px 10px;
@@ -300,7 +300,7 @@ nav {
 .ph-right { display: flex; align-items: center; gap: 8px; }
 .ph-all {
   border: none; background: var(--color-rose-soft); color: var(--color-rose-text);
-  font-size: 11px; padding: 3px 9px; border-radius: 999px; cursor: pointer; transition: all var(--dur-micro);
+  font-size: 11px; padding: 3px 8px; border-radius: 999px; cursor: pointer; transition: all var(--dur-micro);
 }
 .ph-all:active { transform: scale(0.95); }
 .close { border: none; background: none; font-size: 18px; cursor: pointer; color: var(--color-ink-3); }
@@ -324,7 +324,7 @@ html:not(.reduce-motion) .msg-list li.unread:active .swipe-hint { opacity: 0.8; 
 .md { color: var(--color-ink-3); font-size: 11px; margin-top: 4px; font-family: var(--font-mono); }
 
 .nav-item {
-  display: flex; align-items: center; gap: 11px; padding: 10px 13px; border-radius: 12px;
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px;
   color: var(--color-ink-2); text-decoration: none; font-size: 14px; position: relative;
   transition: all var(--dur-pop) var(--ease-love);
 }

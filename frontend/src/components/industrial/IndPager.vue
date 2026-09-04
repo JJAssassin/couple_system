@@ -43,13 +43,13 @@ function go(p: number) {
 
 <style scoped>
 .ind-pager {
-  display: flex; align-items: center; justify-content: center; gap: 14px;
-  padding: 18px 0 8px; color: var(--color-ink-3); font-size: 13px;
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 16px 0 8px; color: var(--color-ink-3); font-size: 13px;
 }
 .pg-info { font-family: var(--font-mono); letter-spacing: 0.04em; }
 .pg-btn {
   min-width: 92px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 8px 14px; border-radius: var(--radius-md); cursor: pointer; font-weight: 600;
+  padding: 8px 16px; border-radius: var(--radius-md); cursor: pointer; font-weight: 600;
   background: var(--color-surface); color: var(--color-ink);
   border: 1px solid var(--color-border);
   transition: all var(--dur-micro) var(--ease-love);

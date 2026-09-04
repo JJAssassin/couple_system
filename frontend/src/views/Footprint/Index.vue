@@ -360,7 +360,7 @@ onMounted(async () => {
 <style scoped>
 .footprint-page { max-width: 880px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -376,7 +376,7 @@ onMounted(async () => {
 
 .head-row { display: flex; align-items: center; justify-content: space-between; }
 .add-btn {
-  border: 1px solid var(--color-border); cursor: pointer; padding: 9px 16px; border-radius: 999px;
+  border: 1px solid var(--color-border); cursor: pointer; padding: 8px 16px; border-radius: 999px;
   color: var(--color-rose-text); font-size: 13px; background: var(--color-rose-soft);
   box-shadow: 0 1px 2px rgba(31, 41, 55, 0.04);
   transition: all var(--dur-micro) var(--ease-love);
@@ -384,14 +384,14 @@ onMounted(async () => {
 html:not(.reduce-motion) .add-btn:hover { background: var(--color-rose); color: #fff; transform: translateY(-1px); box-shadow: 0 8px 18px -8px rgba(255, 111, 125, 0.5); }
 .add-btn:active { transform: scale(0.97); }
 
-.block { margin: 22px 0; }
+.block { margin: 24px 0; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
 .fp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
 .fp-card-wrap { display: block; transform-style: preserve-3d; }
 .fp-card {
   position: relative; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 26px 16px 20px; cursor: pointer; text-align: center; border-radius: var(--radius-lg);
+  padding: 24px 16px 20px; cursor: pointer; text-align: center; border-radius: var(--radius-lg);
   background: var(--color-surface); border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love);
@@ -468,7 +468,7 @@ html:not(.reduce-motion) .fp-card:hover .fp-emoji { transform: scale(1.07) rotat
 }
 .emoji-input:focus { outline: none; border-color: var(--color-rose); box-shadow: 0 0 0 3px var(--color-rose-soft); }
 
-.emoji-section { margin-bottom: 14px; }
+.emoji-section { margin-bottom: 16px; }
 .emoji-section:last-child { margin-bottom: 0; }
 .emoji-section-title {
   display: block; font-size: 12px; font-weight: 600; color: var(--color-ink-3);

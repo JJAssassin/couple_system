@@ -146,14 +146,14 @@ if (!auth.accessToken) {
   width: min(92vw, 380px);
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 20px; padding: 26px 22px; text-align: center;
+  border-radius: 20px; padding: 24px 24px; text-align: center;
   box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.4);
 }
 .svr-ico { font-size: 40px; }
 .svr-title { margin-top: 10px; font-size: 18px; font-weight: 800; color: var(--color-ink); }
 .svr-tip { margin: 12px 0 16px; font-size: 13px; color: var(--color-ink-2); line-height: 1.7; }
 .svr-input {
-  width: 100%; padding: 11px 12px; margin-bottom: 14px;
+  width: 100%; padding: 11px 12px; margin-bottom: 16px;
   border-radius: var(--radius-md, 10px); border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink); font-size: 14px;
   box-sizing: border-box;

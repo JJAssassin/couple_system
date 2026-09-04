@@ -513,7 +513,7 @@ onUnmounted(() => {
 <style scoped>
 .home { max-width: 880px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -549,7 +549,7 @@ onUnmounted(() => {
 /* 圆整节点庆祝横幅 */
 .cele-banner {
   display: flex; align-items: center; gap: 8px; justify-content: center;
-  margin: 0 auto 18px; max-width: 520px; padding: 10px 14px; border-radius: 999px;
+  margin: 0 auto 16px; max-width: 520px; padding: 10px 16px; border-radius: 999px;
   color: var(--color-on-primary); font-weight: 600; font-size: 14px;
   background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
   box-shadow: 0 8px 24px -8px rgba(255, 111, 125, 0.5);
@@ -606,7 +606,7 @@ onUnmounted(() => {
 .hero-lovedate {
   display: inline-flex; align-items: center; gap: 7px; margin-top: 10px;
   font-size: 13px; color: var(--color-ink-2);
-  padding: 5px 14px; border-radius: 999px;
+  padding: 5px 16px; border-radius: 999px;
   background: var(--color-rose-soft); border: 1px solid var(--color-border);
 }
 .hero-lovedate :deep(svg) { color: var(--color-rose-text); }
@@ -629,7 +629,7 @@ onUnmounted(() => {
   padding: 7px 10px; border-radius: 10px; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink); font-size: 13px;
 }
-.block { margin: 22px 0; }
+.block { margin: 24px 0; }
 
 /* 今日与你（聚合卡，移动端单列、宽屏自适应多列） */
 .today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
@@ -680,7 +680,7 @@ html:not(.reduce-motion) .film-cell:hover img, html:not(.reduce-motion) .film-ce
 
 /* 数据可视化大屏 */
 .viz-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-.viz-card { padding: 14px 14px 8px; cursor: pointer; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
+.viz-card { padding: 16px 16px 8px; cursor: pointer; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
 .viz-card:hover { box-shadow: 0 0 0 2px rgba(255, 111, 125, 0.3), 0 10px 28px -10px rgba(122, 100, 98, 0.18); }
 .viz-title { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 2px; }
 .viz-hint { margin-top: 10px; font-size: 12px; color: var(--color-ink-3); text-align: center; }
@@ -701,7 +701,7 @@ html:not(.reduce-motion) .film-cell:hover img, html:not(.reduce-motion) .film-ce
 .feed-time { font-size: 12px; color: var(--color-ink-3); }
 
 /* 每日一句 */
-.quote-card { padding: 20px 22px; position: relative; overflow: hidden; }
+.quote-card { padding: 20px 24px; position: relative; overflow: hidden; }
 .quote-mark {
   position: absolute; top: -6px; left: 10px; font-size: 64px; line-height: 1;
   color: var(--color-rose-text); opacity: 0.18; font-family: Georgia, serif;
@@ -762,8 +762,8 @@ button.film-cell:focus-visible, button.stat-link:focus-visible, .viz-card.ind-ca
 }
 
 @media (max-width: 767px) {
-  .brand { padding: 10px 14px; }
+  .brand { padding: 10px 16px; }
   .brand .ind-label { font-size: 12px; }
-  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .brand-status { padding: 3px 8px; font-size: 11px; }
 }
 </style>

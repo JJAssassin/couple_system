@@ -86,10 +86,10 @@ const { dialogAttrs } = useDialogA11y({
 }
 .ob-card {
   width: min(440px, 94vw); margin: auto; background: var(--color-cream); border-radius: 24px;
-  padding: 18px 24px 22px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  padding: 16px 24px 24px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
   text-align: center; overflow: hidden;
 }
-.ob-grip { width: 40px; height: 5px; border-radius: 999px; background: var(--color-ink-soft); margin: 0 auto 14px; }
+.ob-grip { width: 40px; height: 5px; border-radius: 999px; background: var(--color-ink-soft); margin: 0 auto 16px; }
 .ob-stage { position: relative; height: 210px; }
 .ob-slide {
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -100,7 +100,7 @@ const { dialogAttrs } = useDialogA11y({
 .ob-ico { color: var(--color-rose-text); }
 .ob-slide h2 { margin: 0; font-size: 19px; color: var(--color-ink); }
 .ob-slide p { margin: 0; color: var(--color-ink-2); font-size: 14px; line-height: 1.7; padding: 0 6px; }
-.ob-pair { margin: 14px 0 4px; }
+.ob-pair { margin: 16px 0 4px; }
 .ob-pair-label { font-size: 13px; color: var(--color-ink-3); margin-bottom: 8px; }
 .ob-code {
   font-family: var(--font-mono); font-size: 30px; font-weight: 700; letter-spacing: 0.18em; color: var(--color-accent-text);
@@ -108,7 +108,7 @@ const { dialogAttrs } = useDialogA11y({
   box-shadow: inset 3px 3px 7px var(--color-ink-3), inset -3px -3px 7px #ffffff;
 }
 .ob-pair-tip { font-size: 12px; color: var(--color-ink-3); margin-top: 10px; }
-.ob-dots { display: flex; gap: 8px; justify-content: center; margin: 14px 0; }
+.ob-dots { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
 .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--color-ink-soft); transition: all var(--dur-micro) var(--ease-love); }
 .dot.on { width: 22px; background: var(--color-accent); }
 .ob-actions { display: flex; gap: 10px; }

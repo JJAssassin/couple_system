@@ -112,7 +112,7 @@ function dismiss() {
   border-radius: inherit;
   display: flex;
   align-items: center;
-  padding: 0 22px;
+  padding: 0 24px;
 }
 .fx-swipe__behind.left { justify-content: flex-start; }
 .fx-swipe__behind.right { justify-content: flex-end; }
@@ -121,7 +121,7 @@ function dismiss() {
   font-size: 14px;
   letter-spacing: 0.04em;
   background: #fff;
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 999px;
   box-shadow: 0 4px 14px -4px rgba(31, 41, 55, 0.25);
   white-space: nowrap;

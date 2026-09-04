@@ -190,9 +190,9 @@ async function share() {
 }
 .poster-wrap { display: flex; flex-direction: column; align-items: center; max-height: 92vh; overflow: auto; }
 .poster-canvas { width: min(92vw, 430px); border-radius: 18px; box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.45); }
-.poster-actions { display: flex; gap: 10px; margin-top: 14px; }
+.poster-actions { display: flex; gap: 10px; margin-top: 16px; }
 .p-btn {
-  padding: 10px 22px; border-radius: 999px; border: 1px solid var(--color-border);
+  padding: 10px 24px; border-radius: 999px; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink-2); font-size: 14px; cursor: pointer;
 }
 .p-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: var(--color-on-primary); font-weight: 600; }

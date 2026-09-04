@@ -226,8 +226,8 @@ async function handleShare() {
   font-size: 21px; letter-spacing: 0.14em; color: #7a6462;
 }
 .qp-date { font-size: 21px; letter-spacing: 0.08em; color: #a89ba0; }
-.qp-rule { display: flex; align-items: center; gap: 18px; margin: 30px 0 10px; }
-.qp-rule-b { margin: 6px 0 26px; }
+.qp-rule { display: flex; align-items: center; gap: 16px; margin: 30px 0 10px; }
+.qp-rule-b { margin: 6px 0 24px; }
 .qp-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(216, 133, 147, 0.55), transparent); }
 .qp-heart { font-size: 22px; color: #ff6f7d; line-height: 1; }
 .qp-quote-mark {
@@ -241,7 +241,7 @@ async function handleShare() {
 }
 .qp-author {
   font-family: "Noto Serif SC", "Songti SC", "STZhongsong", "SimSun", serif;
-  font-size: 24px; color: #8c827a; margin-top: 26px; text-align: right;
+  font-size: 24px; color: #8c827a; margin-top: 24px; text-align: right;
 }
 .qp-sign {
   font-family: ui-monospace, "JetBrains Mono", monospace;

@@ -223,7 +223,7 @@ function later() {
 }
 .upd-card {
   width: min(92vw, 360px); background: var(--color-surface);
-  border-radius: 20px; padding: 26px 22px; text-align: center;
+  border-radius: 20px; padding: 24px 24px; text-align: center;
   box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.35);
   max-height: 86vh; overflow-y: auto;
 }
@@ -236,7 +236,7 @@ function later() {
   padding: 10px 12px; border-radius: 10px;
 }
 .upd-tip {
-  margin-top: 12px; padding: 12px 14px;
+  margin-top: 12px; padding: 12px 16px;
   background: color-mix(in srgb, var(--color-rose) 10%, transparent);
   border-radius: 12px; text-align: left;
 }
@@ -246,9 +246,9 @@ function later() {
   background: var(--color-surface-2); padding: 1px 6px; border-radius: 4px;
   font-size: 11.5px; font-family: ui-monospace, monospace;
 }
-.upd-actions { margin-top: 18px; display: flex; gap: 10px; justify-content: center; }
+.upd-actions { margin-top: 16px; display: flex; gap: 10px; justify-content: center; }
 .upd-btn {
-  padding: 10px 22px; border-radius: 999px; border: 1px solid var(--color-border);
+  padding: 10px 24px; border-radius: 999px; border: 1px solid var(--color-border);
   background: var(--color-surface); color: var(--color-ink-2); font-size: 14px; cursor: pointer;
 }
 .upd-btn.primary { background: var(--color-rose); border-color: var(--color-rose); color: var(--color-on-primary); font-weight: 600; }

@@ -490,11 +490,11 @@ onUnmounted(() => {
 
 <style scoped>
 .board-page { max-width: 880px; margin: 0 auto; }
-.block { margin: 22px 0; }
+.block { margin: 24px 0; }
 
 /* 品牌条 */
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -507,14 +507,14 @@ onUnmounted(() => {
 .brand-icon { margin-right: 2px; flex: 0 0 auto; }
 .board-rel { color: var(--color-rose); opacity: 0.85; }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
-.lead { margin: 0 0 18px; font-size: 13px; color: var(--color-ink-3); }
+.lead { margin: 0 0 16px; font-size: 13px; color: var(--color-ink-3); }
 
 /* 统计瓷砖 */
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
 
-.tabs { margin-bottom: 18px; }
+.tabs { margin-bottom: 16px; }
 
-.composer { padding: 14px; margin-bottom: 18px; }
+.composer { padding: 16px; margin-bottom: 16px; }
 .composer-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; }
 .composer-actions { display: flex; align-items: center; gap: 10px; }
 .colors { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -537,7 +537,7 @@ onUnmounted(() => {
 
 .wall { display: flex; flex-direction: column; gap: 12px; }
 .msg {
-  padding: 14px 16px; border-left: 4px solid var(--color-rose-soft);
+  padding: 16px 16px; border-left: 4px solid var(--color-rose-soft);
   transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love);
 }
 .msg.mine { border-left-color: var(--color-cocoa); }
@@ -557,7 +557,7 @@ html:not(.reduce-motion) .msg:hover { transform: translateY(-3px); box-shadow: v
 .msg-reactions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .reaction-pill {
   display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
-  border: 1px solid var(--color-border); padding: 3px 9px 3px 6px; border-radius: 999px;
+  border: 1px solid var(--color-border); padding: 3px 8px 3px 6px; border-radius: 999px;
   font-size: 12px; background: var(--color-surface-2); color: var(--color-ink-2);
   transition: all var(--dur-micro) var(--ease-love);
 }

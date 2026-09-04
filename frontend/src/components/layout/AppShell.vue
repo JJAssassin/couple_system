@@ -229,7 +229,7 @@ function goSetting() {
 /* 顶部磨砂条 */
 .topbar {
   position: sticky; top: 0; z-index: 40;
-  display: flex; align-items: center; gap: 14px;
+  display: flex; align-items: center; gap: 16px;
   box-sizing: border-box;
   /* 灵动岛/状态栏安全区：导航条整体下沉，内容落在可见区，不再被遮挡 */
   height: calc(60px + env(safe-area-inset-top));

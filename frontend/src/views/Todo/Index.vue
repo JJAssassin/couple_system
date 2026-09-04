@@ -528,7 +528,7 @@ onMounted(async () => {
 <style scoped>
 .todo-page { max-width: 960px; margin: 0 auto; }
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 8px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -541,15 +541,15 @@ onMounted(async () => {
   background: var(--color-surface-2); border: 1px solid var(--color-border);
 }
 .ind-label { font-family: var(--font-mono); font-weight: 500; letter-spacing: 0.1em; font-size: 13px; color: var(--color-ink); margin: 0; }
-.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.page-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
 .head-left { display: flex; align-items: center; gap: 16px; }
 .page-head h1 { font-size: 22px; margin: 0; }
-.filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.filter-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
 .cat-tabs { flex: 1 1 320px; min-width: 0; }
 .status-select { flex: 0 0 auto; width: 118px; }
 @media (max-width: 520px) { .cat-tabs { flex: 1 1 100%; } .status-select { width: 100%; } }
 
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 /* 拖拽手柄：绝对定位在卡片右上角，仅在手柄上按下才触发排序（@pointerdown.stop 隔离 SwipeCard 左滑） */
 .todo { position: relative; transition: box-shadow var(--dur-pop) var(--ease-love), border-color var(--dur-pop) var(--ease-love); }
 /* 卡片浮起（box-shadow，避开 SwipeCard 的 translate 手势冲突；拖拽手柄已用 @pointerdown.stop 隔离） */
@@ -565,7 +565,7 @@ onMounted(async () => {
 .drag-handle:active { cursor: grabbing; }
 .drag-ghost { opacity: 0.35; }
 .drag-fallback { transform: rotate(2deg); box-shadow: var(--shadow-float); }
-.done-cards { margin-top: 18px; }
+.done-cards { margin-top: 16px; }
 .todo-top { display: flex; align-items: flex-start; gap: 10px; }
 .check {
   flex: 0 0 auto; width: 22px; height: 22px; border-radius: 7px; cursor: pointer;
@@ -585,24 +585,24 @@ onMounted(async () => {
 .todo.overdue.lv3 { border-color: var(--color-rose-vivid); box-shadow: 0 0 0 2px var(--color-rose); }
 .overdue {
   color: #fff; background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
-  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+  padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
 }
 .overdue.lv1 { background: linear-gradient(135deg, var(--color-rose-soft) 0%, var(--color-rose) 100%); }
 .overdue.lv3 { background: linear-gradient(135deg, var(--color-rose-vivid) 0%, #E0394F 100%); }
 /* 临近预警：温润琥珀色，与逾期玫瑰色区分（谨慎引入的辅助色，不破坏浪漫主色板） */
 .due-soon {
   color: #fff; background: linear-gradient(135deg, #E8B06A 0%, #D98E3C 100%);
-  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+  padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
 }
 .head-stat { display: flex; flex-direction: column; line-height: 1.1; margin-left: 2px; }
 .overdue-num { font-size: 20px; font-weight: 700; color: var(--color-rose); font-family: var(--font-mono); }
-.head-stat.warn { margin-left: 14px; }
+.head-stat.warn { margin-left: 16px; }
 .duesoon-num { font-size: 20px; font-weight: 700; color: #D98E3C; font-family: var(--font-mono); }
 .head-stat-label { font-size: 12px; color: var(--color-ink-3); }
 .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding-bottom: calc(0px + env(safe-area-inset-bottom)); }
-.todo-form { display: flex; flex-direction: column; gap: 18px; }
+.todo-form { display: flex; flex-direction: column; gap: 16px; }
 
-@media (max-width: 767px) { .cards { grid-template-columns: 1fr; } .brand { padding: 10px 14px; } .brand .ind-label { font-size: 12px; } .brand-status { padding: 3px 9px; font-size: 11px; } }
+@media (max-width: 767px) { .cards { grid-template-columns: 1fr; } .brand { padding: 10px 16px; } .brand .ind-label { font-size: 12px; } .brand-status { padding: 3px 8px; font-size: 11px; } }
 :global(.todo-modal) { padding: 0 !important; }
 @media (max-width: 767px) {
   :global(.todo-modal) { width: 100vw !important; max-width: 100vw !important; height: 100dvh; margin: 0; border-radius: 0; padding: calc(0px + env(safe-area-inset-top)) calc(0px + env(safe-area-inset-right)) calc(0px + env(safe-area-inset-bottom)) calc(0px + env(safe-area-inset-left)) !important; }

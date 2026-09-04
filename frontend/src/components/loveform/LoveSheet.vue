@@ -260,7 +260,7 @@ function onGrabUp() {
 .lsheet-x:active { transform: scale(0.92); }
 
 .lsheet-body {
-  padding: 4px 18px 18px;
+  padding: 4px 16px 16px;
   overflow-y: auto;
   flex: 1;
   -webkit-overflow-scrolling: touch;

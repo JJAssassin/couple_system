@@ -331,15 +331,15 @@ onMounted(async () => {
 .card-badges { display: flex; flex-wrap: wrap; gap: 6px; }
 .date-due-soon {
   color: #fff; background: linear-gradient(135deg, #E8B06A 0%, #D98E3C 100%);
-  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; align-self: flex-start;
+  padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; align-self: flex-start;
 }
 .date-overdue {
   color: #fff; background: linear-gradient(135deg, var(--color-rose) 0%, var(--color-rose-vivid) 100%);
-  padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; align-self: flex-start;
+  padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; align-self: flex-start;
 }
 .date-overdue.lv1 { background: linear-gradient(135deg, var(--color-rose-soft) 0%, var(--color-rose) 100%); }
 .date-overdue.lv3 { background: linear-gradient(135deg, var(--color-rose-vivid) 0%, #E0394F 100%); }
-.block { margin: 22px 0; }
+.block { margin: 24px 0; }
 .block h2 { font-size: 16px; margin: 0 0 12px; }
 .page-head { margin-bottom: 4px; }
 .page-head h1 { font-size: 22px; margin: 0; }

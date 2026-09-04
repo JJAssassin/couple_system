@@ -418,7 +418,7 @@ function moodColor(score?: number): string {
 
 /* 品牌条 */
 .brand {
-  display: flex; align-items: center; gap: 14px; padding: 12px 16px; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 16px; padding: 12px 16px; margin-bottom: 12px;
   background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
 }
@@ -443,10 +443,10 @@ function moodColor(score?: number): string {
 .yr-title { margin: 0; font-size: 22px; font-weight: 800; color: var(--color-ink); }
 .yr-sub { font-size: 12px; color: var(--color-ink-3); margin-top: 2px; }
 
-.block { margin: 22px 0; }
+.block { margin: 24px 0; }
 
 .hero {
-  position: relative; overflow: hidden; text-align: center; padding: 34px 16px;
+  position: relative; overflow: hidden; text-align: center; padding: 32px 16px;
   background: linear-gradient(135deg, var(--color-rose-soft), var(--color-surface));
   border: 1px solid var(--color-border); border-radius: var(--radius-lg);
 }
@@ -479,23 +479,23 @@ function moodColor(score?: number): string {
 .lbl { font-size: 12px; color: var(--color-ink-3); }
 
 .chart-card {
-  margin-top: 14px; background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: var(--radius-md); padding: 14px;
+  margin-top: 16px; background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-md); padding: 16px;
 }
 .chart-title { font-size: 13px; font-weight: 600; color: var(--color-ink-2); margin-bottom: 8px; }
 
 .ann-list { display: flex; flex-direction: column; gap: 8px; }
 .ann-item {
   display: flex; align-items: center; gap: 10px; background: var(--color-surface);
-  border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 14px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 16px;
 }
 .ann-name { font-size: 14px; font-weight: 600; color: var(--color-ink); }
 .ann-date { margin-left: auto; font-size: 12px; color: var(--color-ink-3); }
 
 /* 关系里程碑竖向时间轴 */
-.milestone-tl { position: relative; margin-left: 6px; padding-left: 22px; }
+.milestone-tl { position: relative; margin-left: 6px; padding-left: 24px; }
 .milestone-tl::before { content: ''; position: absolute; left: 6px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--color-rose-soft), var(--color-border)); border-radius: 2px; }
-.ms-item { position: relative; display: flex; align-items: center; gap: 10px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 11px 14px; margin-bottom: 10px; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
+.ms-item { position: relative; display: flex; align-items: center; gap: 10px; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 11px 16px; margin-bottom: 10px; transition: transform var(--dur-pop) var(--ease-love), box-shadow var(--dur-pop) var(--ease-love); }
 html:not(.reduce-motion) .ms-item:hover { transform: translateY(-2px); box-shadow: var(--elev-3); }
 .ms-dot { position: absolute; left: -22px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; border-radius: 50%; background: var(--color-surface); border: 2px solid var(--color-rose); display: grid; place-items: center; font-size: 7px; }
 .ms-body { display: flex; flex-direction: column; gap: 1px; }
@@ -512,7 +512,7 @@ html:not(.reduce-motion) .ms-item:hover { transform: translateY(-2px); box-shado
 .gauge-sub { font-size: 11px; color: var(--color-ink-3); margin-top: -6px; text-align: center; }
 
 /* 年度心情日历热力图（GitHub 式 53×7 网格） */
-.heatmap-card { padding: 14px; }
+.heatmap-card { padding: 16px; }
 .heatmap-scroll { overflow-x: auto; padding-bottom: 4px; }
 .hm-month-row { display: flex; margin-bottom: 4px; }
 .hm-corner { flex: 0 0 18px; width: 18px; margin-right: 6px; }
@@ -535,14 +535,14 @@ html:not(.reduce-motion) .hcell:hover { transform: scale(1.35); }
 }
 
 @media (max-width: 767px) {
-  .brand { padding: 10px 14px; margin-bottom: 10px; }
+  .brand { padding: 10px 16px; margin-bottom: 10px; }
   .brand .ind-label { font-size: 12px; }
-  .brand-status { padding: 3px 9px; font-size: 11px; }
+  .brand-status { padding: 3px 8px; font-size: 11px; }
   .yr-title { font-size: 19px; }
-  .hero { padding: 26px 14px; }
+  .hero { padding: 24px 16px; }
   .hero-num { font-size: 40px; }
   .hero-unit { font-size: 17px; }
   .cards { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
-  .block { margin: 18px 0; }
+  .block { margin: 16px 0; }
 }
 </style>
